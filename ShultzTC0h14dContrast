@@ -1,0 +1,92 @@
+---
+title: "DESeq2 Pairwise TC Shultz"
+output: html_document
+---
+
+```{r}
+
+###Be sure you set your working directory to one specific location: ex. Desktop
+
+library(DESeq2)
+library(tidyverse)
+#read in data and clean
+tccount<-read.table("18-5-23_dedup_Proc_ibet_TC_for_deseq.txt", header=TRUE)
+rownames(tccount) <- tccount$gene
+tccount<-subset(tccount, select=c(2:28))
+head(tccount)
+```
+
+```{r}
+###build design matrix w/ treatments and replicates
+
+#design
+design<-data.frame(time=as.factor(c(rep("0h", 3), rep("6h", 3), rep("12h", 3), rep("24h",3), rep("48h",3), rep("3d",3), rep("7d",3), rep("10d",3), rep("14d",3))), rep=as.factor(rep(1:3,9)))
+
+#create DESeqDataSet Object
+ddstcCountTable <- DESeqDataSetFromMatrix(
+  countData = tccount,
+  colData = design,
+  design = ~ time + rep)
+
+```
+
+```{r}
+#Run DESeq2 Pipeline and compile results
+
+#run DESeq2 
+tcdds<-DESeq(ddstcCountTable)
+
+#Results take contrast between 0hr and 14d
+tcresults<-results(tcdds, contrast = c("time", "14d", "0h"))
+#just get the significant ones (padj<0.01)
+resSig<- tcresults[ which(tcresults$padj < 0.01 ), ]
+#order by logfc and look at data
+head( resSig[ order( resSig$log2FoldChange ), ] )
+
+#MA plot
+plotMA( tcresults, ylim = c(-3, 3) )
+
+#plot dispersions
+plotDispEsts( tcdds, ylim = c(1e-6, 1e1) )
+
+#plot p-values
+hist( tcresults$pvalue, breaks=20, col="grey" )
+
+
+#Let's get some actual gene names!
+#write out resSig so we can provide to geneID Retriever
+#https://tritrypdb.org/tritrypdb/showQuestion.do?questionFullName=GeneQuestions.GeneByLocusTag
+file_to_write<-paste(rownames(resSig), collapse="\t")
+write.table(file_to_write, file="0h14dtcresSig")
+#be sure to manipulate the text (leave out vector index and quotes). Can do this manually or use unix commands
+
+#select your genes and column identifiers and export as .csv
+genenames<-read.csv("0h14dGeneByLocusTag_Summary.csv", header=TRUE)
+
+#add entrez, UNIPROT, Gene Names, and GO Terms to your dataset
+idx <- match(rownames(resSig), genenames$Gene.ID)
+resSig$entrez <- genenames$Entrez.Gene.ID[idx]
+resSig$product_description<-genenames$Product.Description[idx]
+resSig$UNIPROT<-genenames$UniProt.ID[idx]
+resSig$Gene_Names<-genenames$Gene.Name.or.Symbol[idx]
+resSig$GO<-genenames$Computed.GO.Function.IDs[idx]
+
+#PCA Plot
+rld <- rlog(tcdds)
+print(plotPCA(rld, intgroup = c( "time", "rep")))
+
+#heatmap and gene clustering
+library( "genefilter" )
+topVarGenes <- head( order( rowVars( assay(rld) ), decreasing=TRUE ), 25 )
+heatmap.2( assay(rld)[ topVarGenes, ], scale="row",
+     trace="none", dendrogram="column",
+     col = colorRampPalette( rev(brewer.pal(9, "RdBu")) )(255))
+
+#GO Term enrichment in R is kinda hard b/c I don't think there is a T. brucei biomart db
+#I just did GO Term enrichment on TryTrpDb: https://tritrypdb.org/tritrypdb/showApplication.do
+
+tcGO<-read.delim("0h14dhiddenGoEnrichmentResult.tab", header=TRUE, sep="\t")
+tcPathway<-read.csv("0h14dhiddenPathwaysEnrichmentResult.tab", header=TRUE, sep="\t")
+```
+
+Conclusions: compared 0h and 14d contrasts. 92 DE GO Terms. Lot of differentially expressed metabolic pathways.
