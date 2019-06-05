@@ -4,7 +4,7 @@ title: "Savage DataSet DESeq2"
 
 ```{r}
 
-###Be sure you set your working directory to one specific location: ex. Desktop[]
+###Be sure you set your working directory to one specific location: ex. Desktop
 
 library(DESeq2)
 library(tidyverse)
@@ -60,16 +60,42 @@ hist( savresults$pvalue, breaks=20, col="grey" )
 #Let's get some actual gene names!
 #write out resSig so we can provide to geneID Retriever
 #https://tritrypdb.org/tritrypdb/showQuestion.do?questionFullName=GeneQuestions.GeneByLocusTag
-
 file_to_write<-paste(rownames(resSig), collapse="\t")
 write.table(file_to_write, file="SAMGsavresSig")
-
-#be sure to manipulate the text (leave out vector index and quotes). Can do this manually or use unix commands. I did this manually
+#be sure to manipulate the text (leave out vector index and quotes). Can do this manually or use unix commands
 
 #select your genes and column identifiers and export as .csv
-genenames<-read.csv("GeneByLocusTag_Summary.csv")
+genenames<-read.csv("GeneByLocusTag_Summary.csv", header=TRUE)
 
+#add entrez, UNIPROT, Gene Names, and GO Terms to your dataset
+idx <- match(rownames(resSig), genenames$Gene.ID)
+resSig$entrez <- genenames$Entrez.Gene.ID[idx]
+resSig$product_description<-genenames$Product.Description[idx]
+resSig$UNIPROT<-genenames$UniProt.ID[idx]
+resSig$Gene_Names<-genenames$Gene.Name.or.Symbol[idx]
+resSig$GO<-genenames$Computed.GO.Function.IDs[idx]
+
+#PCA Plot
+rld <- rlog(savdds)
+print(plotPCA(rld, intgroup = c( "rep", "stage")))
+
+#heatmap and gene clustering
+library( "genefilter" )
+topVarGenes <- head( order( rowVars( assay(rld) ), decreasing=TRUE ), 25 )
+heatmap.2( assay(rld)[ topVarGenes, ], scale="row",
+     trace="none", dendrogram="column",
+     col = colorRampPalette( rev(brewer.pal(9, "RdBu")) )(255))
+
+##GO Term enrichment in R is kinda hard b/c I don't think there is a T. brucei biomart db
+#I just did GO Term enrichment on TryTrpDb: https://tritrypdb.org/tritrypdb/showApplication.do
+
+savGO<-read.delim("hiddenGoEnrichmentResult.tab", header=TRUE, sep="\t")
+savPathway<-read.csv("hiddenPathwaysEnrichmentResult.tab", header=TRUE, sep="\t")
 ```
-
+Conclusions:
+We ran DESeq 2 with Mg (mid-gut) and SA (salivary) contrast. We identified ~2000 genes that were significantly differentially
+expressed between these treatments. We also ran GO and pathway analyses with the online tool TryTrpDb and identfied several
+differentially-regulated pathways and terms. A cursory search between DEGs revealed that EP1 and EP2 –procyclin-encoding genes–
+were DE. This is good news! Looks like DESeq2 ran well!
 
 
