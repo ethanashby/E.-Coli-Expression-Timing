@@ -60,15 +60,15 @@ hist( savresults$pvalue, breaks=20, col="grey" )
 #Let's get some actual gene names!
 #write out resSig so we can provide to geneID Retriever
 #https://tritrypdb.org/tritrypdb/showQuestion.do?questionFullName=GeneQuestions.GeneByLocusTag
+
 file_to_write<-paste(rownames(resSig), collapse="\t")
 write.table(file_to_write, file="SAMGsavresSig")
-#be sure to manipulate the text (leave out vector index and quotes). Can do this manually or use unix commands
+
+#be sure to manipulate the text (leave out vector index and quotes). Can do this manually or use unix commands. I did this manually
 
 #select your genes and column identifiers and export as .csv
 genenames<-read.csv("GeneByLocusTag_Summary.csv")
 
-library( "biomaRt" )
-ensembl = useMart( "ensembl", dataset = "hsapiens_gene_ensembl" )
 ```
 
 
