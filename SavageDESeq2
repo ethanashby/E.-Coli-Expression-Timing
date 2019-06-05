@@ -29,7 +29,7 @@ ddsSavageCountTable <- DESeqDataSetFromMatrix(
 
 #run DESeq2
 savdds<-DESeq(ddsSavageCountTable)
-savresults<-results(savdds, contrast = "stage")
+savresults<-results(savdds, contrast = c("stage", "SA", "MG"))
 mcols(savresults)
 ```
 
