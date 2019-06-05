@@ -1,0 +1,33 @@
+---
+title: "Savage DataSet DESeq2"
+---
+
+```{r}
+library(DESeq2)
+library(tidyverse)
+#read in data and clean
+savagecount<-read.table("18-5-24_dedup_Savage_deseq_counts.txt", header=TRUE)
+rownames(savagecount) <- savagecount$gene
+savagecount<-subset(savagecount, select=c(2:11))
+head(savagecount)
+```
+
+```{r}
+###build design matrix w/ treatments and replicates
+design<-data.frame(rep(rownames(savagecount), 10))
+#set stage as parasitic stage
+design[,"stage"]<-as.factor(c(rep("MG", 28074), rep("PV", 37432), rep("SA", 28074)))
+#set replicate numbers
+design[,"replicate"]<-as.factor(c(rep(1, 9358), rep(2, 9358), rep(3, 9358), rep(1, 9358), rep(2, 9358), rep(3, 9358), rep(4, 9358), rep(1, 9358), rep(2, 9358), rep(3, 9358)))
+colnames(design)<-c("gene", "stage", "replicate")
+
+#design
+design<-data.frame(stage=as.factor(c(rep("MG", 3), rep("PV", 4), rep("SA", 3))),rep=as.factor(c(1,2,3,1,2,3,4,1,2,3)))
+
+#
+ddsSavageCountTable <- DESeqDataSetFromMatrix(
+  countData = savagecount,
+  colData = design,
+  design = ~ stage + rep)
+```
+
