@@ -58,22 +58,18 @@ hist( savresults$pvalue, breaks=20, col="grey" )
 
 
 #Let's get some actual gene names!
-#write out resSig so we can provide to geneID Retriever
-#https://tritrypdb.org/tritrypdb/showQuestion.do?questionFullName=GeneQuestions.GeneByLocusTag
-file_to_write<-paste(rownames(resSig), collapse="\t")
-write.table(file_to_write, file="SAMGsavresSig")
-#be sure to manipulate the text (leave out vector index and quotes). Can do this manually or use unix commands
+```
 
-#select your genes and column identifiers and export as .csv
-genenames<-read.csv("GeneByLocusTag_Summary.csv", header=TRUE)
+```{r}
+#download the gaf file from https://tritrypdb.org/common/downloads/Current_Release/TbruceiTREU927/gaf/
 
-#add entrez, UNIPROT, Gene Names, and GO Terms to your dataset
-idx <- match(rownames(resSig), genenames$Gene.ID)
-resSig$entrez <- genenames$Entrez.Gene.ID[idx]
-resSig$product_description<-genenames$Product.Description[idx]
-resSig$UNIPROT<-genenames$UniProt.ID[idx]
-resSig$Gene_Names<-genenames$Gene.Name.or.Symbol[idx]
-resSig$GO<-genenames$Computed.GO.Function.IDs[idx]
+TrypGAF<-read.delim("TriTrypDB-43_TbruceiTREU927_GO.gaf.txt", header=FALSE)
+idmatch <- match(rownames(resSig), TrypGAF$V2)
+resSig$gene.name <- TrypGAF$V3[idmatch]
+resSig$GO<-TrypGAF$V5[idmatch]
+resSig$func<-TrypGAF$V10[idmatch]
+
+#gene names, functions, GO terms retrieved
 
 #PCA Plot
 rld <- rlog(savdds)
