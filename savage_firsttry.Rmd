@@ -1,0 +1,188 @@
+---
+title: "Tb_Trial"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(DESeq2)
+```
+
+
+```{r}
+## GET COUNT DATA
+
+savagecounts_nofilter <- read.table("~/Downloads/18-5-24_dedup_Savage_deseq_counts.txt", header = TRUE)
+
+head(savagecounts_nofilter)
+
+```
+
+```{r}
+## FILTER OUT NON EXPRESSED GENES
+
+length(savagecounts_nofilter$gene)
+
+savagecounts <- filter(savagecounts_nofilter,(MG_1+MG_2+MG_3+PV_1+PV_2+PV_3+PV_4+SA_1+SA_2+SA_3) >= 10)
+
+length(savagecounts$gene)
+
+#savagecounts <- savagecounts_nofilter
+
+rownames(savagecounts) <- savagecounts$gene
+
+savagecounts <- savagecounts %>% dplyr::select(-gene)
+```
+
+
+```{r}
+## DESIGN
+
+coldata <- data.frame(row.names = colnames(savagecounts),
+                      reps = as.factor(c(1, 2, 3, 1, 2, 3, 4, 1, 2, 3)), 
+                      stage = as.factor(c("MG", "MG", "MG", "PV", "PV", "PV", "PV", "SA", "SA", "SA")))
+
+coldata
+
+ddsFullCountTable <- DESeqDataSetFromMatrix(countData = savagecounts, colData = coldata, design = ~ stage + reps)
+
+```
+
+
+```{r}
+## RUN DESEQ
+
+savagedds <- DESeq(ddsFullCountTable)
+```
+
+```{r}
+## COMPARE MG AND SA RESULTS
+savageresults <- results(savagedds, contrast = c("stage", "MG", "SA"))
+
+## DETERMINE SIGNIFICANT RESULTS AND ORDER FROM MOST UPREGULATED TO MOST DOWNREGULATED
+
+resSig <- savageresults[ which(savageresults$padj < 1 ), ]
+
+resSig <- resSig[ which(abs(resSig$log2FoldChange) > 2 ), ]
+
+head( resSig[ order( resSig$log2FoldChange ), ] )
+
+tail( resSig[ order( resSig$log2FoldChange ), ] )
+```
+
+```{r}
+## PLOTS ON PLOTS
+
+plotMA( savageresults, ylim = c(-1, 1) )
+
+plotDispEsts( savagedds, ylim = c(1e-6, 1e1) )
+
+hist( savageresults$pvalue, breaks=20, col="grey" )
+```
+
+```{r}
+## EXPORT SIGNIFICANT GENES
+
+write.table(paste(rownames(resSig), collapse = " "), file = "~/Documents/RNA-seq/savagegeneid.txt")
+```
+
+
+```{r}
+## VIZ
+
+library(ggplot2)
+
+rld <- rlog( savagedds)
+
+plotPCA( rld, intgroup = c( "reps", "stage")) + geom_point(aes(color = coldata$stage, stroke = coldata$stage))
+
+```
+
+
+```{r}
+
+## VIZZZ
+
+sampleDists <- dist( t( assay(rld) ) )
+sampleDists
+
+sampleDistMatrix <- as.matrix( sampleDists )
+rownames(sampleDistMatrix) <- paste( rld$reps,
+   rld$stage, sep="-" )
+colnames(sampleDistMatrix) <- paste( rld$reps,
+   rld$stage, sep="-" )
+
+library("gplots")
+library(RColorBrewer)
+
+colours = colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
+heatmap.2( sampleDistMatrix, trace="none", col=colours)
+```
+
+```{r}
+## GENE ID
+
+genenames <- read_csv("~/Downloads/GeneByLocusTag_Summary-3.csv")
+
+resSig$ensembl <- rownames(resSig)
+
+idx <- match(resSig$ensembl, genenames$`Gene ID`)
+
+resSig$gene_name <- genenames$`Gene Name or Symbol`[ idx ]
+
+resSig$description <- genenames$`Product Description`[ idx ]
+```
+
+```{r}
+## COMPARE TO SAVAGE DATA
+savage_data <- readxl::read_xlsx("~/Downloads/pone.0168877.s007.xlsx")
+
+head(savage_data)
+
+xref <- match(savage_data$`Gene ID`,rownames(resSig))
+
+comparedata <- data.frame(savage_data$`Gene ID`, rownames(resSig) [xref])
+
+sum(!is.na(comparedata$rownames.resSig..xref.))
+```
+
+```{r}
+## VIZ COMPARE
+
+library(VennDiagram)
+
+grid.newpage()
+draw.pairwise.venn(area1 = length(savage_data$`Gene ID`), area2 = length(resSig$pvalue), cross.area = sum(!is.na(comparedata$rownames.resSig..xref.)), category = c("Savage", 
+    "Dojojo"))
+
+library(tidyverse)
+
+overlap_data <- filter(comparedata, !is.na(comparedata$rownames.resSig..xref)) %>% dplyr::select(savage_data..Gene.ID.)
+
+colnames(overlap_data) <- "overlapping_genes"
+
+overlap_data
+
+
+resSig$ensembl <- rownames(resSig)
+
+ind <- match(resSig$ensembl, genenames$`Gene ID`)
+
+resSig$gene_name <- genenames$`Gene Name or Symbol`[ idx ]
+
+resSig$description <- genenames$`Product Description`[ idx ]
+
+```
+
+
+```{r}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("EuPathDB")
+```
+
+
+
