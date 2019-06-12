@@ -1,0 +1,133 @@
+---
+title: "Schulz_Viz_1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(DESeq2)
+```
+
+
+```{r}
+## Import data
+
+rawcounts <- read.table("~/Downloads/18-5-23_dedup_Proc_ibet_TC_for_deseq.txt", header = TRUE)
+
+```
+
+```{r}
+## Normalization
+
+rawcounts_norm <- rawcounts
+
+rownames(rawcounts_norm) <- rawcounts_norm$gene
+
+rawcounts_norm <- rawcounts_norm %>% dplyr::select(-gene)
+
+# for coldata with times as numeric
+
+coldata <- data.frame(names = colnames(rawcounts_norm)) %>%
+  separate(names, c("treat","time","rep"),"_") %>%
+  mutate(time = ifelse(time == "ib", 0, 
+                        ifelse(time == "6h", 6, 
+                               ifelse(time == "12h", 12,
+                                      ifelse(time == "24h", 24,
+                                             ifelse(time == "48h", 48,
+                                                    ifelse(time == "3d", 72,
+                                                           ifelse(time == "7d", 168,
+                                                                  ifelse(time == "10d", 240, 336)))))))))
+```
+
+```{r}
+## Normalization
+
+# converting coldata to factor data (categorical) for contrast
+
+coldata <- data.frame(names = colnames(rawcounts_norm)) %>%
+  separate(names, c("treat","time","rep"),"_") %>%
+  mutate(timetreat = paste(treat,time,sep = "_")) %>%
+  select(-c(treat,time))
+
+rownames(coldata) <- colnames(rawcounts_norm)
+
+dds <- DESeqDataSetFromMatrix(rawcounts_norm,colData = coldata, ~ timetreat)
+
+dds_de <- DESeq(dds)
+
+norm_counts <- as.data.frame(counts(dds_de, normalized = TRUE)) %>%
+  mutate(gene = rawcounts$gene)
+
+```
+
+
+```{r}
+## Filter significant results
+
+de_results <- results(dds_de, contrast = c("timetreat", "noo_ib", "ib_14d"))
+
+resSig <- de_results[ which(de_results$padj < .05 ), ]
+
+resSig <- resSig[ which(abs(resSig$log2FoldChange) > 2 ), ]
+
+resSig$gene <- rownames(resSig)
+
+ind <- match(norm_counts$gene,resSig$gene)
+
+norm_counts$sig <- resSig$gene[ind]
+
+norm_counts_sig <- norm_counts %>%
+  filter(!is.na(sig)) %>%
+  select(-sig)
+```
+
+
+```{r}
+## Tidy data
+
+counts_gath <- norm_counts_sig %>%
+  gather(-gene, key="sample", value = "rawcount") %>%
+  mutate(sample2 = sample) %>%
+  separate(sample2, c("treat", "time", "rep"), "_") %>%
+  mutate(time = ifelse(time == "ib", 0, 
+                        ifelse(time == "6h", 6, 
+                               ifelse(time == "12h", 12,
+                                      ifelse(time == "24h", 24,
+                                             ifelse(time == "48h", 48,
+                                                    ifelse(time == "3d", 72,
+                                                           ifelse(time == "7d", 168,
+                                                                  ifelse(time == "10d", 240, 336)))))))))
+
+counts_sum_norm <- counts_gath_norm %>%
+  group_by(gene, treat, time) %>%
+  summarize(avecount = mean(rawcount))
+
+# filtering for counts with 2 times more at the end than beginning
+
+counts_sum_norm_2 <- counts_sum_norm %>%
+  group_by(gene) %>%
+  filter(nth(avecount,8) > 2*nth(avecount,9))
+```
+
+```{r}
+## some plots
+counts_sum_norm_2 %>%
+  ggplot(aes(x=time, y=avecount, color=gene)) + 
+  geom_line(data = counts_sum_norm_2, aes(x = time, y = avecount), alpha = 0.75) + 
+  theme(legend.position = "none")
+
+counts_sum_norm %>%
+  ggplot(aes(x=time, y=avecount, color=gene)) + 
+  geom_point(alpha = 0.5) +
+  geom_line(data = counts_sum_norm, aes(x = time, y = avecount), alpha = 0.5) + 
+  theme(legend.position = "none")
+```
+
+
+
+
+
+
