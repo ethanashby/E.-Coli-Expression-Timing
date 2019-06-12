@@ -1,5 +1,6 @@
 ---
 title: "Tidy_Stoebel_Data"
+author: "Annie Cohen"
 output: html_document
 ---
 
