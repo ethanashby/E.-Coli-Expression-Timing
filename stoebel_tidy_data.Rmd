@@ -1,0 +1,41 @@
+---
+title: "Tidy_Stoebel_Data"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ec_rawcounts <- read.table("~/Documents/RNA-Seq/LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.txt", header = TRUE)
+```
+
+```{r}
+## TIDY
+
+ec_counts_gath <- ec_rawcounts %>%
+  gather(-Geneid, key="sample", value = "rawcount") %>%
+  mutate(sample2 = sample) %>%
+  separate(sample2, c("treat", "rep_time"), "_") %>%
+  mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
+                        ifelse(substr(rep_time,start=1,stop = 1) == "B", 2, 3))) %>%
+  mutate(time = ifelse(substr(rep_time,start=3,stop = 3) == "1", 0,
+                      ifelse(substr(rep_time,start=3,stop = 3) == "2", 30,
+                             ifelse(substr(rep_time,start=3,stop = 3) == "3", 60,
+                                    ifelse(substr(rep_time,start=3,stop = 3) == "4", 90,
+                                           ifelse(substr(rep_time,start=3,stop = 3) == "5", 120, 150)))))) %>%
+  mutate(treat = ifelse(treat == "JH01", "WT","dRpoS")) %>%
+  select(-c(rep_time,sample))
+                                      
+ec_counts_sum <- ec_counts_gath %>%
+  group_by(Geneid, treat, time) %>%
+  summarize(avecount = mean(rawcount))
+```
+
+
+```{r}
+ec_counts_gath %>%
+  ggplot(aes(x=time, y=rawcount, color=Geneid)) + 
+  geom_point() +
+  geom_line(data = ec_counts_sum, aes(x = time, y = avecount, color = Geneid), alpha = 0.5) +
+  theme(legend.position = "none")
+```
