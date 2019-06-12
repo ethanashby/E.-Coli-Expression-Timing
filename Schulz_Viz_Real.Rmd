@@ -1,5 +1,6 @@
 ---
 title: "Schulz_Viz_1"
+author: "Annie Cohen"
 output: html_document
 ---
 
