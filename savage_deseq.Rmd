@@ -14,7 +14,7 @@ library(DESeq2)
 ```{r}
 ## GET COUNT DATA
 
-savagecounts_nofilter <- read.table("~/Downloads/18-5-24_dedup_Savage_deseq_counts.txt", header = TRUE)
+savagecounts_nofilter <- read.table("18-5-24_dedup_Savage_deseq_counts.txt", header = TRUE)
 
 head(savagecounts_nofilter)
 
