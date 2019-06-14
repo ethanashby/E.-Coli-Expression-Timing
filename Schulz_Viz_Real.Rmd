@@ -15,7 +15,7 @@ library(DESeq2)
 ```{r}
 ## Import data
 
-rawcounts <- read.table("~/Downloads/18-5-23_dedup_Proc_ibet_TC_for_deseq.txt", header = TRUE)
+rawcounts <- read.table("18-5-23_dedup_Proc_ibet_TC_for_deseq.txt", header = TRUE)
 
 ```
 
