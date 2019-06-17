@@ -1,19 +1,55 @@
 ---
 title: "Tidy_Stoebel_Data"
-author: "Annie Cohen"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-ec_rawcounts <- read.table("LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.txt", header = TRUE)
+ec_rawcounts <- read.table("~/Documents/RNA-Seq/LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.txt", header = TRUE)
 ```
 
 ```{r}
-## TIDY
+#format data for normalization
 
-ec_counts_gath <- ec_rawcounts %>%
+ec_rawcounts_norm <- ec_rawcounts
+
+rownames(ec_rawcounts_norm) <- ec_rawcounts_norm$Geneid
+
+ec_rawcounts_norm <- ec_rawcounts_norm %>% dplyr::select(-Geneid)
+
+ec_coldata <- data.frame(names = colnames(ec_rawcounts_norm)) %>%
+  separate(names, c("treat", "rep_time"), "_") %>%
+  mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
+                        ifelse(substr(rep_time,start=1,stop = 1) == "B", 2, 3))) %>%
+  mutate(time = ifelse(substr(rep_time,start=3,stop = 3) == "1", 0,
+                      ifelse(substr(rep_time,start=3,stop = 3) == "2", 30,
+                             ifelse(substr(rep_time,start=3,stop = 3) == "3", 60,
+                                    ifelse(substr(rep_time,start=3,stop = 3) == "4", 90,
+                                           ifelse(substr(rep_time,start=3,stop = 3) == "5", 120, 150)))))) %>%
+  mutate(treat = ifelse(treat == "JH01", "WT","dRpoS")) %>%
+  select(-rep_time)
+
+rownames(ec_coldata) <- colnames(ec_rawcounts_norm)
+```
+
+
+```{r}
+ec_dds <- DESeqDataSetFromMatrix(ec_rawcounts_norm, colData = ec_coldata, design = ~ treat)
+
+ec_dds_de <- DESeq(ec_dds)
+
+ec_rawcounts_norm <- data.frame(counts(ec_dds_de, normalized = TRUE)) %>%
+  mutate(Geneid = rownames(ec_rawcounts_norm))
+
+results(ec_dds_de, contrast = c("treat","WT","dRpoS"))
+```
+
+
+```{r}
+## TIDY
+library(tidyr)
+ec_counts_gath <- ec_rawcounts_norm %>%
   gather(-Geneid, key="sample", value = "rawcount") %>%
   mutate(sample2 = sample) %>%
   separate(sample2, c("treat", "rep_time"), "_") %>%
