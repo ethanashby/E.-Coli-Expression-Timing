@@ -24,6 +24,8 @@ rawcounts <- read.table("18-5-23_dedup_Proc_ibet_TC_for_deseq.txt", header = TRU
 
 rawcounts_norm <- rawcounts
 
+head(rawcounts)
+
 rownames(rawcounts_norm) <- rawcounts_norm$gene
 
 rawcounts_norm <- rawcounts_norm %>% dplyr::select(-gene)
@@ -65,37 +67,69 @@ norm_counts <- as.data.frame(counts(dds_de, normalized = TRUE)) %>%
 
 
 ```{r}
-## Filter significant results
+## Filter significant results and contrast consecutive times
 
-de_results <- results(dds_de, contrast = c("timetreat", "noo_ib", "ib_14d"))
+contrast_vect = c(0, 6,12,24,48,72,168,240,336)
+contrast_list <- list()
 
-resSig <- de_results[ which(de_results$padj < .05 ), ]
+for (i in 1:8) {
+  de_results <- results(dds_de, contrast = c("timetreat", coldata$timetreat[i], coldata$timetreat[i+3]))
 
-resSig <- resSig[ which(abs(resSig$log2FoldChange) > 1 ), ]
+  resSig <- de_results[ which(de_results$padj < .05 ), ]
 
-resSig$gene <- rownames(resSig)
+  resSig <- resSig[ which(abs(resSig$log2FoldChange) > 2 ), ]
 
-ind <- match(norm_counts$gene,resSig$gene)
+  resSig$gene <- rownames(resSig)
 
-norm_counts$sig <- resSig$gene[ind]
+  ind <- match(norm_counts$gene,resSig$gene)
 
-norm_counts_sig <- norm_counts %>%
-  filter(!is.na(sig)) %>%
-  select(-sig) #%>%
-  #mutate(contrast = 8)
+  norm_counts$sig <- resSig$gene[ind]
+
+  norm_counts_sig <- norm_counts %>%
+   filter(!is.na(sig)) %>%
+   select(-sig) %>%
+   mutate(contrast = contrast_vect[i+1])
+  contrast_list[[i]] = norm_counts_sig 
+}
+
+norm_counts_contrast_consec <- bind_rows(contrast_list[[1]],contrast_list[[2]],contrast_list[[3]],contrast_list[[4]],contrast_list[[5]],contrast_list[[6]],contrast_list[[7]],contrast_list[[8]])
+
 ```
 
 ```{r}
-# combine contrasts and merge dupes
+## Filter significant results and contrast times from t_0
 
-all_contrasts <- bind_rows(norm_counts_sig_6h, norm_counts_sig_12h, norm_counts_sig_24h, norm_counts_sig_48h, norm_counts_sig_3d, norm_counts_sig_7d, norm_counts_sig_10d, norm_counts_sig_14d)
+contrast_vect = c(0, 6,12,24,48,72,168,240,336)
+contrast_list <- list()
+
+for (i in 1:8) {
+  de_results <- results(dds_de, contrast = c("timetreat", "noo_ib", coldata$timetreat[i+3]))
+
+  resSig <- de_results[ which(de_results$padj < .05 ), ]
+
+  resSig <- resSig[ which(abs(resSig$log2FoldChange) > 2 ), ]
+
+  resSig$gene <- rownames(resSig)
+
+  ind <- match(norm_counts$gene,resSig$gene)
+
+  norm_counts$sig <- resSig$gene[ind]
+
+  norm_counts_sig <- norm_counts %>%
+   filter(!is.na(sig)) %>%
+   select(-sig) %>%
+   mutate(contrast = contrast_vect[i+3])
+  contrast_list[[i]] = norm_counts_sig 
+}
+
+norm_counts_contrast <- bind_rows(contrast_list[[1]],contrast_list[[2]],contrast_list[[3]],contrast_list[[4]],contrast_list[[5]],contrast_list[[6]],contrast_list[[7]],contrast_list[[8]])
 ```
 
 ```{r}
 ## Tidy data
 
-counts_gath_norm <- norm_counts_sig %>%
-  gather(-gene, key="sample", value = "rawcount") %>%
+counts_gath_norm <- norm_counts_contrast %>%
+  gather(-c(gene,contrast), key="sample", value = "rawcount") %>%
   mutate(sample2 = sample) %>%
   separate(sample2, c("treat", "time", "rep"), "_") %>%
   mutate(time = ifelse(time == "ib", 0, 
@@ -108,7 +142,7 @@ counts_gath_norm <- norm_counts_sig %>%
                                                                   ifelse(time == "10d", 240, 336)))))))))
 
 counts_sum_norm <- counts_gath_norm %>%
-  group_by(gene, treat, time) %>%
+  group_by(contrast, gene, treat, time) %>%
   summarize(avecount = mean(rawcount))
 
 ```
@@ -116,33 +150,29 @@ counts_sum_norm <- counts_gath_norm %>%
 
 ```{r}
 # filtering for counts with 2 times more at the end than beginning
-counts_sum_norm_2 <- counts_sum_norm %>%
-  group_by(gene) %>%
-  filter(nth(avecount,8) > 2*nth(avecount,9))
+#counts_sum_norm_2 <- counts_sum_norm %>%
+#  group_by(gene) %>%
+#  filter(nth(avecount,8) > 2*nth(avecount,9))
 ```
 
 ```{r}
-
-## some plots
+## plots facet wrapped by contrast
 counts_sum_norm %>%
   ggplot(aes(x=time, y=avecount, color=gene)) + 
-  geom_line(alpha = 0.25) + 
-  ylim(0,31000) +
-  theme(legend.position = "none", panel.background = element_blank(), plot.title = element_text(hjust = 0.5, vjust =-7, size = 14)) +
-  #facet_wrap(counts_sum_norm$contrast) +
-  xlab("time (hours)") +
-  ylab("average read counts") +
-  ggtitle("Differentially expressed genes between"~T[0]~"and "~T[336]~" over all time")
-  
+  geom_line(alpha = 0.25) + geom_vline(aes(xintercept=contrast), color = "black") + geom_vline(aes(xintercept = 0),color = "black")+
+  #ylim(0,50000) +
+  theme(legend.position = "none", panel.background = element_blank(), axis.title = element_text(size = 16)) +
+  facet_wrap(~contrast) +
+  labs(x = "time (hr)", y = "avg count")
 
+## log transformed plots facet wrapped by contrast
 counts_sum_norm %>%
-  ggplot(aes(x=time, y=avecount, color=gene)) +
-  geom_point(alpha = 0.5) +
-  geom_line(data = counts_sum_norm, aes(x = time, y = avecount), alpha = 0.5) + 
-  theme(legend.position = "none",panel.background = element_blank())
-  
+  ggplot(aes(x=time, y=log2(avecount), color=gene)) + 
+  geom_line(alpha = 0.25) + geom_vline(aes(xintercept=contrast), color = "black") + geom_vline(aes(xintercept = 0),color = "black")+
+  #ylim(0,log2(50000)) +
+  theme(legend.position = "none", panel.background = element_blank(), axis.title = element_text(size = 16)) +
+  facet_wrap(~contrast) +
+  labs(x = "time (hr)", y = expression("log"[2]~"(avg count)"))
 ```
-
-
 
 
