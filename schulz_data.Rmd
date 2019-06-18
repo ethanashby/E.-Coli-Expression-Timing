@@ -1,0 +1,141 @@
+---
+title: "schulz_data"
+author: "Lian Morales"
+date: "6/13/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+#LOADING DESEQ2 AND RNASEQ FILE
+knitr::opts_chunk$set(echo = TRUE)
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+library("DESeq2")
+library("dplyr")
+library(readr)
+TBcounts <- read.table("18-5-23_dedup_Proc_ibet_TC_for_deseq.txt",header = TRUE)
+
+```
+
+
+```{r}
+#NORMALIZATION BY DESEQ2
+rownames(TBcounts) <- TBcounts$gene #renames the gene row
+TBcounts <- TBcounts %>% dplyr :: select(-"gene") #this gets rid of the name gene in table
+#creating new data frame
+tb_new <- data.frame(rownames = colnames(TBcounts),
+                     reps = as.factor(c(1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3)),
+                     stage = as.factor(c("noo_ib","noo_ib","noo_ib", "ib_6h","ib_6h","ib_6h", "ib_12h","ib_12h","ib_12h","ib_24h","ib_24h","ib_24h","ib_48h","ib_48h","ib_48h","ib_3d","ib_3d","ib_3d","ib_7d","ib_7d","ib_7d","ib_10d","ib_10d","ib_10d","ib_14d","ib_14d","ib_14d")))
+
+#deseq analysis
+ddsFullCountTable <- DESeqDataSetFromMatrix(countData = TBcounts,
+                                            colData = tb_new, 
+                                            design = ~ reps + stage)
+
+TBcounts_dds <- DESeq(ddsFullCountTable)
+
+#calculating norm counts
+normDE_counts <- DESeq2::counts(TBcounts_dds, normalized = TRUE) #DESeq2 :: allows to specify where this fcn comes from
+
+```
+
+
+```{r}
+#COMPARING - DE ANALYSIS - comparing stages noo_ib and ib_6h
+
+TBcountsRes <- results( TBcounts_dds ,contrast = c("stage",  "noo_ib","ib_6h"))
+
+resSig <- TBcountsRes[ which(TBcountsRes$padj < 0.01 ), ]
+head( resSig[ order( resSig$log2FoldChange ), ] )
+tail( resSig[ order( resSig$log2FoldChange ), ] )
+
+#making file of rownames to enter in trypan database
+file_to_write<-paste(rownames(resSig), collapse="\t")
+write.table(file_to_write, file="TBschulz_gene")
+
+#importing genes from trypan database
+TBgenes <- read.csv("~/Downloads/GeneByLocusTag_Summary-4.csv")
+
+#implementing data from trypan database 
+resSig$ensembl <- rownames(resSig)
+idx <- match( rownames(resSig), TBgenes$'Gene ID' )
+resSig$name_sym <- TBgenes$'Gene Name or Symbol'[idx]
+resSig$source_ID <- TBgenes$'source_id'[idx]
+resSig$organism <- TBgenes$'Organism'[idx]
+resSig$prodDes <- TBgenes$'Product Description'[idx]
+resSig$input_ID <- TBgenes$'Input ID'[idx]
+resSig$gene_source_ID <- TBgenes$'gene_source_id'[idx]
+
+
+```
+
+
+
+```{r}
+#MULTIPLYING COUNTS BY 2
+
+TB_2 <- TBcounts*2
+rownames(TB_2) <- rownames(TBcounts)#renames the gene row
+
+#Creating new data frame
+tb_new_2 <- data.frame(rownames = colnames(TB_2),
+                     reps = as.factor(c(1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3)),
+                     stage = as.factor(c("noo_ib","noo_ib","noo_ib", "ib_6h","ib_6h","ib_6h", "ib_12h","ib_12h","ib_12h","ib_24h","ib_24h","ib_24h","ib_48h","ib_48h","ib_48h","ib_3d","ib_3d","ib_3d","ib_7d","ib_7d","ib_7d","ib_10d","ib_10d","ib_10d","ib_14d","ib_14d","ib_14d")))
+```
+
+
+```{r}
+#DESEQ ON TB*2
+ddsFullCountTable_2 <- DESeqDataSetFromMatrix(countData = TB_2,
+                                              colData = tb_new_2, 
+                                              design = ~ reps + stage)
+
+TB_dds_2 <- DESeq(ddsFullCountTable_2)
+
+#calc norm counts
+normDE_counts_2 <- DESeq2::counts(TB_dds_2, normalized = TRUE) #DESeq2 :: allows to specify where this fcn comes from
+
+```
+
+
+```{r}
+#COMPARING NOO_IB TO IB_6 USING COUNTS *2
+
+TBRes_2 <- results( TB_dds_2, contrast = c("stage",  "noo_ib","ib_6h"))
+TBRes_2
+resSig_2 <- TBRes_2[ which(TBRes_2$padj < 0.01 ), ]
+head( resSig_2[ order( resSig_2$log2FoldChange ), ] )
+tail( resSig_2[ order( resSig_2$log2FoldChange ), ] )
+
+
+#making file of rownames to enter in trypan database
+file_to_write_2<-paste(rownames(resSig_2), collapse="\t")
+write.table(file_to_write_2, file="TBschulz_gene_2")
+
+#implementing data from trypan database 
+TBgenes_2 <- read.csv("~/Downloads/GeneByLocusTag_Summary-5.csv")
+resSig_2$ensembl <- rownames(resSig_2)
+idx_2 <- match( rownames(resSig_2), TBgenes_2$'Gene.ID' )
+resSig_2$name_sym <- TBgenes_2$'Gene.Name.or.Symbol'[idx_2]
+resSig_2$source_ID <- TBgenes_2$'gene_source_id'[idx_2]
+resSig_2$organism <- TBgenes_2$'Organism'[idx_2]
+resSig_2$prodDes <- TBgenes_2$'Product Description'[idx_2]
+resSig_2$input_ID <- TBgenes_2$'Input ID'[idx_2]
+
+
+```
+
+```{r}
+#COMPARING TBCOUNTS AND TBCOUNTS*2
+
+comp <- match(rownames(resSig), rownames(resSig_2))
+
+length(comp)
+length(rownames(resSig))
+length(rownames(resSig_2))
+
+
+```
+
+
