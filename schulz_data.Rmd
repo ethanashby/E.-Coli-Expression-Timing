@@ -55,7 +55,7 @@ file_to_write<-paste(rownames(resSig), collapse="\t")
 write.table(file_to_write, file="TBschulz_gene")
 
 #importing genes from trypan database
-TBgenes <- read.csv("GeneByLocusTag_Summary-4.csv")
+TBgenes <- read.csv("GeneByLocusTag_Summary_tbschulz-4.numbers")
 
 #implementing data from trypan database 
 resSig$ensembl <- rownames(resSig)
@@ -136,6 +136,11 @@ length(rownames(resSig))
 length(rownames(resSig_2))
 
 
+genesin1 <- setdiff(rownames(resSig), rownames(resSig_2))
+genesin2 <- setdiff(rownames(resSig_2), rownames(resSig))
+
+View(TBcounts[genesin1,])
+View(TB_2[genesin2,])
 ```
 
 
