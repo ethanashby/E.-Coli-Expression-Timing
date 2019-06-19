@@ -139,8 +139,8 @@ length(rownames(resSig_2))
 genesin1 <- setdiff(rownames(resSig), rownames(resSig_2))
 genesin2 <- setdiff(rownames(resSig_2), rownames(resSig))
 
-View(TBcounts[genesin1,])
-View(TB_2[genesin2,])
+TBcounts_genesin1 <- TBcounts[genesin1,]
+TBcounts_genesin2 <- TB_2[genesin2,]
 ```
 
 
