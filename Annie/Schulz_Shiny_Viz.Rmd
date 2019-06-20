@@ -1,0 +1,204 @@
+---
+title: "Schulz_Shiny_Viz"
+author: "Annie Cohen"
+date: "6/19/2019"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(tidyr)
+library(shiny)
+library(dplyr)
+library(DESeq2)
+library(readr)
+```
+
+```{r}
+## Import data
+
+rawcounts <- read.table(file = "18-5-23_dedup_Proc_ibet_TC_for_deseq.txt", header = TRUE)
+
+rawcounts$gene <- rownames(rawcounts)
+
+```
+
+```{r}
+## Normalization
+
+rawcounts_norm <- rawcounts
+
+head(rawcounts)
+
+rownames(rawcounts_norm) <- rawcounts_norm$gene
+
+rawcounts_norm <- rawcounts_norm %>% dplyr::select(-gene)
+
+# for coldata with times as numeric
+
+coldata <- data.frame(names = colnames(rawcounts_norm)) %>%
+  separate(names, c("treat","time","rep"),"_") %>%
+  mutate(time = ifelse(time == "ib", 0, 
+                        ifelse(time == "6h", 6, 
+                               ifelse(time == "12h", 12,
+                                      ifelse(time == "24h", 24,
+                                             ifelse(time == "48h", 48,
+                                                    ifelse(time == "3d", 72,
+                                                           ifelse(time == "7d", 168,
+                                                                  ifelse(time == "10d", 240, 336)))))))))
+```
+
+```{r}
+## Normalization
+
+# converting coldata to factor data (categorical) for contrast
+
+coldata <- data.frame(names = colnames(rawcounts_norm)) %>%
+  separate(names, c("treat","time","rep"),"_") %>%
+  mutate(timetreat = paste(treat,time,sep = "_")) %>%
+  select(-c(treat,time))
+
+rownames(coldata) <- colnames(rawcounts_norm)
+
+dds <- DESeqDataSetFromMatrix(rawcounts_norm,colData = coldata, ~ timetreat)
+
+dds_de <- DESeq(dds)
+
+norm_counts <- as.data.frame(counts(dds_de, normalized = TRUE)) %>%
+  mutate(gene = rawcounts$gene)
+
+```
+
+
+```{r}
+ui <- fluidPage(
+  sidebarPanel(
+  selectInput(inputId = "pval", label = "Choose your p-value cut-off", c(0.0001,0.0005,0.001,0.005,0.01,0.05,0.1)),
+  numericInput(inputId = "fc", label = "Choose your Fold Change cut-off", min = 0, max = 10, value = 2),
+  selectInput(inputId = "amt", label = "Choose your comparison", c("6", "12", "24", "72", "168", "240", "336", "all"), selected = "all")),
+  mainPanel(plotOutput(outputId = "line", hover =  "plot_hover"),
+            verbatimTextOutput("plot_hover"))
+)
+
+server <- function(input, output, session) {
+  
+  output$line <- renderPlot({
+
+## analyze contrasts depending on 'amt' parameter
+  if (input$amt == "all") {
+    
+    contrast_vect = c(6,12,24,48,72,168,240,336)
+    name_list = c("ib_6h","ib_12h","ib_24h","ib_48h","ib_3d","ib_7d","ib_10d","ib_14d")
+    contrast_list <- list()
+
+    for (i in 1:8) {
+      de_results <- results(dds_de, contrast = c("timetreat", "noo_ib", name_list[i]))
+    
+      resSig <- de_results[ which(de_results$padj < input$pval ), ]
+    
+      resSig <- resSig[ which(abs(resSig$log2FoldChange) > input$fc ), ]
+    
+      resSig$gene <- rownames(resSig)
+    
+      ind <- match(norm_counts$gene,resSig$gene)
+    
+      norm_counts$sig <- resSig$gene[ind]
+    
+      norm_counts_sig <- norm_counts %>%
+       filter(!is.na(sig)) %>%
+       select(-sig) %>%
+       mutate(contrast = contrast_vect[i])
+      contrast_list[[i]] = norm_counts_sig
+    }
+    
+    norm_counts_contrast <- bind_rows(contrast_list[[1]],contrast_list[[2]],contrast_list[[3]],contrast_list[[4]],contrast_list[[5]],contrast_list[[6]],contrast_list[[7]],contrast_list[[8]])
+  }
+  
+  else {
+    treatm = ifelse(input$amt == "6","ib_6h",
+                    ifelse(input$amt == "12", "ib_12h",
+                          ifelse(input$amt == "24", "ib_24h",
+                                 ifelse(input$amt == "48", "ib_48h",
+                                        ifelse(input$amt == "72", "ib_3d",
+                                               ifelse(input$amt == "168", "ib_7d",
+                                                      ifelse(input$amt == "240", "ib_10d",
+                                                             ifelse(input$amt == "336", "ib_14d"))))))))
+    
+    contrast_list <- list()
+
+    de_results <- results(dds_de, contrast = c("timetreat", "noo_ib", treatm))
+  
+    resSig <- de_results[ which(de_results$padj < input$pval ), ]
+  
+    resSig <- resSig[ which(abs(resSig$log2FoldChange) > input$fc ), ]
+  
+    resSig$gene <- rownames(resSig)
+  
+    ind <- match(norm_counts$gene,resSig$gene)
+  
+    norm_counts$sig <- resSig$gene[ind]
+  
+    norm_counts_sig <- norm_counts %>%
+     filter(!is.na(sig)) %>%
+     select(-sig) %>%
+     mutate(contrast = input$amt)
+  
+    norm_counts_contrast <- norm_counts_sig
+  }
+  
+    
+## tidy data
+  counts_gath_norm <- norm_counts_contrast %>%
+  gather(-c(gene,contrast), key="sample", value = "rawcount") %>%
+  mutate(sample2 = sample) %>%
+  separate(sample2, c("treat", "time", "rep"), "_") %>%
+  mutate(time = ifelse(time == "ib", 0, 
+                        ifelse(time == "6h", 6, 
+                               ifelse(time == "12h", 12,
+                                      ifelse(time == "24h", 24,
+                                             ifelse(time == "48h", 48,
+                                                    ifelse(time == "3d", 72,
+                                                           ifelse(time == "7d", 168,
+                                                                  ifelse(time == "10d", 240, 336)))))))))
+
+  counts_sum_norm <- counts_gath_norm %>%
+    group_by(contrast, gene, treat, time) %>%
+    summarize(avecount = mean(rawcount))
+  
+## plotting the data with the user chosen parameters
+  
+  if (input$amt == "all") {
+## log transformed plots facet wrapped by contrast
+    counts_sum_norm %>%
+      ggplot(aes(x=time, y=log2(avecount), color=gene)) + 
+      geom_line(alpha = .75) +
+      geom_vline(aes(xintercept = 0),color = "black") +
+      geom_vline(aes(xintercept=contrast), color = "black") + 
+      #geom_hline(aes(yintercept = 1), color = "black") +
+      #ylim(0,log2(50000)) +
+      theme(legend.position = "none", panel.background = element_blank(), axis.title = element_text(size = 16)) +
+      facet_wrap(~contrast) +
+      labs(x = "time (hr)", y = expression("log"[2]~"(avg count)"))
+    }
+  else {
+## no facet wrap
+    counts_sum_norm %>%
+      ggplot(aes(x=time, y=log2(avecount), color=gene)) + 
+      geom_line(alpha = .75) +
+      geom_vline(aes(xintercept = 0),color = "black") +
+      geom_vline(aes(xintercept=as.numeric(contrast)), color = "black") +  
+      theme(legend.position = "none", panel.background = element_blank(), axis.title = element_text(size = 16)) +
+      labs(x = "time (hr)", y = expression("log"[2]~"(avg count)"))
+    }
+  })
+  
+## hover for coordinates
+  
+  output$plot_hover <- renderText({
+   paste("expression coordinates: ", input$plot_hover$x, ", ", input$plot_hover$y) 
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
