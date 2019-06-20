@@ -1,0 +1,78 @@
+---
+title: "continuous data"
+author: "Lian Morales"
+date: "6/19/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+#LOADING DESEQ2 AND RNASEQ FILE
+knitr::opts_chunk$set(echo = TRUE)
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+library("DESeq2")
+library("dplyr")
+library(readr)
+TBcounts <- read.table("18-5-23_dedup_Proc_ibet_TC_for_deseq.txt",header = TRUE)
+
+```
+
+
+```{r}
+#NORMALIZATION BY DESEQ2
+rownames(TBcounts) <- TBcounts$gene #renames the gene row
+TBcounts <- TBcounts %>% dplyr :: select(-"gene") #this gets rid of the name gene in table
+#creating new data frame
+tb_new <- data.frame(rownames = colnames(TBcounts),
+                     reps = c(1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3),
+                     time = c(0,0,0,6,6,6,12,12,12,
+                               24,24,24,48,48,48,
+                               72,72,72,168,168,168,
+                               240,240,240,336,336,336))
+
+
+#deseq analysis
+ddsFullCountTable <- DESeqDataSetFromMatrix(countData = TBcounts,
+                                            colData = tb_new, 
+                                            design = ~ reps: time)
+
+TBcounts_dds <- DESeq(ddsFullCountTable)
+
+#calculating norm counts
+normDE_counts <- DESeq2::counts(TBcounts_dds, normalized = TRUE) #DESeq2 :: allows to specify where this fcn comes from
+
+```
+
+
+```{r}
+#COMPARING - DE ANALYSIS - continuous data
+
+#for continuous data, use name = "time"
+TBcountsRes <- results( TBcounts_dds ,name = "time",tidy = FALSE) 
+TBcountsRes
+resSig <- TBcountsRes[ which(TBcountsRes$padj < 0.01 ), ]
+head( resSig[ order( resSig$log2FoldChange ), ] )
+tail( resSig[ order( resSig$log2FoldChange ), ] )
+
+#making file of rownames to enter in trypan database
+file_to_write<-paste(rownames(resSig), collapse="\t")
+write.table(file_to_write, file="TBgene_contData")
+
+#importing genes from trypan database
+TBgenes <- read.csv("GeneByLocusTag_Summary_tbschulz-4.numbers")
+
+#implementing data from trypan database 
+resSig$ensembl <- rownames(resSig)
+idx <- match( rownames(resSig), TBgenes$'Gene ID' )
+resSig$name_sym <- TBgenes$'Gene Name or Symbol'[idx]
+resSig$source_ID <- TBgenes$'source_id'[idx]
+resSig$organism <- TBgenes$'Organism'[idx]
+resSig$prodDes <- TBgenes$'Product Description'[idx]
+resSig$input_ID <- TBgenes$'Input ID'[idx]
+resSig$gene_source_ID <- TBgenes$'gene_source_id'[idx]
+
+
+```
+
+

@@ -33,6 +33,10 @@ ddsFullCountTable <- DESeqDataSetFromMatrix(countData = TBcounts,
                                             colData = tb_new, 
                                             design = ~ reps + stage)
 
+#Filtering Data, counts less than  10
+keep <- rowSums(counts(ddsFullCountTable)) >= 10
+ddsFullCountTable <- ddsFullCountTable[keep,]
+
 TBcounts_dds <- DESeq(ddsFullCountTable)
 
 #calculating norm counts
@@ -90,6 +94,9 @@ tb_new_2 <- data.frame(rownames = colnames(TB_2),
 ddsFullCountTable_2 <- DESeqDataSetFromMatrix(countData = TB_2,
                                               colData = tb_new_2, 
                                               design = ~ reps + stage)
+#FILTERING COUNTS, <20
+keep <- rowSums(counts(ddsFullCountTable_2)) >= 20
+ddsFullCountTable_2 <- ddsFullCountTable_2[keep,]
 
 TB_dds_2 <- DESeq(ddsFullCountTable_2)
 
@@ -137,10 +144,14 @@ length(rownames(resSig_2))
 
 
 genesin1 <- setdiff(rownames(resSig), rownames(resSig_2))
+genesin1
 genesin2 <- setdiff(rownames(resSig_2), rownames(resSig))
+length(genesin2)
 
 TBcounts_genesin1 <- TBcounts[genesin1,]
+TBcounts_genesin1
 TBcounts_genesin2 <- TB_2[genesin2,]
+TBcounts_genesin2
 ```
 
 
