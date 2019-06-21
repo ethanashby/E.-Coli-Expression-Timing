@@ -1,0 +1,16 @@
+Create impulse models that simulate the impulse/peak-trough model for gene expressions
+
+```{r}
+###Build Impulse model to model DE expression
+#h_0 is amplitude parameter: determines y-intercept i.e. # counts @ time=0
+#h_1 is an amplitude parameter: moderates intermediate (peak expression)
+#h_2 is an amplitude parameter: determines the height of the peak (steady state expression)
+#t_1 is a state transition time: inflection point of upwards impulse
+#t_2 is a state transition time: inflection point of downward half of impulse
+#b is the slope parameter (slope of the impulse)
+impulse_function<-function(h_0, h_1, h_2, t_1, t_2, b, t){
+  (1/h_1)*(h_0+(h_1-h_0)/(1+exp(-b*(t-t_1))))*(h_2+(h_1-h_2)/(1+exp(b*(t-t_2))))
+}
+#example plot
+plot(seq(1,10,0.1), impulse_function(h_0=0, h_1=6.0, h_2=3.5, t_1=3, t_2=6, b=6, t=seq(1,10,0.1)), type="b", xlab='time', ylab='count')
+```
