@@ -1,0 +1,169 @@
+---
+title: "Stoebel_Shiny_Viz"
+author: "Annie Cohen"
+date: "6/21/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(tidyr)
+library(shiny)
+library(dplyr)
+library(DESeq2)
+library(readr)
+```
+
+```{r}
+## Import data
+
+ec_rawcounts <- read.table("~/Downloads/LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.txt", header = TRUE)
+```
+
+```{r}
+#format data for normalization
+ec_rawcounts_norm <- ec_rawcounts
+rownames(ec_rawcounts_norm) <- ec_rawcounts_norm$Geneid
+ec_rawcounts_norm <- ec_rawcounts_norm %>% dplyr::select(-Geneid)
+ec_coldata <- data.frame(names = colnames(ec_rawcounts_norm)) %>%
+  separate(names, c("treat", "rep_time"), "_") %>%
+  mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
+                        ifelse(substr(rep_time,start=1,stop = 1) == "B", 2, 3))) %>%
+  mutate(time = ifelse(substr(rep_time,start=3,stop = 3) == "1", 0,
+                      ifelse(substr(rep_time,start=3,stop = 3) == "2", 30,
+                             ifelse(substr(rep_time,start=3,stop = 3) == "3", 60,
+                                    ifelse(substr(rep_time,start=3,stop = 3) == "4", 90,
+                                           ifelse(substr(rep_time,start=3,stop = 3) == "5", 120, 150)))))) %>%
+  mutate(treat = ifelse(treat == "JH01", "WT","dRpoS")) %>%
+  mutate(timetreat = paste(treat,time,sep = "")) %>%
+  select(-rep_time)
+rownames(ec_coldata) <- colnames(ec_rawcounts_norm)
+```
+
+
+```{r}
+ec_dds <- DESeqDataSetFromMatrix(ec_rawcounts_norm, colData = ec_coldata, design = ~ timetreat)
+ec_dds_de <- DESeq(ec_dds)
+ec_norm_counts <- data.frame(counts(ec_dds_de, normalized = TRUE)) %>%
+  mutate(Geneid = ec_rawcounts$Geneid)
+
+```
+
+```{r}
+ui <- fluidPage(
+  sidebarPanel(
+  selectInput(inputId = "pval", label = "Choose your p-value cut-off", c(0.0001,0.0005,0.001,0.005,0.01,0.05,0.1)),
+  numericInput(inputId = "fc", label = "Choose your Fold Change cut-off", min = 0, max = 10, value = 2),
+  selectInput(inputId = "amt", label = "Choose your comparison", c("0", "30", "60", "90", "120", "150", "all"), selected = "all")),
+  mainPanel(plotOutput(outputId = "line", hover =  "plot_hover"),
+            verbatimTextOutput("plot_hover"))
+)
+
+server <- function(input, output, session) {
+  
+  output$line <- renderPlot({
+
+  contrast_vect = c(0,30,60,90,120,150)
+  dRpoS_list = c("dRpoS0","dRpoS30","dRpoS60","dRpoS90","dRpoS120","dRpoS150")
+  WT_list = c("WT0","WT30","WT60","WT90","WT120","WT150")
+
+## analyze contrasts depending on 'amt' parameter
+  if (input$amt == "all") {
+    contrast_list = c()
+    
+    for (i in 1:6) {
+      de_results <- results(ec_dds_de, contrast = c("timetreat", WT_list[i],dRpoS_list[i]))
+      
+      resSig <- de_results[ which(de_results$padj < input$pval ), ]
+      
+      resSig <- resSig[ which(abs(resSig$log2FoldChange) > input$fc ), ]
+      
+      resSig$gene <- rownames(resSig)
+    
+      ind <- match(ec_norm_counts$Geneid,resSig$gene)
+    
+      ec_norm_counts$sig <- resSig$gene[ind]
+      
+      contrast_list[[i]] <- ec_norm_counts %>%
+       filter(!is.na(ec_norm_counts$sig)) %>%
+       select(-sig) %>%
+       mutate(contrast = contrast_vect[i])
+    }
+
+    norm_counts_contrast <- bind_rows(contrast_list[[1]],contrast_list[[2]],contrast_list[[3]],contrast_list[[4]],contrast_list[[5]],contrast_list[[6]])
+  }
+  else {
+    idx = ifelse(input$amt == "0",1,
+                      ifelse(input$amt == "30", 2,
+                            ifelse(input$amt == "60", 3,
+                                   ifelse(input$amt == "90", 4,
+                                          ifelse(input$amt == "120", 5,6)))))
+
+    de_results <- results(ec_dds_de, contrast = c("timetreat", WT_list[idx],dRpoS_list[idx]))
+      
+    resSig <- de_results[ which(de_results$padj < input$pval ), ]
+      
+    resSig <- resSig[ which(abs(resSig$log2FoldChange) > input$fc ), ]
+      
+    resSig$gene <- rownames(resSig)
+    
+    ind <- match(ec_norm_counts$Geneid,resSig$gene)
+    
+    ec_norm_counts$sig <- resSig$gene[ind]
+  
+    norm_counts_contrast <- ec_norm_counts %>%
+     filter(!is.na(ec_norm_counts$sig)) %>%
+     select(-sig) %>%
+     mutate(contrast = as.numeric(input$amt))
+  
+  }
+
+## TIDY
+  ec_counts_gath <- norm_counts_contrast %>%
+    gather(-c(Geneid,contrast), key="sample", value = "rawcount") %>%
+    separate(sample, c("treat", "rep_time"), "_") %>%
+    mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
+                          ifelse(substr(rep_time,start=1,stop = 1) == "B", 2, 3))) %>%
+    mutate(time = ifelse(substr(rep_time,start=3,stop = 3) == "1", 0,
+                        ifelse(substr(rep_time,start=3,stop = 3) == "2", 30,
+                               ifelse(substr(rep_time,start=3,stop = 3) == "3", 60,
+                                      ifelse(substr(rep_time,start=3,stop = 3) == "4", 90,
+                                             ifelse(substr(rep_time,start=3,stop = 3) == "5", 120, 150)))))) %>%
+    mutate(treat = ifelse(treat == "JH01", "WT","dRpoS")) %>%
+    select(-c(rep_time))
+                                        
+  ec_counts_sum <- ec_counts_gath %>%
+    group_by(Geneid, contrast, treat, time) %>%
+    summarize(avecount = mean(rawcount)) %>%
+    mutate(gtreat = paste(Geneid,treat,sep = "")) %>%
+    filter(treat == "WT")
+
+## plotting the data with the user chosen parameters
+  ## log transformed plots facet wrapped by contrast
+    if (input$amt == "all") {
+      ec_counts_sum %>%
+        ggplot(aes(x=time, y=log2(avecount))) +
+        geom_line(aes(color = gtreat, linetype = treat), alpha = 0.5) +
+        geom_vline(aes(xintercept = contrast)) +
+        facet_wrap(~contrast) +
+        theme(legend.position = "none")
+    }
+  ## no facet wrap
+    else {
+      ec_counts_sum %>%
+        ggplot(aes(x=time, y=log2(avecount))) +
+        geom_line(aes(color = Geneid), alpha = 0.5) +
+        geom_vline(aes(xintercept = contrast)) +
+        theme(legend.position = "none")
+    }
+  })
+  
+## hover for coordinates
+  
+  output$plot_hover <- renderText({
+   paste("expression coordinates: ", input$plot_hover$x, ", ", input$plot_hover$y) 
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
