@@ -1,0 +1,122 @@
+---
+title: "ecoli_rename"
+author: "Lian Morales"
+date: "6/21/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library("tidyverse")
+library(stringr)
+library(DESeq2)
+library("Hmisc")
+library(cluster)
+library("mclust")
+library(readr)
+
+ec_Counts <- read.table("LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.txt", header = T, sep = "\t")
+nameTable <- read.table("nameMapping.txt", header = T, sep = "\t")
+```
+
+
+```{r, warning=FALSE, echo=FALSE}
+bnum = "b[0-9]{4}"
+
+ec_Counts$GeneidBackup = ec_Counts$Geneid
+ec_Counts <- ec_Counts %>% separate(GeneidBackup, c("feature", "rest"), sep="[:]")
+
+
+
+# IGR's separate: 
+# do start.bnum end.bnum start.genename end.genename
+# left join igrs to ec_Counts
+genename = ",[a-z]{3}[A-Z,]."
+rna.name = ",rna[0-9].."
+igr <- ec_Counts %>% filter(feature %in% c("IGR", "AS_IGR"))
+
+igr$GeneidBackup = igr$Geneid
+igr <- igr %>% separate(GeneidBackup, c("Geneid1", "Geneid2"), sep = "[/]")
+igr$Feature1 <- separate(igr, Geneid1, c("Feature1", "rest"), sep = "[,]")$Feature1
+igr$Feature1 <- separate(igr, Feature1, c("rest", "Feature1"), sep = "[()]")$Feature1
+igr$Feature2 <- separate(igr, Geneid2, c("Feature2", "rest"), sep = "[,]")$Feature2
+igr$start.gene <- case_when(
+    igr$Feature1 == "CDS" ~ str_extract(igr$Geneid1, genename),
+    TRUE ~ str_extract(igr$Geneid1, rna.name))
+igr$end.gene <- case_when(
+    igr$Feature2 == "CDS" ~ str_extract(igr$Geneid2, genename),
+    TRUE ~ str_extract(igr$Geneid2, rna.name))
+igr$start.bnum <- case_when(
+    igr$Feature1 == "CDS" ~ str_extract(igr$Geneid1, bnum),
+    TRUE ~ "none")
+igr$end.bnum <- case_when(
+    igr$Feature2 == "CDS" ~ str_extract(igr$Geneid2, bnum),
+    TRUE ~ "none")
+igr <- igr %>% separate(start.gene, into = c("comma", "start.gene"), sep = "[,]") %>% select(-comma) %>% separate(end.gene, into = c("comma", "end.gene"), sep = "[,]") %>% select(-comma)
+ec_Counts <- full_join(igr, ec_Counts)
+
+```
+
+
+```{r}
+# CDS
+# have bnum and genename columns
+# left join to ec_Counts
+genename = ":[a-z]{3}.."
+ec_cds <- ec_Counts %>% filter(feature %in% c("AS_CDS", "CDS")) 
+ec_cds$genename <- str_extract(ec_cds$Geneid, genename)
+ec_cds$bnum <- str_extract(ec_cds$Geneid, bnum)
+ec_cds <- ec_cds %>% separate(genename, into = c("colon", "genename"), sep = ":") %>%
+  select(-colon)
+ec_Counts <- full_join(ec_Counts, ec_cds)
+ec_Counts 
+
+```
+
+
+```{r}
+#ncRNA
+#ncRNA doesn't have bnums, but id's which we'll put in the genename column
+rna.name = ":rna[0-9].."
+rna <- ec_Counts %>% filter(feature %in% c("ncRNA", "AS_ncRNA"))
+rna$genename <- str_extract(rna$Geneid, rna.name)
+rna <- rna %>% separate(genename, into = c("colon", "genename"), sep = ":") %>%
+  select(-colon)
+ec_Counts <- full_join(ec_Counts, rna)
+
+#rRNA
+rRNA <- ec_Counts %>% filter(feature %in% c("rRNA", "AS_rRNA"))
+rRNA$genename <- str_extract(rRNA$Geneid, rna.name)
+rRNA <- rRNA %>% separate(genename, into = c("colon", "genename"), sep = ":") %>%
+  select(-colon)
+ec_Counts <- full_join(ec_Counts, rRNA)
+
+#tRNA
+tRNA <- ec_Counts %>% filter(feature %in% c("tRNA", "AS_tRNA"))
+tRNA$genename <- str_extract(tRNA$Geneid, rna.name)
+tRNA <- tRNA %>% separate(genename, into = c("colon", "genename"), sep = ":") %>%
+  select(-colon)
+ec_Counts <- full_join(tRNA, ec_Counts)
+
+# remove the NA rows we just created by full_joining while adding the ncRNA, rRNA, tRNA genenames
+ec_Counts <- filter(ec_Counts, feature %in% c("IGR", "AS_IGR") | genename != "NA")
+
+# make tidy data
+countsTable.ec.tidy <- ec_Counts %>%
+  gather(cond.samps, rawCount, -Geneid, -feature, -genename, -bnum, -Geneid1, -Geneid2, -Feature1, -Feature2, -start.gene, -end.gene, -start.bnum, - end.bnum)
+countsTable.ec.tidy
+countsTable.all.tidy
+```
+```{r}
+
+ec_Counts.filtered <- ec_Counts %>% select(Geneid, feature, `JH01_A01`, `JH01_A02`,`JH01_A03`,`JH01_B01`,`JH01_B02`,`JH01_B03`,`JH01_C01`,`JH01_C02`,`JH01_C03`,)
+
+
+
+
+
+```
