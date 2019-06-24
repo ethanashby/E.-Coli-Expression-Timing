@@ -72,7 +72,7 @@ server <- function(input, output, session) {
     contrast_list = c()
     
     for (i in 1:6) {
-      de_results <- results(ec_dds_de, contrast = c("timetreat", WT_list[i],dRpoS_list[i]))
+      de_results <- results(ec_dds_de, contrast = c("timetreat",dRpoS_list[i],WT_list[i]))
       
       resSig <- de_results[ which(de_results$padj < input$pval ), ]
       
@@ -92,6 +92,7 @@ server <- function(input, output, session) {
 
     norm_counts_contrast <- bind_rows(contrast_list[[1]],contrast_list[[2]],contrast_list[[3]],contrast_list[[4]],contrast_list[[5]],contrast_list[[6]])
   }
+  
   else {
     idx = ifelse(input$amt == "0",1,
                       ifelse(input$amt == "30", 2,
@@ -99,7 +100,7 @@ server <- function(input, output, session) {
                                    ifelse(input$amt == "90", 4,
                                           ifelse(input$amt == "120", 5,6)))))
 
-    de_results <- results(ec_dds_de, contrast = c("timetreat", WT_list[idx],dRpoS_list[idx]))
+    de_results <- results(ec_dds_de, contrast = c("timetreat",dRpoS_list[idx], WT_list[idx]))
       
     resSig <- de_results[ which(de_results$padj < input$pval ), ]
       
@@ -151,8 +152,9 @@ server <- function(input, output, session) {
   ## no facet wrap
     else {
       ec_counts_sum %>%
+        filter(contrast == input$amt) %>%
         ggplot(aes(x=time, y=log2(avecount))) +
-        geom_line(aes(color = Geneid), alpha = 0.5) +
+        geom_line(aes(color = gtreat, linetype = treat), alpha = 0.5) +
         geom_vline(aes(xintercept = contrast)) +
         theme(legend.position = "none")
     }
@@ -167,3 +169,7 @@ server <- function(input, output, session) {
 
 shinyApp(ui = ui, server = server)
 ```
+
+
+
+
