@@ -113,9 +113,6 @@ countsTable.all.tidy
 ```
 ```{r}
 
-ec_Counts.filtered <- ec_Counts %>% select(Geneid, feature, `JH01_A01`, `JH01_A02`,`JH01_A03`,`JH01_B01`,`JH01_B02`,`JH01_B03`,`JH01_C01`,`JH01_C02`,`JH01_C03`,)
-
-
 
 
 
