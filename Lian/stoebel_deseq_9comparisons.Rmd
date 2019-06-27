@@ -44,9 +44,7 @@ ec_coldata <- data.frame(names = colnames(ec_rawcounts_norm)) %>%
   mutate(timetreat = paste(treat,time,sep = "")) %>%
   select(-rep_time)
 rownames(ec_coldata) <- colnames(ec_rawcounts_norm)
-
-#time <- c(0,30,60,90,120,150,0,30,60,90,120,150,0,30,60,90,120,150,0,30,60,90,120,150,0,30,60,90,120,150,0,30,60,90,120,150,0,30,60,90,120,150)
-
+ 
 ec_coldata
 ```
 
@@ -70,92 +68,96 @@ ec_norm_counts <- data.frame(counts(ec_dds_de, normalized = TRUE)) %>%
 #COMPARING - DE ANALYSIS - getting DE genes
 
 #looking at WT continuous
-
-ECcountsRes <- results(ec_dds_de, name = "time")
-length(rownames(ECcountsRes))
-ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
-head( ECresSig[ order( ECresSig$log2FoldChange ), ] )
-tail( ECresSig[ order( ECresSig$log2FoldChange ), ] )
-WT_cont <- ECresSig
-length(WT_cont)
-#looking at WT0  to WT150
+#ECcountsRes <- results(ec_dds_de, name = "time")
+#length(rownames(ECcountsRes))
+#ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+#WT_cont <- ECresSig
+#length(WT_cont)
 
 ec_dds <- DESeqDataSetFromMatrix(ec_rawcounts_norm, colData = ec_coldata, design = ~timetreat)
-
 ec_dds_de <- DESeq(ec_dds)
 
-ec_dds_de
-ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT0", "WT150"))
-length(rownames(ECcountsRes))
+#looking at WT0  to WT30
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT0", "WT30"))
 ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
-head( ECresSig[ order( ECresSig$log2FoldChange ), ] )
-tail( ECresSig[ order( ECresSig$log2FoldChange ), ] )
-WT0_WT150 <- ECresSig
+WT0_WT30 <- ECresSig
 
-#looking at KO0  to KO150
 
-ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "dRpoS0", "dRpoS150"))
-length(rownames(ECcountsRes))
+#looking at WT0  to WT60
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT0", "WT60"))
 ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
-head( ECresSig[ order( ECresSig$log2FoldChange ), ] )
-tail( ECresSig[ order( ECresSig$log2FoldChange ), ] )
-dRpoS0_dRpoS50 <- ECresSig
-
-#looking at KO0  to KO90
-
-ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "dRpoS0", "dRpoS90"))
-length(rownames(ECcountsRes))
-ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
-head( ECresSig[ order( ECresSig$log2FoldChange ), ] )
-tail( ECresSig[ order( ECresSig$log2FoldChange ), ] )
-dRpoS0_dRpoS90 <- ECresSig
+WT0_WT60 <- ECresSig
 
 
 #looking at WT0  to WT90
-
 ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT0", "WT90"))
-length(rownames(ECcountsRes))
 ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
-head( ECresSig[ order( ECresSig$log2FoldChange ), ] )
-tail( ECresSig[ order( ECresSig$log2FoldChange ), ] )
 WT0_WT90 <- ECresSig
 
-#looking at WT90  to WT150
 
-ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT90", "WT150"))
-length(rownames(ECcountsRes))
+#looking at WT0  to WT150
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT0", "WT150"))
 ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
-head( ECresSig[ order( ECresSig$log2FoldChange ), ] )
-tail( ECresSig[ order( ECresSig$log2FoldChange ), ] )
-WT90_WT150 <- ECresSig
+WT0_WT150 <- ECresSig
 
- 
-#looking at KO90  to KO150
+#############
+#############
 
-ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "dRpoS90", "dRpoS150"))
-length(rownames(ECcountsRes))
+#looking at drpos0  to drpos30
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "dRpoS0", "dRpoS30"))
 ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
-head( ECresSig[ order( ECresSig$log2FoldChange ), ] )
-tail( ECresSig[ order( ECresSig$log2FoldChange ), ] )
-dRpoS90_dRpoS150 <- ECresSig
+dRpoS0_dRpoS30 <- ECresSig
+
 
 #looking at KO0  to KO60
-
 ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "dRpoS0", "dRpoS60"))
-length(rownames(ECcountsRes))
 ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
-head( ECresSig[ order( ECresSig$log2FoldChange ), ] )
-tail( ECresSig[ order( ECresSig$log2FoldChange ), ] )
 dRpoS0_dRpoS60 <- ECresSig
 length(dRpoS0_dRpoS60)
-#looking at WT0  to WT60
 
-ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT0", "WT60"))
+
+#looking at KO0  to KO90
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "dRpoS0", "dRpoS90"))
+ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+dRpoS0_dRpoS90 <- ECresSig
+
+
+#looking at KO0  to KO150
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "dRpoS0", "dRpoS150"))
 length(rownames(ECcountsRes))
 ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
-head( ECresSig[ order( ECresSig$log2FoldChange ), ] )
-tail( ECresSig[ order( ECresSig$log2FoldChange ), ] )
-WT0_WT60 <- ECresSig
+dRpoS0_dRpoS50 <- ECresSig
+
+#############
+#############
+
+#looking at WT30 drpos30
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT30", "dRpoS30"))
+length(rownames(ECcountsRes))
+ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+WT30_dRpoS30 <- ECresSig
+
+
+#looking at WT60 drpos60
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT60", "dRpoS60"))
+length(rownames(ECcountsRes))
+ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+WT60_dRpoS60 <- ECresSig
+
+
+#looking at WT90 drpoS90
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT90", "dRpoS90"))
+length(rownames(ECcountsRes))
+ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+WT90_dRpoS90 <- ECresSig
+
+
+
+#looking at WT150 drpos150
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT150", "dRpoS150"))
+length(rownames(ECcountsRes))
+ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+WT150_dRpoS150 <- ECresSig
 
 ```
 
@@ -163,74 +165,106 @@ WT0_WT60 <- ECresSig
 #making venn diagram
 library(VennDiagram)
 
-area <- length(rownames(WT_cont))
-area1 <- length(rownames(WT0_WT150))
-area2 <- length(rownames(dRpoS0_dRpoS50))
-area3 <- length(rownames(dRpoS0_dRpoS90))
-area4 <- length(rownames(WT0_WT90))
-area5 <- length(rownames(WT90_WT150))
-area6 <- length(rownames(dRpoS90_dRpoS150))
-area7 <- length(rownames(dRpoS0_dRpoS60))
-area8 <- length(rownames(WT0_WT60))
+area_WT_cont <- length(rownames(WT_cont))
+area_WT0_WT150 <- length(rownames(WT0_WT150))
+area_dRpoS0_dRpoS50 <- length(rownames(dRpoS0_dRpoS50))
+area_dRpoS0_dRpoS90 <- length(rownames(dRpoS0_dRpoS90))
+area_WT0_WT90 <- length(rownames(WT0_WT90))
+area_WT90_WT150 <- length(rownames(WT90_WT150))
+area_dRpoS90_dRpoS150 <- length(rownames(dRpoS90_dRpoS150))
+area_dRpoS0_dRpoS60 <- length(rownames(dRpoS0_dRpoS60))
+area_WT0_WT60 <- length(rownames(WT0_WT60))
+area_WT150_dRpoS150 <- length(rownames(WT150_dRpoS150))
+area_WT0_WT30 <- length(rownames(WT0_WT30))
+area_dRpoS0_dRpoS30 <- length(rownames(dRpoS0_dRpoS30))
+area_WT30_dRpoS30 <- length(rownames(WT30_dRpoS30))
+area_WT60_dRpoS60 <- length(rownames(WT60_dRpoS60))
+area_WT90_dRpoS90 <- length(rownames(WT90_dRpoS90))
 
 
-#looking at comparing "WT0_WT150" to "WT_cont"
-cross <- length(intersect(rownames(WT0_WT150),rownames(WT_cont)))
+#looking at comparing "WT0_WT30" to "WT30_dRpoS30"
+cross_0_30 <- length(intersect(rownames(WT0_WT30),rownames(WT30_dRpoS30)))
+grid.newpage()
+draw.pairwise.venn(area1= area_WT0_WT30, area2 = area_WT30_dRpoS30, cross.area = cross_0_30, category = c("WT0_WT30","WT30_dRpoS30"),lty = rep("blank",2),fill = c("light blue", "light green"))
+
+cross_30_list <- intersect(rownames(WT0_WT30),rownames(WT30_dRpoS30))
+cross_30_list <- as.data.frame(cross_30_list)
+#looking at comparing "WT0_WT60" to "dRpoS0_dRpoS60"
+cross_0_60 <- length(intersect(rownames(WT0_WT60),rownames(WT60_dRpoS60)))
+grid.newpage()
+draw.pairwise.venn(area1= area_WT0_WT60, area2 = area_WT60_dRpoS60, cross.area = cross_0_60, category = c("WT0_WT60","WT60_dRpoS60"),lty = rep("blank",2),fill = c("light blue", "light green"))
+ 
+ 
+
+#looking at comparing "WT0_WT90" to "WT90_dRpoS90"
+cross_0_90 <- length(intersect(rownames(dRpoS0_dRpoS50),rownames(WT90_dRpoS90)))
+grid.newpage()
+draw.pairwise.venn(area1= area_WT0_WT90, area2 = area_WT90_dRpoS90, cross.area = cross_0_90, category = c("WT0_WT90","WT90_dRpoS90"),lty = rep("blank",2),fill = c("light blue", "light green"))
 
  
+
+#looking at comparing "WT0_WT150" to "WT150_dRpoS150"
+cross_0_150 <- length(intersect(rownames(WT0_WT150),rownames(WT150_dRpoS150)))
 grid.newpage()
-draw.pairwise.venn(area1= area, area2 = area1, cross.area = cross, category = c("WT0_WT150","WT_cont"),lty = rep("blank",2),fill = c("light blue", "light green"), scaled = FALSE)
+draw.pairwise.venn(area1= area_WT0_WT150, area2 = area_WT150_dRpoS150, cross.area = cross_0_150, category = c("WT0_WT150","WT150_dRpoS150"),lty = rep("blank",2),fill = c("light blue", "light green"))
+
+
+
+
 
 #looking at comparing "WT0_WT150","WT0_WT90","WT0_WT60"
 
-cross12 <- length(intersect(rownames(WT0_WT150),rownames(WT0_WT90)))
-cross23 <- length(intersect(rownames(WT0_WT90),rownames(WT0_WT60)))
-cross123 <- length(intersect(intersect(rownames(WT0_WT150),rownames(WT0_WT60)),rownames(WT0_WT90)))
-
+#cross12 <- length(intersect(rownames(WT0_WT150),rownames(WT0_WT90)))
+#cross23 <- length(intersect(rownames(WT0_WT90),rownames(WT0_WT60)))
+#cross123 <- length(intersect(intersect(rownames(WT0_WT150),rownames(WT0_WT60)),rownames(WT0_WT90)))
+#cross13 <- length(intersect(rownames(WT0_WT150),rownames(WT0_WT60)))
 
 # Note to Lian:  cross13 doesn't exist ... should it be one more comparison above?
-grid.newpage()
-draw.triple.venn(area1 = area1, area2 = area4, area3 = area8,n12 = cross12, n23 = cross23, n13 = cross13,n123 = cross123, category = c("WT0_WT150","WT0_WT90","WT0_WT60") ,lty = "blank",fill = c("skyblue", "pink1", "mediumorchid"),scaled = FALSE) 
+#grid.newpage() 
+
+
+#draw.triple.venn(area1 = area1, area2 = area4, area3 = area8,n12 = cross12, n23 = cross23, n13 = cross13,n123 = cross123, category = c("WT0_WT150","WT0_WT90","WT0_WT60") ,lty = "blank",fill = c("skyblue", "pink1", "mediumorchid")) 
 ```
  
+
+
  
 ```{r}
 ##making columns of rownames of DE genes across 9 comparisons
 
 
-WT_cont_DF <- data.frame(geneID = rownames(WT_cont), comparison = "WT_cont")
-WT0_WT150_DF <- data.frame(geneID = rownames(WT0_WT150), comparison = "WT_WT150")
-dRpoS0_dRpoS50_DF <- data.frame(geneID = rownames(dRpoS0_dRpoS50), comparison = "dRpoS0_dRpoS50")
-dRpoS0_dRpoS90_DF <- data.frame(geneID = rownames(dRpoS0_dRpoS90), comparison = "dRpoS0_dRpoS90")
-WT0_WT90_DF<- data.frame(geneID = rownames(WT0_WT90), comparison = "WT0_WT90")
-WT90_WT150_DF <- data.frame(geneID = rownames(WT90_WT150), comparison = "WT90_WT150")
-dRpoS90_dRpoS150_DF <- data.frame(geneID = rownames(dRpoS90_dRpoS150), 
-                                  comparison = "dRpoS90_dRpoS150")
-dRpoS0_dRpoS60_DF <- data.frame(geneID = rownames(dRpoS0_dRpoS60), comparison = "dRpoS0_dRpoS60")
+#WT_cont_DF <- data.frame(geneID = rownames(WT_cont), comparison = "WT_cont")
+WT0_WT30_DF <- data.frame(geneID = rownames(WT0_WT30), comparison = "WT0_WT30")
 WT0_WT60_DF <- data.frame(geneID = rownames(WT0_WT60), comparison = "WT0_WT60")
+WT0_WT90_DF<- data.frame(geneID = rownames(WT0_WT90), comparison = "WT0_WT90")
+WT0_WT150_DF <- data.frame(geneID = rownames(WT0_WT150), comparison = "WT_WT150")
 
-allDEcomp <- rbind(WT_cont_DF, WT0_WT150_DF, dRpoS0_dRpoS50_DF, dRpoS0_dRpoS90_DF, WT0_WT90_DF,
-                   WT90_WT150_DF, dRpoS90_dRpoS150_DF, dRpoS0_dRpoS60_DF, WT0_WT60_DF)
+WT30_dRpoS30_DF <- data.frame(geneID = rownames(WT30_dRpoS30), comparison = "WT30_dRpoS30")
+WT60_dRpoS60_DF <- data.frame(geneID = rownames(dRpoS0_dRpoS60), comparison = "WT60_dRpoS60")
+
+WT90_dRpoS90_DF <- data.frame(geneID = rownames(dRpoS0_dRpoS90), comparison = "WT90_dRpoS90")
+WT150_dRpoS150_DF <- data.frame(geneID = rownames(dRpoS0_dRpoS50), comparison = "WT150_dRpoS150")
+
+#WT90_WT150_DF <- data.frame(geneID = rownames(WT90_WT150), comparison = "WT90_WT150")
+#dRpoS90_dRpoS150_DF <- data.frame(geneID = rownames(dRpoS90_dRpoS150), 
+                                  #comparison = "dRpoS90_dRpoS150")
+
+
+allDEcomp <- rbind(WT0_WT30_DF,WT0_WT60_DF,WT0_WT90_DF,WT150_dRpoS150_DF,WT30_dRpoS30_DF,dRpoS0_dRpoS60_DF,WT90_dRpoS90_DF,WT150_dRpoS150_DF)
 
 
 # for the command below, I'm assuming that there is a big dataframe called "Madison_DF" which contains at least two columns.  One column is labeled "geneIDM" and is the same long string as what we created in all the comparions above.  The second column is called "genename" and is just the small genename. For example, gad4.  If I've gotten the DF name wrong (obviously) or either of the column names wrong (very possible), change them below:
 
-#allDEcomp <- allDEcomp %>% left_join(Madison_DF, by.x = geneID, by.y = geneIDM) %>%
-#  select(geneID, comparison, genename)
+#allDEcomp <- allDEcomp %>% left_join(???, by.x = Geneid, by.y = genename) %>%
+ #select(geneID, comparison, genename)
+#ec_Counts
 
-
-
+#ec_Counts#library(tidyverse)
+#c <- duplicated(allDEcomp$geneID)
+#allDEcomp[!duplicated(allDEcomp$geneID),]
 # this line of code tells you the number of DEGs for each comparison.  Does it give you the right numbers?
-allDEcomp %>% group_by(comparison) %>% 
-  summarize(n())
+#allDEcomp %>% group_by(comparison) %>% summarize(n())
 
 
-#how to make data frame with all rownames of DE genes? I have them all saved above, and Im not sure what exactly to do next. Below is kind of what i started, but I know it's not right(gived error of diff col lengths)
-
-
-#data.frame(WT_cont_DF,WT0_WT150_DF,dRpoS0_dRpoS50_DF,dRpoS0_dRpoS90_DF,WT0_WT90_DF,WT90_WT150_DF,dRpoS90_dRpoS150_DF,dRpoS0_dRpoS60_DF,WT0_WT60_DF)
-
+head(allDEcomp)
 ```
-
-
-
