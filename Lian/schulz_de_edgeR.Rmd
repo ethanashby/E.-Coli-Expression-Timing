@@ -1,0 +1,247 @@
+ 
+---
+title: "schulz_DE_edgeR"
+author: "Lian Morales"
+date: "6/13/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+
+knitr::opts_chunk$set(echo = TRUE)
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+library("DESeq2")
+library("edgeR")
+library(readr)
+TBcounts <- read.table("18-5-23_dedup_Proc_ibet_TC_for_deseq.txt",header = TRUE)
+ 
+```
+
+```{r}
+#DE WITH EDGER
+#creating new dataset from loaded data, then DGElist
+library("dplyr")
+rownames(TBcounts) <- TBcounts$gene #renames the gene row
+TBcounts <- TBcounts %>% dplyr :: select(-"gene") #this gets rid of the name gene in table
+
+#Getting the specific column names(this is more stylistic, than nessecary) for the 'stage' of samples
+
+tb_stage1 <- (substring(colnames(TBcounts[1:3]),1,6)) 
+tb_stage2 <- (substring(colnames(TBcounts[4:6]),1,5))
+tb_stage3 <- (substring(colnames(TBcounts[7:9]),1,6))
+tb_stage4 <- (substring(colnames(TBcounts[10:12]),1,6))
+tb_stage5 <- (substring(colnames(TBcounts[13:15]),1,6))
+tb_stage6 <- (substring(colnames(TBcounts[16:18]),1,6))
+tb_stage7 <- (substring(colnames(TBcounts[19:21]),1,6))
+tb_stage8 <- (substring(colnames(TBcounts[22:24]),1,6))
+tb_stage9 <- (substring(colnames(TBcounts[25:27]),1,6))
+
+#putting all column names together in variable 'stage'
+stage<-as.factor(c(tb_stage1,tb_stage2,tb_stage3,tb_stage4,tb_stage5,tb_stage6,tb_stage7,tb_stage8,tb_stage9))
+stage
+
+#making variable 'rep' for the number of repetitions for each sample
+rep <- as.factor(c(1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3))
+time <- as.factor(c(0,0,0,6,6,6,12,12,12,24,24,24,48,48,48,72,72,72,168,168,168,240,240,240,336,336,336))
+
+#for easy data manipulation, creating DGE list from TBcounts and stages
+#norm.factors is a numeric vector containing normalization factors (optional, defaults to all 1)
+tbcounts_dge <- DGEList(counts = TBcounts, norm.factors = rep(1,ncol(TBcounts)), group = stage, remove.zeros = TRUE)
+
+
+#creating design matrix of reps and stage
+
+design <- model.matrix(~ rep + stage)
+rownames(design) <- colnames(tb_norm)
+
+```
+
+```{r}
+#FILTER data -- getting rid of non expressed genes
+keep <- filterByExpr(tbcounts_dge)
+table(keep)
+tbcounts_dge <- tbcounts_dge[keep, ,keep.lib.sizes = FALSE]
+
+```
+
+```{r}
+#NORMALISE DATA - USING CALCNORMFACTORS()
+
+tb_norm <- calcNormFactors(tbcounts_dge, method = "TMM", refColumn = NULL)
+#separating the counts and samples
+tbcounts <- tb_norm$counts
+tb_normfact <- tb_norm$samples
+
+#getting the norm counts
+tb_normCounts <- cpm(tbcounts_dge)
+
+
+```
+
+
+```{r}
+#Data Exploration
+
+plotMDS(tb_norm, col = rep(1:9, each = 3))
+
+
+#Distances on an MDS plot of a DGEList object correspond to leading log-fold-change between each pair of samples. Leading log-fold-change is the root-mean-square average of the largest log2-fold-changes between each pair of samples. Each pair of samples extracted at each time tend to cluster together, suggesting a batch effect. All treatments seem to cluster together, with sample replicates ib_48h_3 and ib_3d_1 much higher. The noo_ib of all replicates are below all deltaIB, possibly suggesting a treatment effect within each time. 
+
+
+#To examine further consistency of the three replicates, we compute predictive log2-fold- changes (logFC) for the samples.
+
+design <- model.matrix(~(stage-1):(stage-1):rep)
+
+logFC <- predFC(tb_norm,design,prior.count=1,dispersion=0.05)
+cor <- cor(logFC)
+
+#design matrix 
+#We want to test for differential expressions between ∆ib challenged and wt samples within reps, i.e. adjusting for differences between reps. In statistical terms, this is an additive linear model. So the design matrix is created as:
+
+design <- model.matrix(~ stage-1  )#-1 because this specifies not to produce intercept,keeps row 10h 
+rownames(design) <- colnames(tb_norm)
+est_disp <- estimateDisp(tb_norm, design, robust=TRUE)
+est_disp$common.dispersion
+
+plotBCV(est_disp)
+#The square root of dispersion is the coefficient of biological variation (BCV). The common BCV is on the low side, considering that this is a designed experiment using organisms with a entire protein knocked out comparative to WT. 
+
+#The QL dispersions can be estimated using the glmQLFit function, and then be visualized with the plotQLDisp function.
+fit <- glmQLFit(est_disp, design, robust=TRUE)
+plotQLDisp(fit)
+head(fit$coefficients)
+
+```
+
+```{r}
+#DE ANALYSIS - EDGER - getting the DE genes
+
+#comparing 6h to noo, under hypothesis that 6h-noo = 0 
+design <- model.matrix(~0 + stage)
+rownames(design_2) <- colnames(tb_norm)
+con <- makeContrasts(stagenoo_ib-stageib_6h , levels= design)
+est_disp <- estimateDisp(tb_norm, design, robust=TRUE)
+fit <- glmQLFit(est_disp, design, robust=TRUE)
+qlf <- glmQLFTest(fit, contrast = con) 
+summary(decideTests(qlf)) #looks at the number of up and down regulated genes
+topTags(qlf) #looking at the top de genes
+
+#now want to look at all de genes from toptags
+out <- topTags(qlf, n=Inf, adjust.method="BH")  
+keep <- out$table$FDR <= 0.01 #filtering genes with FDR 0.01
+de_table <- out[keep,] #de_table for the table of DE genes
+
+#writing file of DE from edgeR
+file_to_write<-paste(rownames(de_table), collapse="\t")
+write.table(file_to_write, file="DE_tb_ER.txt")
+#FDR <- p.adjust(qlf$table$PValue, method="BH")
+#sum(FDR < 0.05)
+```
+
+```{r}
+#looking at another way to look at DE between samples
+
+#estglm = estimateGLMCommonDisp(tb_norm, design)
+#esttagwise = estimateGLMTagwiseDisp(estglm, design)
+#fit = glmFit(esttagwise, design)
+ 
+#lrt2vs1 = glmLRT(fit, coef = 2) #looking at the first 
+
+
+
+```
+
+```{r}
+#DIFFERENTAL EXPRESSION -- 12h to 14d
+
+
+#now looking at efect of deltaIB
+
+#qlf_all <- glmQLFTest(fit, coef = 1:9)
+#topTags(qlf_all)
+#top <- rownames(topTags(qlf_all))
+#cpm(est_disp)[top,]
+```
+
+
+
+```{r}
+#Normalization by DESeq
+
+#creating new data frame
+tb_new <- data.frame(rownames = colnames(TBcounts),
+                     reps = as.factor(c(1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3)),
+                     stage = as.factor(c("noo_ib","noo_ib","noo_ib", "ib_6h","ib_6h","ib_6h", "ib_12h","ib_12h","ib_12h","ib_24h","ib_24h","ib_24h","ib_48h","ib_48h","ib_48h","ib_3d","ib_3d","ib_3d","ib_7d","ib_7d","ib_7d","ib_10d","ib_10d","ib_10d","ib_14d","ib_14d","ib_14d")))
+tb_new
+ddsFullCountTable <- DESeqDataSetFromMatrix(countData = TBcounts,colData = tb_new, design = ~ reps + stage)
+ddsFullCountTable
+TBcounts_dds <- DESeq(ddsFullCountTable)
+TBcounts_dds
+normDE_counts <- DESeq2::counts(TBcounts_dds, normalized = TRUE) #DESeq2 :: allows to specify where this fcn comes from
+
+```
+
+
+```{r}
+#COMPARING - DE ANALYSIS - getting DE genes
+
+#looking at noo_ib and ib_6h
+
+TBcountsRes <- results( TBcounts_dds ,contrast = c("stage",  "noo_ib","ib_6h"))
+length(rownames(TBcountsRes))
+resSig <- TBcountsRes[ which(TBcountsRes$padj < 0.01 ), ]
+head( resSig[ order( resSig$log2FoldChange ), ] )
+tail( resSig[ order( resSig$log2FoldChange ), ] )
+length(rownames(resSig))
+
+file_to_write<-paste(rownames(resSig), collapse="\t")
+write.table(file_to_write, file="TBschulz_gene")
+
+#importing genes from trypan web
+library(readr)
+TBgenes <- read.csv("~/Downloads/GeneByLocusTag_Summary-4.csv")
+
+
+resSig$ensembl <- rownames(resSig)
+idx <- match( rownames(resSig), TBgenes$'Gene.ID' )
+resSig$name_sym <- TBgenes$'Gene.Name.or.Symbol'[idx]
+resSig$source_ID <- TBgenes$'gene_source_id'[idx]
+resSig$organism <- TBgenes$'Organism'[idx]
+
+resSig$prodDes <- TBgenes$'Product Description'[idx]
+resSig$input_ID <- TBgenes$'Input ID'[idx]
+head(resSig_2,10)
+
+```
+
+```{r}
+#making venn diagram
+ 
+area1 <- length(rownames(resSig))    
+area2 <- length(rownames(de_table))  
+cross <- length(intersect(rownames(resSig), rownames(de_table)))
+
+ 
+library(VennDiagram)
+  
+ 
+grid.newpage()
+draw.pairwise.venn(area1= area1, area2 = area2, cross.area = cross, category = c("DESeq","edgeR"))
+
+#looking at the genes that are different in venn diagram
+genesin1 <- setdiff(rownames(resSig), rownames(de_table))
+genesin2 <- setdiff(rownames(de_table), rownames(resSig))
+
+TBcounts_genesin1 <- TBcounts[genesin1,]
+TBcounts_genesin1
+
+TBcounts_genesin2 <- TB_2[genesin2,]
+TBcounts_genesin2
+```
+ 
+ 
+
+

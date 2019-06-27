@@ -1,0 +1,218 @@
+---
+title: "stoebel_DESeq_edgeR"
+author: "Lian Morales"
+date: "6/26/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+
+knitr::opts_chunk$set(echo = TRUE)
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+library("dplyr")
+library("tidyr")
+library("DESeq2")
+library("edgeR")
+library(readr)
+ec_rawcounts <- read.table("LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.txt",header = TRUE)
+ 
+```
+
+
+```{r}
+#format data for normalization
+
+ec_rawcounts_norm <- ec_rawcounts
+
+rownames(ec_rawcounts_norm) <- ec_rawcounts_norm$Geneid
+
+ec_rawcounts_norm <- ec_rawcounts_norm %>% dplyr::select(-Geneid)
+
+ec_coldata <- data.frame(names = colnames(ec_rawcounts_norm)) %>%
+  separate(names, c("treat", "rep_time"), "_") %>%
+  mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
+                        ifelse(substr(rep_time,start=1,stop = 1) == "B", 2, 3))) %>%
+  mutate(time = ifelse(substr(rep_time,start=3,stop = 3) == "1", 0,
+                      ifelse(substr(rep_time,start=3,stop = 3) == "2", 30,
+                             ifelse(substr(rep_time,start=3,stop = 3) == "3", 60,
+                                    ifelse(substr(rep_time,start=3,stop = 3) == "4", 90,
+                                           ifelse(substr(rep_time,start=3,stop = 3) == "5", 120, 150)))))) %>%
+  
+  mutate(treat = ifelse(treat == "JH01", "WT","dRpoS")) %>%
+  mutate(timetreat = paste(treat,time,sep = "")) %>%
+  select(-rep_time)
+rownames(ec_coldata) <- colnames(ec_rawcounts_norm)
+
+#time <- c(0,30,60,90,120,150,0,30,60,90,120,150,0,30,60,90,120,150,0,30,60,90,120,150,0,30,60,90,120,150,0,30,60,90,120,150,0,30,60,90,120,150)
+
+ec_coldata
+```
+
+
+```{r}
+ec_dds <- DESeqDataSetFromMatrix(ec_rawcounts_norm, colData = ec_coldata, design = ~time + treat)
+
+ec_dds_de <- DESeq(ec_dds)
+ec_dds_de
+
+#Calculating Raw Counts
+ec_norm_counts <- data.frame(counts(ec_dds_de, normalized = TRUE)) %>%
+  mutate(Geneid = rownames(ec_rawcounts_norm))
+
+
+```
+
+
+
+```{r}
+#COMPARING - DE ANALYSIS - getting DE genes
+
+#looking at WT continuous
+
+ECcountsRes <- results(ec_dds_de, name = "time")
+length(rownames(ECcountsRes))
+ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+head( ECresSig[ order( ECresSig$log2FoldChange ), ] )
+tail( ECresSig[ order( ECresSig$log2FoldChange ), ] )
+WT_cont <- ECresSig
+length(WT_cont)
+#looking at WT0  to WT150
+
+ec_dds <- DESeqDataSetFromMatrix(ec_rawcounts_norm, colData = ec_coldata, design = ~timetreat)
+
+ec_dds_de <- DESeq(ec_dds)
+
+ec_dds_de
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT0", "WT150"))
+length(rownames(ECcountsRes))
+ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+head( ECresSig[ order( ECresSig$log2FoldChange ), ] )
+tail( ECresSig[ order( ECresSig$log2FoldChange ), ] )
+WT0_WT150 <- ECresSig
+
+#looking at KO0  to KO150
+
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "dRpoS0", "dRpoS150"))
+length(rownames(ECcountsRes))
+ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+head( ECresSig[ order( ECresSig$log2FoldChange ), ] )
+tail( ECresSig[ order( ECresSig$log2FoldChange ), ] )
+dRpoS0_dRpoS50 <- ECresSig
+
+#looking at KO0  to KO90
+
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "dRpoS0", "dRpoS90"))
+length(rownames(ECcountsRes))
+ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+head( ECresSig[ order( ECresSig$log2FoldChange ), ] )
+tail( ECresSig[ order( ECresSig$log2FoldChange ), ] )
+dRpoS0_dRpoS90 <- ECresSig
+
+
+#looking at WT0  to WT90
+
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT0", "WT90"))
+length(rownames(ECcountsRes))
+ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+head( ECresSig[ order( ECresSig$log2FoldChange ), ] )
+tail( ECresSig[ order( ECresSig$log2FoldChange ), ] )
+WT0_WT90 <- ECresSig
+
+#looking at WT90  to WT150
+
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT90", "WT150"))
+length(rownames(ECcountsRes))
+ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+head( ECresSig[ order( ECresSig$log2FoldChange ), ] )
+tail( ECresSig[ order( ECresSig$log2FoldChange ), ] )
+WT90_WT150 <- ECresSig
+
+ 
+#looking at KO90  to KO150
+
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "dRpoS90", "dRpoS150"))
+length(rownames(ECcountsRes))
+ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+head( ECresSig[ order( ECresSig$log2FoldChange ), ] )
+tail( ECresSig[ order( ECresSig$log2FoldChange ), ] )
+dRpoS90_dRpoS150 <- ECresSig
+
+#looking at KO0  to KO60
+
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "dRpoS0", "dRpoS60"))
+length(rownames(ECcountsRes))
+ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+head( ECresSig[ order( ECresSig$log2FoldChange ), ] )
+tail( ECresSig[ order( ECresSig$log2FoldChange ), ] )
+dRpoS0_dRpoS60 <- ECresSig
+length(dRpoS0_dRpoS60)
+#looking at WT0  to WT60
+
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT0", "WT60"))
+length(rownames(ECcountsRes))
+ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+head( ECresSig[ order( ECresSig$log2FoldChange ), ] )
+tail( ECresSig[ order( ECresSig$log2FoldChange ), ] )
+WT0_WT60 <- ECresSig
+
+```
+
+```{r}
+#making venn diagram
+library(VennDiagram)
+
+area <- length(rownames(WT_cont))
+area1 <- length(rownames(WT0_WT150))
+area2 <- length(rownames(dRpoS0_dRpoS50))
+area3 <- length(rownames(dRpoS0_dRpoS90))
+area4 <- length(rownames(WT0_WT90))
+area5 <- length(rownames(WT90_WT150))
+area6 <- length(rownames(dRpoS90_dRpoS150))
+area7 <- length(rownames(dRpoS0_dRpoS60))
+area8 <- length(rownames(WT0_WT60))
+
+
+#looking at comparing "WT0_WT150" to "WT_cont"
+cross <- length(intersect(rownames(WT0_WT150),rownames(WT_cont)))
+
+ 
+grid.newpage()
+draw.pairwise.venn(area1= area, area2 = area1, cross.area = cross, category = c("WT0_WT150","WT_cont"),lty = rep("blank",2),fill = c("light blue", "light green"), scaled = FALSE)
+
+#looking at comparing "WT0_WT150","WT0_WT90","WT0_WT60"
+
+cross12 <- length(intersect(rownames(WT0_WT150),rownames(WT0_WT90)))
+cross23 <- length(intersect(rownames(WT0_WT90),rownames(WT0_WT60)))
+cross123 <- length(intersect(intersect(rownames(WT0_WT150),rownames(WT0_WT60)),rownames(WT0_WT90)))
+
+grid.newpage()
+draw.triple.venn(area1 = area1, area2 = area4, area3 = area8,n12 = cross12, n23 = cross23, n13 = cross13,n123 = cross123, category = c("WT0_WT150","WT0_WT90","WT0_WT60") ,lty = "blank",fill = c("skyblue", "pink1", "mediumorchid"),scaled = FALSE) 
+```
+ 
+ 
+```{r}
+##making columns of rownames of DE genes across 9 comparisons
+
+
+WT_cont_DF <- rownames(WT_cont)
+WT0_WT150_DF <- rownames(WT0_WT150)
+dRpoS0_dRpoS50_DF <- rownames(dRpoS0_dRpoS50)
+dRpoS0_dRpoS90_DF <- rownames(dRpoS0_dRpoS90)
+WT0_WT90_DF<- rownames(WT0_WT90)
+WT90_WT150_DF <- rownames(WT90_WT150)
+dRpoS90_dRpoS150_DF <- rownames(dRpoS90_dRpoS150)
+dRpoS0_dRpoS60_DF <- rownames(dRpoS0_dRpoS60)
+WT0_WT60_DF <- rownames(WT0_WT60)
+
+
+#how to make data frame with all rownames of DE genes? I have them all saved above, and Im not sure what exactly to do next. Below is kind of what i started, but I know it's not right(gived error of diff col lengths)
+
+
+#data.frame(WT_cont_DF,WT0_WT150_DF,dRpoS0_dRpoS50_DF,dRpoS0_dRpoS90_DF,WT0_WT90_DF,WT90_WT150_DF,dRpoS90_dRpoS150_DF,dRpoS0_dRpoS60_DF,WT0_WT60_DF)
+
+```
+
+
+
