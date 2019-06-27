@@ -187,6 +187,8 @@ cross12 <- length(intersect(rownames(WT0_WT150),rownames(WT0_WT90)))
 cross23 <- length(intersect(rownames(WT0_WT90),rownames(WT0_WT60)))
 cross123 <- length(intersect(intersect(rownames(WT0_WT150),rownames(WT0_WT60)),rownames(WT0_WT90)))
 
+
+# Note to Lian:  cross13 doesn't exist ... should it be one more comparison above?
 grid.newpage()
 draw.triple.venn(area1 = area1, area2 = area4, area3 = area8,n12 = cross12, n23 = cross23, n13 = cross13,n123 = cross123, category = c("WT0_WT150","WT0_WT90","WT0_WT60") ,lty = "blank",fill = c("skyblue", "pink1", "mediumorchid"),scaled = FALSE) 
 ```
@@ -196,15 +198,31 @@ draw.triple.venn(area1 = area1, area2 = area4, area3 = area8,n12 = cross12, n23 
 ##making columns of rownames of DE genes across 9 comparisons
 
 
-WT_cont_DF <- rownames(WT_cont)
-WT0_WT150_DF <- rownames(WT0_WT150)
-dRpoS0_dRpoS50_DF <- rownames(dRpoS0_dRpoS50)
-dRpoS0_dRpoS90_DF <- rownames(dRpoS0_dRpoS90)
-WT0_WT90_DF<- rownames(WT0_WT90)
-WT90_WT150_DF <- rownames(WT90_WT150)
-dRpoS90_dRpoS150_DF <- rownames(dRpoS90_dRpoS150)
-dRpoS0_dRpoS60_DF <- rownames(dRpoS0_dRpoS60)
-WT0_WT60_DF <- rownames(WT0_WT60)
+WT_cont_DF <- data.frame(geneID = rownames(WT_cont), comparison = "WT_cont")
+WT0_WT150_DF <- data.frame(geneID = rownames(WT0_WT150), comparison = "WT_WT150")
+dRpoS0_dRpoS50_DF <- data.frame(geneID = rownames(dRpoS0_dRpoS50), comparison = "dRpoS0_dRpoS50")
+dRpoS0_dRpoS90_DF <- data.frame(geneID = rownames(dRpoS0_dRpoS90), comparison = "dRpoS0_dRpoS90")
+WT0_WT90_DF<- data.frame(geneID = rownames(WT0_WT90), comparison = "WT0_WT90")
+WT90_WT150_DF <- data.frame(geneID = rownames(WT90_WT150), comparison = "WT90_WT150")
+dRpoS90_dRpoS150_DF <- data.frame(geneID = rownames(dRpoS90_dRpoS150), 
+                                  comparison = "dRpoS90_dRpoS150")
+dRpoS0_dRpoS60_DF <- data.frame(geneID = rownames(dRpoS0_dRpoS60), comparison = "dRpoS0_dRpoS60")
+WT0_WT60_DF <- data.frame(geneID = rownames(WT0_WT60), comparison = "WT0_WT60")
+
+allDEcomp <- rbind(WT_cont_DF, WT0_WT150_DF, dRpoS0_dRpoS50_DF, dRpoS0_dRpoS90_DF, WT0_WT90_DF,
+                   WT90_WT150_DF, dRpoS90_dRpoS150_DF, dRpoS0_dRpoS60_DF, WT0_WT60_DF)
+
+
+# for the command below, I'm assuming that there is a big dataframe called "Madison_DF" which contains at least two columns.  One column is labeled "geneIDM" and is the same long string as what we created in all the comparions above.  The second column is called "genename" and is just the small genename. For example, gad4.  If I've gotten the DF name wrong (obviously) or either of the column names wrong (very possible), change them below:
+
+#allDEcomp <- allDEcomp %>% left_join(Madison_DF, by.x = geneID, by.y = geneIDM) %>%
+#  select(geneID, comparison, genename)
+
+
+
+# this line of code tells you the number of DEGs for each comparison.  Does it give you the right numbers?
+allDEcomp %>% group_by(comparison) %>% 
+  summarize(n())
 
 
 #how to make data frame with all rownames of DE genes? I have them all saved above, and Im not sure what exactly to do next. Below is kind of what i started, but I know it's not right(gived error of diff col lengths)
