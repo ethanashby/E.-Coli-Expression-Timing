@@ -1,0 +1,227 @@
+---
+title: "Stoebel_Analysis"
+author: "Annie Cohen"
+date: "6/25/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+ec_rawcounts <- read.table("~/Downloads/LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.txt", header = TRUE)
+
+library(ggplot2)
+library(tidyr)
+library(shiny)
+library(dplyr)
+library(DESeq2)
+library(readr)
+```
+
+```{r}
+#format data for normalization
+ec_rawcounts_norm <- ec_rawcounts
+rownames(ec_rawcounts_norm) <- ec_rawcounts_norm$Geneid
+ec_rawcounts_norm <- ec_rawcounts_norm %>% dplyr::select(-Geneid)
+ec_coldata <- data.frame(names = colnames(ec_rawcounts_norm)) %>%
+  separate(names, c("treat", "rep_time"), "_") %>%
+  mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
+                        ifelse(substr(rep_time,start=1,stop = 1) == "B", 2, 3))) %>%
+  mutate(time = ifelse(substr(rep_time,start=3,stop = 3) == "1", 0,
+                      ifelse(substr(rep_time,start=3,stop = 3) == "2", 30,
+                             ifelse(substr(rep_time,start=3,stop = 3) == "3", 60,
+                                    ifelse(substr(rep_time,start=3,stop = 3) == "4", 90,
+                                           ifelse(substr(rep_time,start=3,stop = 3) == "5", 120, 150)))))) %>%
+  mutate(treat = ifelse(treat == "JH01", "WT","dRpoS")) %>%
+  mutate(timetreat = paste(treat,time,sep = "")) %>%
+  select(-rep_time)
+rownames(ec_coldata) <- colnames(ec_rawcounts_norm)
+```
+
+
+```{r}
+ec_dds <- DESeqDataSetFromMatrix(ec_rawcounts_norm, colData = ec_coldata, design = ~ timetreat)
+ec_dds_de <- DESeq(ec_dds)
+ec_norm_counts <- data.frame(counts(ec_dds_de, normalized = TRUE)) %>%
+  mutate(Geneid = ec_rawcounts$Geneid)
+
+```
+
+```{r}
+contrast_list = c()
+contrast_vect = c(0,30,60,90,120,150)
+dRpoS_list = c("dRpoS0","dRpoS30","dRpoS60","dRpoS90","dRpoS120","dRpoS150")
+WT_list = c("WT0","WT30","WT60","WT90","WT120","WT150")
+
+for (i in 1:6) {
+  de_results <- results(ec_dds_de, contrast = c("timetreat", WT_list[i],dRpoS_list[i]))
+  
+  resSig <- de_results[ which(de_results$padj < 0.0083 ), ]
+  
+  resSig <- resSig[ which(abs(resSig$log2FoldChange) > 2 ), ]
+  
+  resSig$gene <- rownames(resSig)
+
+  ind <- match(ec_norm_counts$Geneid,resSig$gene)
+
+  ec_norm_counts$sig <- resSig$gene[ind]
+  
+  norm_counts_sig <- ec_norm_counts %>%
+   filter(!is.na(ec_norm_counts$sig)) %>%
+   select(-sig) %>%
+   mutate(contrast = contrast_vect[i])
+  contrast_list[[i]] = norm_counts_sig
+}
+
+norm_counts_contrast <- bind_rows(contrast_list[[1]],contrast_list[[2]],contrast_list[[3]],contrast_list[[4]],contrast_list[[5]],contrast_list[[6]])
+```
+
+```{r}
+library(dplyr)
+library("tidyverse")
+library(stringr)
+library(DESeq2)
+library("Hmisc")
+library(cluster)
+library("mclust")
+library(readr)
+ec_Counts <- ec_rawcounts
+```
+
+
+```{r, warning=FALSE, echo=FALSE}
+bnum = "b[0-9]{4}"
+ec_Counts$GeneidBackup = ec_Counts$Geneid
+ec_Counts <- ec_Counts %>% separate(GeneidBackup, c("feature", "rest"), sep="[:]")
+# IGR's separate: 
+# do start.bnum end.bnum start.genename end.genename
+# left join igrs to ec_Counts
+genename = ",[a-z]{3}[A-Z,]."
+rna.name = ",rna[0-9].."
+igr <- ec_Counts %>% filter(feature %in% c("IGR", "AS_IGR"))
+igr$GeneidBackup = igr$Geneid
+igr <- igr %>% separate(GeneidBackup, c("Geneid1", "Geneid2"), sep = "[/]")
+igr$Feature1 <- separate(igr, Geneid1, c("Feature1", "rest"), sep = "[,]")$Feature1
+igr$Feature1 <- separate(igr, Feature1, c("rest", "Feature1"), sep = "[()]")$Feature1
+igr$Feature2 <- separate(igr, Geneid2, c("Feature2", "rest"), sep = "[,]")$Feature2
+igr$start.gene <- case_when(
+    igr$Feature1 == "CDS" ~ str_extract(igr$Geneid1, genename),
+    TRUE ~ str_extract(igr$Geneid1, rna.name))
+igr$end.gene <- case_when(
+    igr$Feature2 == "CDS" ~ str_extract(igr$Geneid2, genename),
+    TRUE ~ str_extract(igr$Geneid2, rna.name))
+igr$start.bnum <- case_when(
+    igr$Feature1 == "CDS" ~ str_extract(igr$Geneid1, bnum),
+    TRUE ~ "none")
+igr$end.bnum <- case_when(
+    igr$Feature2 == "CDS" ~ str_extract(igr$Geneid2, bnum),
+    TRUE ~ "none")
+igr <- igr %>% separate(start.gene, into = c("comma", "start.gene"), sep = "[,]") %>% select(-comma) %>% separate(end.gene, into = c("comma", "end.gene"), sep = "[,]") %>% select(-comma)
+ec_Counts <- full_join(igr, ec_Counts)
+```
+
+
+```{r}
+# CDS
+# have bnum and genename columns
+# left join to ec_Counts
+genename = ":[a-z]{3}.."
+ec_cds <- ec_Counts %>% filter(feature %in% c("AS_CDS", "CDS")) 
+ec_cds$genename <- str_extract(ec_cds$Geneid, genename)
+ec_cds$bnum <- str_extract(ec_cds$Geneid, bnum)
+ec_cds <- ec_cds %>% separate(genename, into = c("colon", "genename"), sep = ":") %>%
+  select(-colon)
+ec_Counts <- full_join(ec_Counts, ec_cds)
+ec_Counts 
+```
+
+
+```{r}
+#ncRNA
+#ncRNA doesn't have bnums, but id's which we'll put in the genename column
+rna.name = ":rna[0-9].."
+rna <- ec_Counts %>% filter(feature %in% c("ncRNA", "AS_ncRNA"))
+rna$genename <- str_extract(rna$Geneid, rna.name)
+rna <- rna %>% separate(genename, into = c("colon", "genename"), sep = ":") %>%
+  select(-colon)
+ec_Counts <- full_join(ec_Counts, rna)
+#rRNA
+rRNA <- ec_Counts %>% filter(feature %in% c("rRNA", "AS_rRNA"))
+rRNA$genename <- str_extract(rRNA$Geneid, rna.name)
+rRNA <- rRNA %>% separate(genename, into = c("colon", "genename"), sep = ":") %>%
+  select(-colon)
+ec_Counts <- full_join(ec_Counts, rRNA)
+#tRNA
+tRNA <- ec_Counts %>% filter(feature %in% c("tRNA", "AS_tRNA"))
+tRNA$genename <- str_extract(tRNA$Geneid, rna.name)
+tRNA <- tRNA %>% separate(genename, into = c("colon", "genename"), sep = ":") %>%
+  select(-colon)
+ec_Counts <- full_join(tRNA, ec_Counts)
+# remove the NA rows we just created by full_joining while adding the ncRNA, rRNA, tRNA genenames
+ec_Counts <- filter(ec_Counts, feature %in% c("IGR", "AS_IGR") | !is.na(genename))
+# make tidy data
+countsTable.ec.tidy <- ec_Counts %>%
+  gather(cond.samps, rawCount, -Geneid, -feature, -genename, -bnum, -Geneid1, -Geneid2, -Feature1, -Feature2, -start.gene, -end.gene, -start.bnum, - end.bnum)
+
+ec_tidy <- ec_Counts %>%
+  select(Geneid, genename, bnum)
+```
+
+```{r}
+ec_tidy <- left_join(norm_counts_contrast, ec_tidy, by = "Geneid")
+
+ec_past <- read_csv("~/Downloads/sensitivitydata.csv") %>%
+  select(geneName, bNum)
+```
+
+```{r}
+
+crossarea <- length(intersect(ec_past$bNum, ec_tidy$bnum))
+
+area1 <- count(!is.na(ec_past$bNum))
+
+area2 <- count(!is.na(ec_tidy$bnum))
+
+library(VennDiagram)
+
+grid.newpage()
+draw.pairwise.venn(area1 = area1, area2 = area2, cross.area = crossarea, category = c("2017 data", 
+    "2019 data"), lty = rep("blank", 2), fill = c("orange", "cornflowerblue"), cex = 2, cat.cex = 1.3)
+```
+
+```{r}
+de_results <- results(ec_dds_de, contrast = c("timetreat", "WT150","dRpoS150"))
+  
+resSig <- de_results[ which(de_results$padj < 0.0083 ), ]
+  
+resSig <- resSig[ which(abs(resSig$log2FoldChange) > 2 ), ]
+  
+resSig$gene <- rownames(resSig)
+
+smallest_pval <- resSig[order(resSig$padj),]
+
+smallest_pval <- bind_cols(Geneid = smallest_pval$gene, padj = highest_pval$padj)
+
+biggest_fc <- resSig[order(resSig$log2FoldChange),]
+
+biggest_fc <- bind_cols(Geneid = biggest_fc$gene, fc = biggest_fc$log2FoldChange)
+
+ec_pval <- left_join(smallest_pval, ec_tidy,by = "Geneid") %>%
+  filter(!is.na(genename)) %>%
+  select(-Geneid)
+
+ec_fc <- left_join(biggest_fc, ec_tidy, by = "Geneid") %>%
+  filter(!is.na(genename)) %>%
+  select(-Geneid)
+
+write_csv(ec_fc, "ec_big_fc.csv")
+
+write_csv(ec_pval, "ec_sig_pval.csv")
+```
+
+```{r}
+```
+
+
