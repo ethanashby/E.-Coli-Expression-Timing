@@ -50,14 +50,16 @@ ec_coldata
 
 
 ```{r}
-ec_dds <- DESeqDataSetFromMatrix(ec_rawcounts_norm, colData = ec_coldata, design = ~time + treat)
+#####DESEQ FOR CONT DATA
 
-ec_dds_de <- DESeq(ec_dds)
-ec_dds_de
+#ec_dds <- DESeqDataSetFromMatrix(ec_rawcounts_norm, colData = ec_coldata, design = ~time + treat)
+
+#ec_dds_de <- DESeq(ec_dds)
+#ec_dds_de
 
 #Calculating Raw Counts
-ec_norm_counts <- data.frame(counts(ec_dds_de, normalized = TRUE)) %>%
-  mutate(Geneid = rownames(ec_rawcounts_norm))
+#ec_norm_counts <- data.frame(counts(ec_dds_de, normalized = TRUE)) %>%
+ # mutate(Geneid = rownames(ec_rawcounts_norm))
 
 
 ```
@@ -95,11 +97,20 @@ ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
 WT0_WT90 <- ECresSig
 
 
+
+#looking at WT0  to WT120
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT0", "WT120"))
+ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+WT0_WT120 <- ECresSig
+
+
 #looking at WT0  to WT150
 ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT0", "WT150"))
 ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
 WT0_WT150 <- ECresSig
 
+
+length(rownames(WT0_WT150))
 #############
 #############
 
@@ -152,6 +163,12 @@ ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
 WT90_dRpoS90 <- ECresSig
 
 
+#looking at WT120 drpoS120
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT120", "dRpoS120"))
+length(rownames(ECcountsRes))
+ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+WT120_dRpoS120 <- ECresSig
+
 
 #looking at WT150 drpos150
 ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT150", "dRpoS150"))
@@ -165,7 +182,7 @@ WT150_dRpoS150 <- ECresSig
 #making venn diagram
 library(VennDiagram)
 
-area_WT_cont <- length(rownames(WT_cont))
+#area_WT_cont <- length(rownames(WT_cont))
 area_WT0_WT150 <- length(rownames(WT0_WT150))
 area_dRpoS0_dRpoS50 <- length(rownames(dRpoS0_dRpoS50))
 area_dRpoS0_dRpoS90 <- length(rownames(dRpoS0_dRpoS90))
@@ -180,33 +197,43 @@ area_dRpoS0_dRpoS30 <- length(rownames(dRpoS0_dRpoS30))
 area_WT30_dRpoS30 <- length(rownames(WT30_dRpoS30))
 area_WT60_dRpoS60 <- length(rownames(WT60_dRpoS60))
 area_WT90_dRpoS90 <- length(rownames(WT90_dRpoS90))
-
-
+area_WT120_dRpoS120 <- length(rownames(WT120_dRpoS120))
+area_WT0_WT120 <- length(rownames(WT0_WT120))
+ 
 #looking at comparing "WT0_WT30" to "WT30_dRpoS30"
 cross_0_30 <- length(intersect(rownames(WT0_WT30),rownames(WT30_dRpoS30)))
 grid.newpage()
 draw.pairwise.venn(area1= area_WT0_WT30, area2 = area_WT30_dRpoS30, cross.area = cross_0_30, category = c("WT0_WT30","WT30_dRpoS30"),lty = rep("blank",2),fill = c("light blue", "light green"))
 
-cross_30_list <- intersect(rownames(WT0_WT30),rownames(WT30_dRpoS30))
-cross_30_list <- as.data.frame(cross_30_list)
+cross_0_30_list <- intersect(rownames(WT0_WT30),rownames(WT30_dRpoS30))
+
+
 #looking at comparing "WT0_WT60" to "dRpoS0_dRpoS60"
 cross_0_60 <- length(intersect(rownames(WT0_WT60),rownames(WT60_dRpoS60)))
 grid.newpage()
 draw.pairwise.venn(area1= area_WT0_WT60, area2 = area_WT60_dRpoS60, cross.area = cross_0_60, category = c("WT0_WT60","WT60_dRpoS60"),lty = rep("blank",2),fill = c("light blue", "light green"))
  
- 
+cross_0_60_list <- intersect(rownames(WT0_WT60),rownames(WT60_dRpoS60))
 
 #looking at comparing "WT0_WT90" to "WT90_dRpoS90"
-cross_0_90 <- length(intersect(rownames(dRpoS0_dRpoS50),rownames(WT90_dRpoS90)))
+cross_0_90 <- length(intersect(rownames(WT0_WT90),rownames(WT90_dRpoS90)))
 grid.newpage()
 draw.pairwise.venn(area1= area_WT0_WT90, area2 = area_WT90_dRpoS90, cross.area = cross_0_90, category = c("WT0_WT90","WT90_dRpoS90"),lty = rep("blank",2),fill = c("light blue", "light green"))
 
- 
+cross_0_90_list <- intersect(rownames(WT0_WT90),rownames(WT90_dRpoS90))
+
+#looking at comparing "WT0_WT120" to "WT120_dRpoS120"
+cross_0_120 <- length(intersect(rownames(WT0_WT120),rownames(WT120_dRpoS120)))
+grid.newpage()
+draw.pairwise.venn(area1= area_WT0_WT120, area2 = area_WT120_dRpoS120, cross.area = cross_0_120, category = c("WT0_WT120","WT120_dRpoS120"),lty = rep("blank",2),fill = c("light blue", "light green"))
+
+cross_0_120_list <- intersect(rownames(WT0_WT120),rownames(WT120_dRpoS120))
 
 #looking at comparing "WT0_WT150" to "WT150_dRpoS150"
 cross_0_150 <- length(intersect(rownames(WT0_WT150),rownames(WT150_dRpoS150)))
 grid.newpage()
 draw.pairwise.venn(area1= area_WT0_WT150, area2 = area_WT150_dRpoS150, cross.area = cross_0_150, category = c("WT0_WT150","WT150_dRpoS150"),lty = rep("blank",2),fill = c("light blue", "light green"))
+cross_0_150_list <- intersect(rownames(WT0_WT150),rownames(WT150_dRpoS150))
 
 
 
@@ -231,40 +258,74 @@ draw.pairwise.venn(area1= area_WT0_WT150, area2 = area_WT150_dRpoS150, cross.are
  
 ```{r}
 ##making columns of rownames of DE genes across 9 comparisons
-
+gene_interest <- read.table("genesOfInterest.txt", header = TRUE)
+colnames(gene_interest)
+colnames(gene_interest)[1] <- "genename"
 
 #WT_cont_DF <- data.frame(geneID = rownames(WT_cont), comparison = "WT_cont")
 WT0_WT30_DF <- data.frame(geneID = rownames(WT0_WT30), comparison = "WT0_WT30")
 WT0_WT60_DF <- data.frame(geneID = rownames(WT0_WT60), comparison = "WT0_WT60")
 WT0_WT90_DF<- data.frame(geneID = rownames(WT0_WT90), comparison = "WT0_WT90")
+WT0_WT120_DF<- data.frame(geneID = rownames(WT0_WT120), comparison = "WT0_WT120")
 WT0_WT150_DF <- data.frame(geneID = rownames(WT0_WT150), comparison = "WT_WT150")
 
 WT30_dRpoS30_DF <- data.frame(geneID = rownames(WT30_dRpoS30), comparison = "WT30_dRpoS30")
-WT60_dRpoS60_DF <- data.frame(geneID = rownames(dRpoS0_dRpoS60), comparison = "WT60_dRpoS60")
+WT60_dRpoS60_DF <- data.frame(geneID = rownames(WT60_dRpoS60), comparison = "WT60_dRpoS60")
 
-WT90_dRpoS90_DF <- data.frame(geneID = rownames(dRpoS0_dRpoS90), comparison = "WT90_dRpoS90")
-WT150_dRpoS150_DF <- data.frame(geneID = rownames(dRpoS0_dRpoS50), comparison = "WT150_dRpoS150")
+WT90_dRpoS90_DF <- data.frame(geneID = rownames(WT90_dRpoS90), comparison = "WT90_dRpoS90")
+WT120_dRpoS120_DF <- data.frame(geneID = rownames(WT120_dRpoS120), comparison = "WT150_dRpoS150")
+WT150_dRpoS150_DF <- data.frame(geneID = rownames(WT150_dRpoS150), comparison = "WT150_dRpoS150")
 
-#WT90_WT150_DF <- data.frame(geneID = rownames(WT90_WT150), comparison = "WT90_WT150")
-#dRpoS90_dRpoS150_DF <- data.frame(geneID = rownames(dRpoS90_dRpoS150), 
-                                  #comparison = "dRpoS90_dRpoS150")
+rownames(WT0_WT30)
 
-
-allDEcomp <- rbind(WT0_WT30_DF,WT0_WT60_DF,WT0_WT90_DF,WT150_dRpoS150_DF,WT30_dRpoS30_DF,dRpoS0_dRpoS60_DF,WT90_dRpoS90_DF,WT150_dRpoS150_DF)
+allDEcomp <- rbind(WT0_WT30_DF,WT0_WT60_DF,WT0_WT90_DF,WT0_WT120_DF,WT150_dRpoS150_DF,WT30_dRpoS30_DF,dRpoS0_dRpoS60_DF,WT90_dRpoS90_DF,WT120_dRpoS120_DF,WT150_dRpoS150_DF)
 
 
-# for the command below, I'm assuming that there is a big dataframe called "Madison_DF" which contains at least two columns.  One column is labeled "geneIDM" and is the same long string as what we created in all the comparions above.  The second column is called "genename" and is just the small genename. For example, gad4.  If I've gotten the DF name wrong (obviously) or either of the column names wrong (very possible), change them below:
-
-#allDEcomp <- allDEcomp %>% left_join(???, by.x = Geneid, by.y = genename) %>%
- #select(geneID, comparison, genename)
-#ec_Counts
-
-#ec_Counts#library(tidyverse)
-#c <- duplicated(allDEcomp$geneID)
-#allDEcomp[!duplicated(allDEcomp$geneID),]
-# this line of code tells you the number of DEGs for each comparison.  Does it give you the right numbers?
-#allDEcomp %>% group_by(comparison) %>% summarize(n())
+#copying all DEs from comparisons. 
+colnames(allDEcomp)[1] <- "Geneid" #renaming the geneID to Geneid
+ec_Counts_join <- ec_Counts %>% dplyr::select(  "Geneid", "bnum" ,"genename" )
+allDEcomp <- allDEcomp %>% left_join(ec_Counts_join, by.x = Geneid, by.y = bnum) %>%
+ select(Geneid, comparison, genename,bnum)
+#######
+#making data frame matching all genes of interest (GOI for genes of interest)
+allDEcomp_GOI <- allDEcomp %>% left_join(gene_interest, by.x = genename) %>%
+ select(Geneid, comparison, genename,bnum, group)
 
 
-head(allDEcomp)
+#######################
+#######################
+#making list of all crosses
+cross_0_30_list_DF <- data.frame(geneID = cross_0_30_list, comparison = "WT0_WT30.WT30_dRpoS30")
+cross_0_60_list_DF <- data.frame(geneID = cross_0_60_list, comparison = "WT0_WT60.WT60_dRpoS60")
+cross_0_90_list_DF <- data.frame(geneID = cross_0_90_list, comparison = "WT0_WT90.WT90_dRpoS90")
+cross_0_120_list_DF <- data.frame(geneID = cross_0_120_list, comparison = "WT0_WT120.WT120_dRpoS120")
+cross_0_150_list_DF <- data.frame(geneID = cross_0_150_list, comparison = "WT0_WT150.WT150_dRpoS150")
+
+crossDEcomp <- rbind(cross_0_30_list_DF, cross_0_60_list_DF,cross_0_90_list_DF,cross_0_120_list_DF,cross_0_150_list_DF)
+
+colnames(crossDEcomp)[1] <- "Geneid" #renaming the geneID to Geneid
+ec_Counts_join <- ec_Counts %>% dplyr::select(  "Geneid", "bnum" ,"genename" )
+crossDEcomp <- crossDEcomp %>% left_join(ec_Counts_join, by.x = Geneid, by.y = bnum) %>%
+ select(Geneid, comparison, genename, bnum)
+
+#joining the genes of interest list by group of insensitive to this list
+crossDEcomp_GOI <- crossDEcomp %>% left_join(gene_interest, by.x = genename) %>%
+ select(Geneid, comparison, genename,bnum, group)
+
+###############################
+###############################
+#making genelist of all intersct of all crossed genes
+cross_intersect <- Reduce(intersect,list(cross_0_30_list,cross_0_60_list,cross_0_90_list,cross_0_120_list,cross_0_150_list))
+
+inter_crossDEcomp <- data.frame(geneID = cross_intersect, comparison = "allCross")
+
+colnames(inter_crossDEcomp)[1] <- "Geneid" #renaming the geneID to Geneid
+ec_Counts_join <- ec_Counts %>% dplyr::select(  "Geneid", "bnum" ,"genename" )
+inter_crossDEcomp <- inter_crossDEcomp %>% left_join(ec_Counts_join, by.x = Geneid, by.y = bnum) %>%
+ select(Geneid, comparison, genename, bnum)
+
+#putting in the genes of interest into table
+inter_crossDEcomp_GOI <- inter_crossDEcomp %>% left_join(gene_interest, by.x = genename, by.y = bnum) %>%
+ select(Geneid, comparison, genename, bnum,group)
+
 ```
