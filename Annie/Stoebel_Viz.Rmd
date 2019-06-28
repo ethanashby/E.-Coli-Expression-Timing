@@ -53,9 +53,9 @@ WT_list = c("WT0","WT30","WT60","WT90","WT120","WT150")
 for (i in 1:6) {
   de_results <- results(ec_dds_de, contrast = c("timetreat", WT_list[i],dRpoS_list[i]))
   
-  resSig <- de_results[ which(de_results$padj < .0005 ), ]
+  resSig <- de_results[ which(de_results$padj < 0.0083 ), ]
   
-  resSig <- resSig[ which(abs(resSig$log2FoldChange) > 3 ), ]
+  resSig <- resSig[ which(abs(resSig$log2FoldChange) > 2 ), ]
   
   resSig$gene <- rownames(resSig)
 
@@ -75,44 +75,53 @@ norm_counts_contrast <- bind_rows(contrast_list[[1]],contrast_list[[2]],contrast
 ```
 
 ```{r}
-amt = 30
-padj = 0.05
-fc = 4
-
+contrast_list_0 = c()
 contrast_vect = c(0,30,60,90,120,150)
 dRpoS_list = c("dRpoS0","dRpoS30","dRpoS60","dRpoS90","dRpoS120","dRpoS150")
 WT_list = c("WT0","WT30","WT60","WT90","WT120","WT150")
 
-idx = ifelse(amt == "0",1,
-                      ifelse(amt == "30", 2,
-                            ifelse(amt == "60", 3,
-                                   ifelse(amt == "90", 4,
-                                          ifelse(amt == "120", 5,6)))))
+for (i in 1:6) {
 
-de_results <- results(ec_dds_de, contrast = c("timetreat", WT_list[idx],dRpoS_list[idx]))
+  de_results <- results(ec_dds_de, contrast = c("timetreat", "WT0", WT_list[i]))
+    
+  resSig <- de_results[ which(de_results$padj < .0083 ), ]
+    
+  resSig <- resSig[ which(abs(resSig$log2FoldChange) > 2 ), ]
+    
+  resSig$gene <- rownames(resSig)
   
-resSig <- de_results[ which(de_results$padj < padj ), ]
+  ind <- match(ec_norm_counts$Geneid,resSig$gene)
   
-resSig <- resSig[ which(abs(resSig$log2FoldChange) > fc ), ]
+  ec_norm_counts$sig <- resSig$gene[ind]
+    
+  norm_counts_sig <- ec_norm_counts %>%
+   filter(!is.na(ec_norm_counts$sig)) %>%
+   select(-sig) %>%
+   mutate(contrast = contrast_vect[i])
   
-resSig$gene <- rownames(resSig)
+  contrast_list_0[[i]] <- norm_counts_sig
+  
+}
 
-ind <- match(ec_norm_counts$Geneid,resSig$gene)
+norm_counts_contrast_0 <- bind_rows(contrast_list_0[[1]], contrast_list_0[[2]], contrast_list_0[[3]], contrast_list_0[[4]], contrast_list_0[[5]], contrast_list_0[[6]])
 
-ec_norm_counts$sig <- resSig$gene[ind]
-  
-norm_counts_sig <- ec_norm_counts %>%
- filter(!is.na(ec_norm_counts$sig)) %>%
- select(-sig) %>%
- mutate(contrast = contrast_vect[idx])
+#write_csv(unique(norm_counts_contrast), file = "stoebel_DEGs.csv")
+```
 
-norm_counts_contrast <- norm_counts_sig
+```{r}
+norm_counts_contrast_0 <- data.frame(norm_counts_contrast_0$Geneid)
+
+colnames(norm_counts_contrast_0) <- "Geneid"
+
+ec_intersection <- inner_join(norm_counts_contrast_0,norm_counts_contrast, by = "Geneid")
+
+ec_intersection
 ```
 
 
 ```{r}
 ## TIDY
-ec_counts_gath <- norm_counts_contrast %>%
+ec_counts_gath <- ec_intersection %>%
   gather(-c(Geneid,contrast), key="sample", value = "rawcount") %>%
   separate(sample, c("treat", "rep_time"), "_") %>%
   mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
@@ -127,17 +136,18 @@ ec_counts_gath <- norm_counts_contrast %>%
                                       
 ec_counts_sum <- ec_counts_gath %>%
   group_by(Geneid, contrast, treat, time) %>%
-  summarize(avecount = mean(rawcount)) %>%
-  mutate(gtreat = paste(Geneid,treat,sep = "")) #%>%
-  #filter(treat == "WT")
+  dplyr::summarise(avecount = mean(rawcount)) %>%
+  mutate(gtreat = paste(Geneid,treat,sep = "")) %>%
+  filter(treat == "WT")
 ```
 
 
 ```{r}
 ec_counts_sum %>%
   ggplot(aes(x=time, y=log2(avecount))) +
-  geom_line(aes(color = gtreat, linetype = treat), alpha = 0.5) +
+  geom_line(aes(color = gtreat), alpha = 0.5) +
   geom_vline(aes(xintercept = contrast)) +
   facet_wrap(~contrast) +
   theme(legend.position = "none")
 ```
+
