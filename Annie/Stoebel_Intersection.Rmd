@@ -1,0 +1,157 @@
+---
+title: "Stoebel_Intersection"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+ec_rawcounts <- read.table("~/Downloads/LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.txt", header = TRUE)
+
+library(ggplot2)
+library(tidyr)
+library(shiny)
+library(dplyr)
+library(DESeq2)
+library(readr)
+```
+
+```{r}
+#format data for normalization
+ec_rawcounts_norm <- ec_rawcounts
+rownames(ec_rawcounts_norm) <- ec_rawcounts_norm$Geneid
+ec_rawcounts_norm <- ec_rawcounts_norm %>% dplyr::select(-Geneid)
+ec_coldata <- data.frame(names = colnames(ec_rawcounts_norm)) %>%
+  separate(names, c("treat", "rep_time"), "_") %>%
+  mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
+                        ifelse(substr(rep_time,start=1,stop = 1) == "B", 2, 3))) %>%
+  mutate(time = ifelse(substr(rep_time,start=3,stop = 3) == "1", 0,
+                      ifelse(substr(rep_time,start=3,stop = 3) == "2", 30,
+                             ifelse(substr(rep_time,start=3,stop = 3) == "3", 60,
+                                    ifelse(substr(rep_time,start=3,stop = 3) == "4", 90,
+                                           ifelse(substr(rep_time,start=3,stop = 3) == "5", 120, 150)))))) %>%
+  mutate(treat = ifelse(treat == "JH01", "WT","dRpoS")) %>%
+  mutate(timetreat = paste(treat,time,sep = "")) %>%
+  select(-rep_time)
+rownames(ec_coldata) <- colnames(ec_rawcounts_norm)
+```
+
+
+```{r}
+ec_dds <- DESeqDataSetFromMatrix(ec_rawcounts_norm, colData = ec_coldata, design = ~ timetreat)
+ec_dds_de <- DESeq(ec_dds)
+ec_norm_counts <- data.frame(counts(ec_dds_de, normalized = TRUE)) %>%
+  mutate(Geneid = ec_rawcounts$Geneid)
+
+```
+
+```{r}
+## same T comparison
+
+contrast_list = c()
+contrast_vect = c(30,60,90,120,150)
+dRpoS_list = c("dRpoS30","dRpoS60","dRpoS90","dRpoS120","dRpoS150")
+WT_list = c("WT30","WT60","WT90","WT120","WT150")
+
+for (i in 1:5) {
+  de_results <- results(ec_dds_de, contrast = c("timetreat", WT_list[i],dRpoS_list[i]))
+  
+  resSig <- de_results[ which(de_results$padj < 0.01 ), ]
+  
+  resSig$gene <- rownames(resSig)
+
+  ind <- match(ec_norm_counts$Geneid,resSig$gene)
+
+  ec_norm_counts$sig <- resSig$gene[ind]
+  
+  norm_counts_sig <- ec_norm_counts %>%
+   filter(!is.na(ec_norm_counts$sig)) %>%
+   select(-sig) %>%
+   mutate(contrast = contrast_vect[i])
+  contrast_list[[i]] = norm_counts_sig
+}
+
+norm_counts_contrast <- bind_rows(contrast_list[[1]],contrast_list[[2]],contrast_list[[3]],contrast_list[[4]],contrast_list[[5]])
+
+```
+
+```{r}
+##T_0 and T comparison
+
+contrast_list_0 = c()
+contrast_vect = c(30,60,90,120,150)
+dRpoS_list = c("dRpoS30","dRpoS60","dRpoS90","dRpoS120","dRpoS150")
+WT_list = c("WT30","WT60","WT90","WT120","WT150")
+
+for (i in 1:5) {
+
+  de_results <- results(ec_dds_de, contrast = c("timetreat", "WT0", WT_list[i]))
+    
+  resSig <- de_results[ which(de_results$padj < .01 ), ]
+    
+  resSig$gene <- rownames(resSig)
+  
+  ind <- match(ec_norm_counts$Geneid,resSig$gene)
+  
+  ec_norm_counts$sig <- resSig$gene[ind]
+    
+  norm_counts_sig <- ec_norm_counts %>%
+   filter(!is.na(ec_norm_counts$sig)) %>%
+   select(-sig) %>%
+   mutate(contrast = contrast_vect[i])
+  
+  contrast_list_0[[i]] <- norm_counts_sig
+  
+}
+
+norm_counts_contrast_0 <- bind_rows(contrast_list_0[[1]], contrast_list_0[[2]], contrast_list_0[[3]], contrast_list_0[[4]], contrast_list_0[[5]])
+
+#write_csv(unique(norm_counts_contrast), file = "stoebel_DEGs.csv")
+```
+
+```{r}
+norm_counts_contrast_0 <- data.frame(norm_counts_contrast_0$Geneid)
+
+colnames(norm_counts_contrast_0) <- "Geneid"
+
+ec_intersection <- inner_join(norm_counts_contrast_0,norm_counts_contrast, by = "Geneid")
+
+ec_intersection
+
+table(ec_intersection$contrast)
+
+hi <- ec_intersection[which(ec_intersection$contrast == "30"),]
+```
+
+
+```{r}
+## TIDY
+ec_counts_gath <- ec_intersection %>%
+  gather(-c(Geneid,contrast), key="sample", value = "rawcount") %>%
+  separate(sample, c("treat", "rep_time"), "_") %>%
+  mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
+                        ifelse(substr(rep_time,start=1,stop = 1) == "B", 2, 3))) %>%
+  mutate(time = ifelse(substr(rep_time,start=3,stop = 3) == "1", 0,
+                      ifelse(substr(rep_time,start=3,stop = 3) == "2", 30,
+                             ifelse(substr(rep_time,start=3,stop = 3) == "3", 60,
+                                    ifelse(substr(rep_time,start=3,stop = 3) == "4", 90,
+                                           ifelse(substr(rep_time,start=3,stop = 3) == "5", 120, 150)))))) %>%
+  mutate(treat = ifelse(treat == "JH01", "WT","dRpoS")) %>%
+  select(-c(rep_time))
+                                      
+ec_counts_sum <- ec_counts_gath %>%
+  group_by(Geneid, contrast, treat, time) %>%
+  dplyr::summarise(avecount = mean(rawcount)) %>%
+  mutate(gtreat = paste(Geneid,treat,sep = "")) %>%
+  filter(treat == "WT")
+```
+
+
+```{r}
+ec_counts_sum %>%
+  ggplot(aes(x=time, y=log2(avecount))) +
+  geom_line(aes(color = gtreat), alpha = 0.5) +
+  geom_vline(aes(xintercept = contrast)) +
+  facet_wrap(~contrast) +
+  theme(legend.position = "none")
+```
+
