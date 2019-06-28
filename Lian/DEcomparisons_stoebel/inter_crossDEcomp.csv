@@ -1,0 +1,8 @@
+Geneid,comparison,genename,bnum
+CDS:b0707:ybgA:DUF1722_family_protein:cds695:+:509:NC_000913.3,allCross,ybgA,b0707
+CDS:b0897:ycaC:putative_isochorismatase_family_hydrolase:cds877:-:626:NC_000913.3,allCross,ycaC,b0897
+"AS_IGR:(CDS,b2265,menF,isochorismate_synthase_2,cds2249,-,1295/CDS,b2266,elaB,putative_membrane-anchored_DUF883_family_ribosome-binding_protein,cds2250,-,305):+:27:NC_000913.3",allCross,NA,NA
+CDS:b2266:elaB:putative_membrane-anchored_DUF883_family_ribosome-binding_protein:cds2250:-:305:NC_000913.3,allCross,elaB,b2266
+CDS:b2672:ygaM:putative_membrane-anchored_DUF883_family_ribosome-binding_protein:cds2640:+:329:NC_000913.3,allCross,ygaM,b2672
+CDS:b3555:yiaG:HTH_CROC1_family_putative_transcriptional_regulator:cds3491:+:290:NC_000913.3,allCross,yiaG,b3555
+CDS:b4376:osmY:salt-inducible_putative_ABC_transporter_periplasmic_binding_protein:cds4290:+:605:NC_000913.3,allCross,osmY,b4376
