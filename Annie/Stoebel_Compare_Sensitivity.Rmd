@@ -8,7 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-ec_rawcounts <- read.table("LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.txt", header = TRUE)
+ec_rawcounts <- read.table("~/Downloads/LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.txt", header = TRUE)
 
 library(ggplot2)
 library(tidyr)
@@ -189,8 +189,6 @@ colnames(sens) <- c("genename","bnum","direction of regulation", "sensitivity")
 
 sens_compare <- inner_join(joint, sens, by = c("bnum")) %>%
   filter(!is.na(bnum))
-
-length(sens_compare$bnum)
 ```
 
 ```{r}
@@ -221,10 +219,12 @@ df_sens_prop$contrast <- c("60","90","120","150")
 
 df_sens_prop %>%
   gather(group, props, -contrast) %>%
-  ggplot(aes(x = as.factor(as.numeric(contrast)), y = props, fill = group)) +
+  ggplot(aes(x = as.numeric(contrast), y = props, fill = group)) +
   geom_bar(stat = "identity", position = "dodge") +
   labs(x = "time", y = "sensitivity proportion") +
-  scale_fill_manual(values = c("#E69D2E", "#4087CE"))
+  geom_line(size = 1, lineend = "round", aes(color = group)) +
+  scale_fill_manual(values = c("#E69D2E", "#4087CE")) +
+  scale_color_manual(values = c("#9E621E", "#1E4C9E"))
 ```
 
 
