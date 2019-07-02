@@ -241,16 +241,17 @@ cross_0_150_list <- intersect(rownames(WT0_WT150),rownames(WT150_dRpoS150))
 
 #looking at comparing "WT0_WT150","WT0_WT90","WT0_WT60"
 
-#cross12 <- length(intersect(rownames(WT0_WT150),rownames(WT0_WT90)))
-#cross23 <- length(intersect(rownames(WT0_WT90),rownames(WT0_WT60)))
-#cross123 <- length(intersect(intersect(rownames(WT0_WT150),rownames(WT0_WT60)),rownames(WT0_WT90)))
-#cross13 <- length(intersect(rownames(WT0_WT150),rownames(WT0_WT60)))
+cross12 <- length(intersect(rownames(WT150_dRpoS150),rownames(WT90_dRpoS90)))
+cross23 <- length(intersect(rownames(WT90_dRpoS90),rownames(WT60_dRpoS60)))
+cross123 <- length(intersect(intersect(rownames(WT150_dRpoS150),rownames(WT60_dRpoS60)),rownames(WT90_dRpoS90)))
+cross13 <- length(intersect(rownames(WT150_dRpoS150),rownames(WT60_dRpoS60)))
 
 # Note to Lian:  cross13 doesn't exist ... should it be one more comparison above?
-#grid.newpage() 
+#"WT150_dRpoS150","WT90_dRpoS90","WT60_dRpoS60"
+grid.newpage() 
 
 
-#draw.triple.venn(area1 = area1, area2 = area4, area3 = area8,n12 = cross12, n23 = cross23, n13 = cross13,n123 = cross123, category = c("WT0_WT150","WT0_WT90","WT0_WT60") ,lty = "blank",fill = c("skyblue", "pink1", "mediumorchid")) 
+draw.triple.venn(area1 = area1, area2 = area4, area3 = area8,n12 = cross12, n23 = cross23, n13 = cross13,n123 = cross123, category = c("WT150_dRpoS150","WT90_dRpoS90","WT60_dRpoS60") ,lty = "blank",fill = c("skyblue", "pink1", "mediumorchid")) 
 ```
  
 
@@ -278,7 +279,7 @@ WT150_dRpoS150_DF <- data.frame(geneID = rownames(WT150_dRpoS150), comparison = 
 
 rownames(WT0_WT30)
 
-allDEcomp <- rbind(WT0_WT30_DF,WT0_WT60_DF,WT0_WT90_DF,WT0_WT120_DF,WT150_dRpoS150_DF,WT30_dRpoS30_DF,dRpoS0_dRpoS60_DF,WT90_dRpoS90_DF,WT120_dRpoS120_DF,WT150_dRpoS150_DF)
+allDEcomp <- rbind(WT0_WT30_DF,WT0_WT60_DF,WT0_WT90_DF,WT0_WT120_DF,WT150_dRpoS150_DF,WT30_dRpoS30_DF,WT60_dRpoS60_DF,WT90_dRpoS90_DF,WT120_dRpoS120_DF,WT150_dRpoS150_DF)
 
 
 #copying all DEs from comparisons. 
@@ -327,5 +328,12 @@ inter_crossDEcomp <- inter_crossDEcomp %>% left_join(ec_Counts_join, by.x = Gene
 #putting in the genes of interest into table
 inter_crossDEcomp_GOI <- inter_crossDEcomp %>% left_join(gene_interest, by.x = genename, by.y = bnum) %>%
  select(Geneid, comparison, genename, bnum,group)
+
+write_csv(allDEcomp,"allDEcomp.csv")
+write_csv(crossDEcomp,"crossDEcomp.csv")
+write_csv(inter_crossDEcomp,"inter_crossDEcomp.csv")
+write_csv(allDEcomp_GOI,"allDEcomp_GOI.csv")
+write_csv(crossDEcomp_GOI,"crossDEcomp_GOI.csv")
+write_csv(inter_crossDEcomp_GOI,"inter_crossDEcomp_GOI.csv")
 
 ```
