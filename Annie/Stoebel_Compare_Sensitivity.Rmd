@@ -8,7 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-ec_rawcounts <- read.table("~/Downloads/LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.txt", header = TRUE)
+ec_rawcounts <- read.table("LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.txt", header = TRUE)
 
 library(ggplot2)
 library(tidyr)
@@ -56,7 +56,7 @@ WT_list = c("WT0","WT30","WT60","WT90","WT120","WT150")
 for (i in 1:6) {
   de_results <- results(ec_dds_de, contrast = c("timetreat", WT_list[i],dRpoS_list[i]))
   
-  resSig <- de_results[ which(de_results$padj < 0.0167 ), ]
+  resSig <- de_results[ which(de_results$padj < 0.01 ), ]
   
   #resSig <- resSig[ which(abs(resSig$log2FoldChange) > 2 ), ]
   
@@ -94,8 +94,8 @@ library("Hmisc")
 library(cluster)
 library("mclust")
 library(readr)
-ec_Counts <- norm_counts_contrast %>%
-  select(-contrast)
+ec_Counts <- ec_intersection #%>%
+  #select(-contrast)
 ```
 
 
@@ -174,21 +174,37 @@ countsTable.ec.tidy <- ec_Counts %>%
   gather(cond.samps, rawCount, -Geneid, -feature, -genename, -bnum, -Geneid1, -Geneid2, -Feature1, -Feature2, -start.gene, -end.gene, -start.bnum, - end.bnum)
 
 ec_tidy <- ec_Counts %>%
-  select(Geneid, genename, bnum)
+  filter(feature == "CDS") %>%
+  select(Geneid, genename, bnum, contrast)
 ```
 
 ```{r}
-joint <- left_join(de_contrasts, ec_tidy, by = "Geneid")
+#joint <- left_join(de_contrasts, ec_tidy, by = "Geneid")
+
+ec_tidy
 ```
 
 ```{r}
-sens <- read_csv("~/Downloads/sensitivitydata.csv") %>%
-  select(c(geneName,bNum,`Direction of regulation`, sensitivity))
+sens <- read_csv("ec_past_EX.csv") %>%
+  select(c(geneName,bNum, `Differentially expressed between 0% and 100% RpoS`,`Direction of regulation`, sensitivity)) %>%
+  filter(`Differentially expressed between 0% and 100% RpoS` == TRUE) %>%
+  select(-`Differentially expressed between 0% and 100% RpoS`)
 
 colnames(sens) <- c("genename","bnum","direction of regulation", "sensitivity")
 
-sens_compare <- inner_join(joint, sens, by = c("bnum")) %>%
-  filter(!is.na(bnum))
+sens_unique <- unique(sens, by = "genename")
+
+length(sens_unique$genename)
+
+ec_tidy <- unique(ec_tidy, by = "genename")
+                  
+length(ec_tidy$Geneid)
+
+sens_compare <- intersect(sens_unique$genename, ec_tidy$genename)
+library(VennDiagram)
+
+grid.newpage()
+draw.pairwise.venn(area1 = length(sens_unique$genename), area2 = length(ec_tidy$genename), cross = length(sens_compare), category = c("2017","2019"))
 ```
 
 ```{r}
@@ -208,23 +224,25 @@ df_sens %>%
 df_sens_prop <- df_sens %>%
   table() %>%
   as.data.frame.matrix() %>%
-  select(c(insensitive, sensitive)) %>%
-  mutate(total = rowSums(.[1:2])) %>%
+  mutate(total = rowSums(.[1:3])) %>%
   filter(!(total == 0)) %>%
   mutate(insensitive = insensitive/total) %>%
   mutate(sensitive = sensitive/total) %>%
-  select(-total)
+  mutate(linear = linear/total)
 
-df_sens_prop$contrast <- c("60","90","120","150")
+df_sens_prop$contrast <- c("30", "60","90","120","150")
+
+df_sens_prop
 
 df_sens_prop %>%
-  gather(group, props, -contrast) %>%
+  gather(group, props, -c(contrast,total)) %>%
   ggplot(aes(x = as.numeric(contrast), y = props, fill = group)) +
   geom_bar(stat = "identity", position = "dodge") +
   labs(x = "time", y = "sensitivity proportion") +
-  geom_line(size = 1, lineend = "round", aes(color = group)) +
-  scale_fill_manual(values = c("#E69D2E", "#4087CE")) +
-  scale_color_manual(values = c("#9E621E", "#1E4C9E"))
+  geom_line(size = 0.5, lineend = "round", aes(color = group)) +
+  scale_fill_manual(values = c("#E69D2E", "#4087CE", "#db7474")) +
+  scale_color_manual(values = c("#9E621E", "#1E4C9E", "#7a3a3a")) +
+  geom_text(aes(label=c("7","","", "542","","", "62","","", "280","","", "280","","")), vjust=c(rep(-33.2,3),rep(-0.7,3),rep(-13.7,3),rep(-22.5,3),rep(-0.5,3)), position = "dodge", fontface = "bold")
 ```
 
 
