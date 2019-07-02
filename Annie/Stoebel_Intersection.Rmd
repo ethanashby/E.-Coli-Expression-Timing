@@ -5,7 +5,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-ec_rawcounts <- read.table("~/Downloads/LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.txt", header = TRUE)
+ec_rawcounts <- read.table("~/Documents/RNA-Seq/LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.txt", header = TRUE)
 
 library(ggplot2)
 library(tidyr)
@@ -109,17 +109,19 @@ norm_counts_contrast_0 <- bind_rows(contrast_list_0[[1]], contrast_list_0[[2]], 
 ```
 
 ```{r}
-norm_counts_contrast_0 <- data.frame(norm_counts_contrast_0$Geneid)
+norm_counts_contrast_0 <- data.frame(norm_counts_contrast_0$Geneid,norm_counts_contrast_0$contrast)
 
-colnames(norm_counts_contrast_0) <- "Geneid"
+colnames(norm_counts_contrast_0) <- c("Geneid","contrast")
 
-ec_intersection <- inner_join(norm_counts_contrast_0,norm_counts_contrast, by = "Geneid")
+ec_intersection <- inner_join(norm_counts_contrast_0,norm_counts_contrast, by = c("Geneid","contrast"))
 
 ec_intersection
 
 table(ec_intersection$contrast)
 
-hi <- ec_intersection[which(ec_intersection$contrast == "30"),]
+hi <- ec_intersection[which(ec_intersection$contrast == "150"),]
+
+contrast_list_0[[5]]
 ```
 
 

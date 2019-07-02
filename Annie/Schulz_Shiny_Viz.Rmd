@@ -18,7 +18,7 @@ library(readr)
 ```{r}
 ## Import data
 
-rawcounts <- read.table(file = "18-5-23_dedup_Proc_ibet_TC_for_deseq.txt", header = TRUE)
+rawcounts <- read.table("18-5-23_dedup_Proc_ibet_TC_for_deseq.txt", header = TRUE)
 
 rawcounts$gene <- rownames(rawcounts)
 
@@ -164,7 +164,7 @@ server <- function(input, output, session) {
 
   counts_sum_norm <- counts_gath_norm %>%
     group_by(contrast, gene, treat, time) %>%
-    summarize(avecount = mean(rawcount))
+    dplyr::summarise(avecount = mean(rawcount))
   
 ## plotting the data with the user chosen parameters
   

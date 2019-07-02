@@ -197,14 +197,30 @@ sens_unique <- unique(sens, by = "genename")
 length(sens_unique$genename)
 
 ec_tidy <- unique(ec_tidy, by = "genename")
-                  
-length(ec_tidy$Geneid)
+
+ec_tidy_150 <- ec_tidy %>%
+  filter(contrast == "150")
+
+sens_compare_150 <- intersect(sens_unique$genename, ec_tidy_150$genename)
 
 sens_compare <- intersect(sens_unique$genename, ec_tidy$genename)
 library(VennDiagram)
 
-grid.newpage()
-draw.pairwise.venn(area1 = length(sens_unique$genename), area2 = length(ec_tidy$genename), cross = length(sens_compare), category = c("2017","2019"))
+#v1 <- draw.pairwise.venn(area1 = length(sens_unique$genename), area2 = length(ec_tidy$genename), cross = length(sens_compare), category = c("2017","2019"))
+#gridExtra::grid.arrange(gTree(children=v1), top="comparison of all DEGs")
+
+v1 <- draw.pairwise.venn(area1 = length(sens_unique$genename),
+                   area2 = length(ec_tidy_150$genename), 
+                   cross = length(sens_compare_150), 
+                   category = c("2017","2019"))
+v2 <- draw.pairwise.venn(area1 = length(sens_unique$genename),
+                   area2 = length(ec_tidy$genename),
+                   cross = length(sens_compare),
+                   category = c("2017","2019"))
+
+library(cowplot)
+cowplot::plot_grid(gTree(children = v1), gTree(children = v2),
+                   labels = c("comparison of T150 DEGs","comparison of all DEGs"))
 ```
 
 ```{r}
