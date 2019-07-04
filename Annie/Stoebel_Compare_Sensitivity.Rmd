@@ -58,7 +58,7 @@ for (i in 1:6) {
   
   resSig <- de_results[ which(de_results$padj < 0.01 ), ]
   
-  #resSig <- resSig[ which(abs(resSig$log2FoldChange) > 2 ), ]
+  resSig <- resSig[ which(abs(resSig$log2FoldChange) > 2 ), ]
   
   resSig$gene <- rownames(resSig)
 
@@ -182,6 +182,7 @@ ec_tidy <- ec_Counts %>%
 #joint <- left_join(de_contrasts, ec_tidy, by = "Geneid")
 
 ec_tidy
+
 ```
 
 ```{r}

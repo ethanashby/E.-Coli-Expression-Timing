@@ -5,7 +5,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-ec_rawcounts <- read.table("~/Downloads/LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.txt", header = TRUE)
+ec_rawcounts <- read.table("LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.txt", header = TRUE)
 
 library(ggplot2)
 library(tidyr)
@@ -46,14 +46,14 @@ ec_norm_counts <- data.frame(counts(ec_dds_de, normalized = TRUE)) %>%
 
 ```{r}
 contrast_list = c()
-contrast_vect = c(0,30,60,90,120,150)
-dRpoS_list = c("dRpoS0","dRpoS30","dRpoS60","dRpoS90","dRpoS120","dRpoS150")
-WT_list = c("WT0","WT30","WT60","WT90","WT120","WT150")
+contrast_vect = c(30,60,90,120,150)
+dRpoS_list = c("dRpoS30","dRpoS60","dRpoS90","dRpoS120","dRpoS150")
+WT_list = c("WT30","WT60","WT90","WT120","WT150")
 
-for (i in 1:6) {
+for (i in 1:5) {
   de_results <- results(ec_dds_de, contrast = c("timetreat", WT_list[i],dRpoS_list[i]))
   
-  resSig <- de_results[ which(de_results$padj < 0.0083 ), ]
+  resSig <- de_results[ which(de_results$padj < 0.01 ), ]
   
   resSig <- resSig[ which(abs(resSig$log2FoldChange) > 2 ), ]
   
@@ -70,21 +70,21 @@ for (i in 1:6) {
   contrast_list[[i]] = norm_counts_sig
 }
 
-norm_counts_contrast <- bind_rows(contrast_list[[1]],contrast_list[[2]],contrast_list[[3]],contrast_list[[4]],contrast_list[[5]],contrast_list[[6]])
+norm_counts_contrast <- bind_rows(contrast_list[[1]],contrast_list[[2]],contrast_list[[3]],contrast_list[[4]],contrast_list[[5]])
 
 ```
 
 ```{r}
 contrast_list_0 = c()
-contrast_vect = c(0,30,60,90,120,150)
-dRpoS_list = c("dRpoS0","dRpoS30","dRpoS60","dRpoS90","dRpoS120","dRpoS150")
-WT_list = c("WT0","WT30","WT60","WT90","WT120","WT150")
+contrast_vect = c(30,60,90,120,150)
+dRpoS_list = c("dRpoS30","dRpoS60","dRpoS90","dRpoS120","dRpoS150")
+WT_list = c("WT30","WT60","WT90","WT120","WT150")
 
-for (i in 1:6) {
+for (i in 1:5) {
 
   de_results <- results(ec_dds_de, contrast = c("timetreat", "WT0", WT_list[i]))
     
-  resSig <- de_results[ which(de_results$padj < .0083 ), ]
+  resSig <- de_results[ which(de_results$padj < .01 ), ]
     
   resSig <- resSig[ which(abs(resSig$log2FoldChange) > 2 ), ]
     
@@ -103,7 +103,7 @@ for (i in 1:6) {
   
 }
 
-norm_counts_contrast_0 <- bind_rows(contrast_list_0[[1]], contrast_list_0[[2]], contrast_list_0[[3]], contrast_list_0[[4]], contrast_list_0[[5]], contrast_list_0[[6]])
+norm_counts_contrast_0 <- bind_rows(contrast_list_0[[1]], contrast_list_0[[2]], contrast_list_0[[3]], contrast_list_0[[4]], contrast_list_0[[5]])
 
 #write_csv(unique(norm_counts_contrast), file = "stoebel_DEGs.csv")
 ```
