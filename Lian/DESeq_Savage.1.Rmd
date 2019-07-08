@@ -1,0 +1,194 @@
+---
+title: "T.brucei data 1"
+author: "Lian Morales"
+date: "6/5/2019"
+output: html_document
+---
+```{r}
+```
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+savagecounts <- read.table("18-5-24_dedup_Savage_deseq_counts.txt", header = TRUE)
+
+savagecounts
+
+```
+```{r}
+sum(savagecounts$MG_1)
+```
+
+ 
+```{r}
+
+
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("EuPathDB")
+
+```
+
+
+ 
+
+```{r, echo=FALSE}
+library("DESeq2")
+
+ 
+```
+```{r}
+library(EuPathDB)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+savagecounts
+```
+```{r}
+library("dplyr")
+```
+
+```{r}
+
+
+rownames(savagecounts) <- savagecounts$gene #renames the gene row
+savagecounts <- savagecounts %>% dplyr :: select(-"gene") #this gets rid of the name gene in table
+
+```
+```{r}
+coldata <- data.frame(rownames = colnames(savagecounts),
+                    reps = as.factor(c(1, 2, 3, 1, 2, 3 ,4,
+                                     1, 2 ,3)), 
+                    stage = as.factor(c("MG","MG","MG","PV","PV","PV","PV","SA","SA","SA")))
+coldata
+```
+```{r} 
+ddsFullCountTable <- DESeqDataSetFromMatrix(
+   countData = savagecounts,
+   colData = coldata,
+   design = ~ reps + stage)
+ddsFullCountTable
+
+```
+
+```{r}
+savagecounts_dds <- DESeq(ddsFullCountTable )
+savagecounts_dds$sizeFactor
+```
+```{r}
+#comparing MG and SA using DESeq
+savageRes <- results( savagecounts_dds ,contrast = c("stage",  "MG","SA"))
+
+resSig <- savageRes[ which(savageRes$padj < 0.01 ), ]
+head( resSig[ order( resSig$log2FoldChange ), ] )
+tail( resSig[ order( resSig$log2FoldChange ), ] )
+resSig
+```
+
+```{r}
+plotMA( savageRes, ylim = c(-1, 1) )
+#red is significantly differentially expressed because of low pvalue
+```
+
+```{r}
+plotDispEsts( savagecounts_dds, ylim = c(1e-6, 1e1) )
+```
+
+```{r}
+hist( savageRes$pvalue, breaks=20, col="grey" )
+```
+
+```{r}
+savagecounts
+```
+
+```{r}
+file_to_write<-paste(rownames(resSig), collapse="\t")
+write.table(file_to_write, file="sav_gene") #look up in file directory, then delete quotation marks as well as the first rows that are not genes
+
+
+```
+
+```{r}
+
+
+ 
+```
+```{r}
+savTBgene
+resSig$ensembl <- rownames(resSig)
+idx <- match( rownames(resSig), savTBgene$'Gene.ID' )
+resSig$name_sym <- savTBgene$'Gene Name or Symbol'[idx]
+resSig$source_ID <- savTBgene$'source_id'[idx]
+resSig$organism <- savTBgene$'Organism'[idx]
+resSig$geneloc <- savTBgene$'Genomic.Location..Gene.'[idx]
+resSig$prodDes <- savTBgene$'Product Description'[idx]
+resSig$input_ID <- savTBgene$'Input ID'[idx]
+
+```
+
+
+```{r}
+
+head(resSig,10)
+
+```
+```{r}
+rld <- rlog( savagecounts_dds )
+head( assay(rld) )
+```
+```{r}
+par( mfrow = c( 1, 2 ) )
+plot( log2( 1+counts(savagecounts_dds, normalized=TRUE)[, 1:2] ), col="#00000020", pch=20, cex=0.3 )
+plot( assay(rld)[, 1:2], col="#00000020", pch=20, cex=0.3 )
+
+```
+
+```{r}
+#Distance matrix
+sav_sampleDists <- dist( t( assay(rld) ) )
+sav_sampleDists
+```
+```{r}
+#HeatMap
+sampleDistMatrix <- as.matrix( sav_sampleDists )
+rownames(sampleDistMatrix) <- paste( savagecounts_dds$reps,savagecounts_dds$stage, sep="-" )
+colnames(sampleDistMatrix) <- paste( rld$reps,rld$stage, sep="-" )
+library( "gplots" )
+library( "RColorBrewer" )
+colours = colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
+heatmap.2( sampleDistMatrix, trace="none", col=colours)
+```
+```{r}
+sampleDistMatrix
+```
+```{r}
+library("ggplot2")
+library( "RColorBrewer" )
+ramp <- 1:3/3
+cols <- c(rgb(ramp, 0, 0),
+          rgb(0, ramp, 0),
+          rgb(0, 0, ramp),
+          rgb(ramp, 0, ramp))
+
+print(plotPCA( rld, intgroup = c("reps", "stage"), ntop = 500, returnData = FALSE), col = cols)
+
+colData(dds)
+```
+```{r}
+ library( "genefilter" )
+topVarGenes <- head( order( rowVars( assay(rld) ), decreasing=TRUE ), 35 )
+
+```
+```{r}
+heatmap.2( assay(rld)[ topVarGenes, ], scale="row",
+     trace="none", dendrogram="column",
+     col = colorRampPalette( rev(brewer.pal(9, "RdBu")) )(255))
+#This heat map shows that our genes cluster together, which is good, and is expected. Also using the dendrogram(the tree) we can see that the MG and the PCV are more closely related than the SA, and more closely which stages 1,2,3,4 are more closely related. 
+```
+
+```{r}
+
+```
+
