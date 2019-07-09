@@ -107,6 +107,7 @@ sav_data <- data.frame(rownames(savagecounts))
 colnames(sav_data) <- "Geneid"
 
 #SAV_JOIN ALL PADJ AND GENES FROM SAV DATA AND COMPARISONS
+#padj data table with all pvalues from all comparisons, and full gene list from savage 
 sav_join <- sav_data %>% dplyr::select(  "Geneid" )
 sav_join<- sav_MgPv %>% full_join(sav_join, by.x = Geneid) %>% select(Geneid,Padj_MgPv)
 sav_join<- sav_MgSa %>% full_join(sav_join, by.x = Geneid) %>%select(Geneid,Padj_MgPv,Padj_MgSa)
