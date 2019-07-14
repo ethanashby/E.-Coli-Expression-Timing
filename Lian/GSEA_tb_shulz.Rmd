@@ -1,0 +1,214 @@
+---
+title: "PAM_tb_shulz"
+author: "Lian Morales"
+date: "7/9/2019"
+output: html_document
+---
+
+```{r}
+#LOADING DESEQ2 AND RNASEQ FILE
+knitr::opts_chunk$set(echo = TRUE)
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+
+library("dplyr")
+library("tidyr")
+library("DESeq2")
+library(readr)
+library(devtools)
+library("DESeq2")
+library("dplyr")
+library(readr)
+library(tidyr)
+library(ggplot2)
+library("vsn")
+library("hexbin")
+library("corrplot")
+
+#for GSEA
+library(doParallel)
+library(Biobase)
+library(biomaRt)
+library(fgsea)
+```
+
+
+```{r}
+#DESEQ ON SCHULZ
+
+TBcounts <- read.table("18-5-23_dedup_Proc_ibet_TC_for_deseq.txt",header = TRUE)
+
+#NORMALIZATION BY DESEQ2
+rownames(TBcounts) <- TBcounts$gene #renames the gene row
+TBcounts <- TBcounts %>% dplyr :: select(-"gene") #this gets rid of the name gene in table
+#creating new data frame for DESeq to analyze
+tb_new <- data.frame(rownames = colnames(TBcounts),
+                     reps = as.factor(c(1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3)),
+                     stage = as.factor(c("noo_ib","noo_ib","noo_ib", "ib_6h","ib_6h","ib_6h", "ib_12h","ib_12h","ib_12h","ib_24h","ib_24h","ib_24h","ib_48h","ib_48h","ib_48h","ib_3d","ib_3d","ib_3d","ib_7d","ib_7d","ib_7d","ib_10d","ib_10d","ib_10d","ib_14d","ib_14d","ib_14d")))
+
+##dds stands for the DESeq Data Set
+ddsFullCountTable <- DESeqDataSetFromMatrix(countData = TBcounts,
+                                            colData = tb_new, 
+                                            design = ~ reps + stage)
+
+#Filtering Data, counts less than  10. This helps run DEseq faster as well.
+keep <- rowSums(counts(ddsFullCountTable)) >= 10
+ddsFullCountTable <- ddsFullCountTable[keep,]
+
+TBcounts_dds <- DESeq(ddsFullCountTable)
+
+#calculating norm counts
+##DESeq2 :: allows to specify where this fcn comes from
+normDE_counts <- DESeq2::counts(TBcounts_dds, normalized = TRUE) 
+
+#COMPARING - DE ANALYSIS 
+
+#comparing stages noo_ib and ib_12h --- the stage of non inhibited bromodomain at time 0 to inhibited bromodomain at time point 12 hours
+TBcountsRes <- results( TBcounts_dds ,contrast = c("stage",  "noo_ib","ib_12h"))
+
+
+#resSig stands for the results of the signigicant genes expressed in comparison of noo_ib and ib_6h
+resSig <- TBcountsRes[ which(TBcountsRes$padj < 0.1 ), ]
+resSig <- TBcountsRes[ which(abs(TBcountsRes$log2FoldChange) > 0.5 ), ]
+resSighead <- head( resSig[ order( resSig$log2FoldChange ), ] )
+resSigtail <- tail( resSig[ order( resSig$log2FoldChange ), ] )
+
+#making file of rownames, or the genes that are considered significantly  expressed, to enter in trypan database
+file_to_write<-paste(rownames(resSig), collapse="\t")
+write.table(file_to_write, file="TBschulz_gene")
+length(rownames(resSig))
+ 
+
+#GSEA -- MAKING DATA TABLES AND RUNNING FGSEA
+  #Making metric rank for 0-12h comparison
+
+#creating metric used for ranking DE of genes for TB schulz 0-12h timepoint contrast
+resSig$fcsign <- sign(resSig$log2FoldChange) #fcsign stands for the log2foldchange sign
+resSig <-  resSig[which(abs(resSig$fcsign) != 0),] #filtering out foldchanges = 0
+resSig$logP = -log10(resSig$pvalue) 
+resSig <-  resSig[which(abs(resSig$logP) != 0),] 
+resSig$metric= resSig$logP/resSig$fcsign #calculating metric = log10(pvalue)/fcsign
+resSig$Gene <- rownames(resSig) #creating column Gene for dataframe
+gsea_schulz <-resSig[,c("Gene", "metric")]
+
+#creating csv file of DE genes and their ranked metric (log10(pvalue)/fcsign)
+write.table(gsea_sculz,file="DE_genes.csv",quote=F,sep="\t",row.names=F)
+
+
+#Creating data frame from gsea_schulz for gsea
+gsea_schulz_df <- data.frame(gsea_schulz)
+rownames(gsea_schulz_df) <- NULL
+gsea_schulz_df <- gsea_schulz_df[which(gsea_schulz_df$metric != -Inf),] #removing metric where = -Inf
+gsea_schulz_df <- gsea_schulz_df[which(gsea_schulz_df$metric != Inf),]
+
+#creating stats and pathways for gsea
+gseaDat_schulz <- filter(gsea_schulz_df, !is.na(Gene))
+ranks <- gsea_schulz_df$metric
+names(ranks) <- gseaDat_schulz$Gene
+
+```
+
+
+```{r setup, include=FALSE}
+
+
+#DESEQ ON SAVAGE DATA - THREE COMPARISON MGSA MGPV PVSA
+
+savagecounts <- read.table("18-5-24_dedup_Savage_deseq_counts.txt", header = TRUE)
+
+ 
+#Creating Data matrix 
+rownames(savagecounts) <- savagecounts$gene #renames the gene row
+savagecounts <- savagecounts %>% dplyr :: select(-"gene") #this gets rid of the name gene in table
+coldata <- data.frame(rownames = colnames(savagecounts),
+                    reps = as.factor(c(1, 2, 3, 1, 2, 3 ,4,
+                                     1, 2 ,3)), 
+                    stage = as.factor(c("MG","MG","MG","PV","PV","PV","PV","SA","SA","SA")))
+
+ddsFullCountTable <- DESeqDataSetFromMatrix(
+   countData = savagecounts,
+   colData = coldata,
+   design = ~ reps + stage)
+#DESeq2 getting DE genes
+savagecounts_dds <- DESeq(ddsFullCountTable )
+
+#Comparisons of all 
+
+#MG and SA
+savageRes_MgSa <- results( savagecounts_dds ,contrast = c("stage",  "MG","SA"))
+resSig <- savageRes_MgSa[ which(savageRes_MgSa$padj < 0.01 ), ]
+ 
+MgSa <- resSig
+
+#MG and PV
+savageRes_MgPv <- results( savagecounts_dds ,contrast = c("stage",  "MG","PV"))
+resSig <- savageRes_MgPv[ which(savageRes_MgPv$padj < 0.01 ), ]
+MgPv <- resSig
+ 
+#PV and SA
+savageRes_PvSa <- results( savagecounts_dds ,contrast = c("stage",  "PV","SA"))
+resSig <- savageRes_PvSa[ which(savageRes_PvSa$padj < 0.01 ), ]
+PvSa <- resSig
+ 
+ 
+#pasting the rownames function -- for uploading into the tryp database
+ 
+#file_to_write<-paste(rownames(resSig), collapse="\t")
+#write.table(file_to_write, file="sav_gene") #look up in file directory, then delete quotation marks as well as the first rows that are not genes
+
+
+```
+
+
+```{r}
+
+####need to make list of all 'pathways'
+sav_all_list <- c()
+  #for MgSa
+MgSa_list <- rownames(MgSa)
+  #for MgPv
+MgPv_list <- rownames(MgPv)
+  #for PvSa
+PvSa_list <- rownames(PvSa)
+ 
+#creating full list for all savage 
+sav_all_list$MgSa <- MgSa_list
+sav_all_list$MgPv <- MgPv_list 
+sav_all_list$PvSa <- PvSa_list 
+
+#FGSEA
+
+fgseaRes_all <- fgsea(pathways = as.list(sav_all_list), stats = ranks, minSize = 1,  nperm = 10000)
+ 
+
+plotEnrichment(pathway = sav_all_list$PvSa,
+               stats  = ranks) 
+plotEnrichment(pathway = sav_all_list$MgSa,
+               stats  = ranks) 
+plotEnrichment(pathway = sav_all_list$MgPv,
+               stats  = ranks) 
+
+
+```
+
+```{r}
+ 
+plotEnrichment(sav_all_list[[head(fgseaRes_all[order(pval), ], 1)$pathway]],
+               ranks) + labs(title=head(fgseaRes_all[order(pval), ], 1)$pathway)
+
+countsToCluster <- select(TBcounts, Geneid, `RpoS%`, replicate, normCount) %>%
+  unite(cond.samp, `RpoS%`, replicate, sep = "_") %>% spread(cond.samp, normCount)
+# only keep the genes that are in the regulon
+countsToCluster <- countsToCluster %>%  filter(Geneid %in% regulated.genes$Geneid) 
+# save the Geneids and make these the names of the rows, keeping only the columns with counts.
+Geneids <- countsToCluster$Geneid
+countsToCluster <- countsToCluster %>% select(-Geneid)
+rownames(countsToCluster) <- Geneids
+#generate dissmilarity matrix based on spearman correlation
+dissimilarity.matrix <- 1 - cor(t(countsToCluster), method = "spearman")
+
+```
+  
+  
+  

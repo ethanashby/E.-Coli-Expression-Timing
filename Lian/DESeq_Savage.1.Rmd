@@ -10,23 +10,28 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(echo = TRUE)
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
+BiocManager::install("goseq")
 library("dplyr")
 library("tidyr")
 library("DESeq2")
 library("edgeR")
 library(readr)
+library(devtools)
+library(Biobase)
+library(goseq)
+
 
 
 savagecounts <- read.table("18-5-24_dedup_Savage_deseq_counts.txt", header = TRUE)
 
-savagecounts
+
 
 ```
 
 ```{r}
-#########################################################################################################################
+ 
 #Creating Data matrix 
-#########################################################################################################################
+ 
 
 rownames(savagecounts) <- savagecounts$gene #renames the gene row
 savagecounts <- savagecounts %>% dplyr :: select(-"gene") #this gets rid of the name gene in table
@@ -44,40 +49,37 @@ ddsFullCountTable
 ```
 
 ```{r}
-#########################################################################################################################
+ 
 #DESeq2 getting DE genes
-#########################################################################################################################
+ 
 savagecounts_dds <- DESeq(ddsFullCountTable )
 
 ```
 
 
 ```{r}
-#########################################################################################################################
-#comparing MG and SA using DESeq
-#########################################################################################################################
+ 
+#Comparisons of all 
+#MG and SA
+#create diss matrix for counts
+
 savageRes_MgSa <- results( savagecounts_dds ,contrast = c("stage",  "MG","SA"))
-
 resSig <- savageRes_MgSa[ which(savageRes_MgSa$padj < 0.01 ), ]
-resSig_head <- head( resSig[ order( resSig$log2FoldChange ), ] )
-resSig_tail <- tail( resSig[ order( resSig$log2FoldChange ), ] )
 MgSa <- resSig
-savageRes_MgPv <- results( savagecounts_dds ,contrast = c("stage",  "MG","PV"))
 
+#MG and PV
+savageRes_MgPv <- results( savagecounts_dds ,contrast = c("stage",  "MG","PV"))
 resSig <- savageRes_MgPv[ which(savageRes_MgPv$padj < 0.01 ), ]
 MgPv <- resSig
-resSig_head <- head( resSig[ order( resSig$log2FoldChange ), ] )
-resSig_tail <- tail( resSig[ order( resSig$log2FoldChange ), ] )
-
+ 
+#PV and SA
 savageRes_PvSa <- results( savagecounts_dds ,contrast = c("stage",  "PV","SA"))
 resSig <- savageRes_PvSa[ which(savageRes_PvSa$padj < 0.01 ), ]
 PvSa <- resSig
-resSig_head <- head( resSig[ order( resSig$log2FoldChange ), ] )
-resSig_tail <- tail( resSig[ order( resSig$log2FoldChange ), ] )
-
-###########################
+ 
+ 
 #pasting the rownames function -- for uploading into the tryp database
-###########################
+ 
 #file_to_write<-paste(rownames(resSig), collapse="\t")
 #write.table(file_to_write, file="sav_gene") #look up in file directory, then delete quotation marks as well as the first rows that are not genes
 
@@ -86,34 +88,66 @@ resSig_tail <- tail( resSig[ order( resSig$log2FoldChange ), ] )
 
 
 ```{r}
-#########################################################################################################################
+ 
 #MAKING PADJ DATAFRAME
-#########################################################################################################################
+ 
 
 #MgSa
-sav_MgSa <-  data.frame(rownames(MgSa), MgSa$padj)
-colnames(sav_MgSa) <- c("Geneid","Padj_MgSa")
+sav_MgSa <-  data.frame(rownames(MgSa), MgSa$pvalue,MgSa$padj)
+colnames(sav_MgSa) <- c("Geneid","Pvalue_MgSa","Padj_MgSa")
 
 #MgPv
-sav_MgPv <-  data.frame(rownames(MgPv), MgPv$padj)
-colnames(sav_MgPv) <- c("Geneid","Padj_MgPv")
+sav_MgPv <-  data.frame(rownames(MgPv), MgPv$pvalue,MgPv$padj)
+colnames(sav_MgPv) <- c("Geneid","Pvalue_MgPv","Padj_MgPv")
 
 #PvSa
-sav_PvSa <-  data.frame(rownames(PvSa),PvSa$padj)
-colnames(sav_PvSa) <- c("Geneid", "Padj_PvSa")
-length(rownames(savagecounts))
+sav_PvSa <-  data.frame(rownames(PvSa),PvSa$pvalue,PvSa$padj)
+colnames(sav_PvSa) <- c("Geneid", "Pvalue_PvSa","Padj_PvSa")
+ 
 
 sav_data <- data.frame(rownames(savagecounts))
 colnames(sav_data) <- "Geneid"
 
+length(sav_MgSa$Geneid)
+
+sav_MgPv_path_df <- data.frame(rownames(MgPv))
+colnames(sav_MgPv_path_df) <- "pathway"
+
+sav_MgSa_path_df <- data.frame(rownames(MgSa))
+colnames(sav_MgSa_path_df) <- "pathway"
+
+sav_PvSa_path_df <- data.frame(rownames(PvSa))
+colnames(sav_PvSa_path_df) <- "pathway"
+
+MgSa_list <- as.list(sav_MgSa_path_df)
+MgPv_list <- as.list(sav_MgPv_path_df)
+PvSa_list <- as.list(sav_PvSa_path_df)
 #SAV_JOIN ALL PADJ AND GENES FROM SAV DATA AND COMPARISONS
 #padj data table with all pvalues from all comparisons, and full gene list from savage 
-sav_join <- sav_data %>% dplyr::select(  "Geneid" )
-sav_join<- sav_MgPv %>% full_join(sav_join, by.x = Geneid) %>% select(Geneid,Padj_MgPv)
-sav_join<- sav_MgSa %>% full_join(sav_join, by.x = Geneid) %>%select(Geneid,Padj_MgPv,Padj_MgSa)
-sav_join<- sav_PvSa %>% full_join(sav_join, by.x = Geneid) %>% select(Geneid,Padj_MgPv,Padj_MgSa,Padj_PvSa)
+#install.packages("plyr")
+#library(plyr)
+#sav_join_2 <- sav_data %>% dplyr::select(  "Geneid" )
+#sav_join_2<- sav_MgPv %>% full_join(sav_join, by.x = Geneid) %>% select(Geneid,Padj_MgPv)
+#sav_join_2<- sav_MgSa %>% full_join(sav_join, by.x = Geneid) %>%select(Geneid,Padj_MgPv,Padj_MgSa)
+#sav_join_2<- sav_PvSa %>% full_join(sav_join, by.x = Geneid) %>% select(Geneid,Padj_MgPv,Padj_MgSa,Padj_PvSa)
+#cbind(sav_MgPv,sav_MgSa,sav_PvSa)
+gene_mgpv <-data.frame(sav_MgPv$Geneid)
+colnames(gene_mgpv) <- "Geneid"
+gene_mgsa <- data.frame(sav_MgSa$Geneid)
+colnames(gene_mgsa) <- "Geneid"
+gene_pvsa <-data.frame(sav_PvSa$Geneid)
+colnames(gene_pvsa) <- "Geneid"
+sav_join <- data.frame(rownames(TBcounts))
+colnames(sav_join) <- "Geneid"
+sav_join <- sav_join %>% full_join(list(gene_mgpv,gene_mgsa,gene_pvsa), by =  Geneid)
+colnames(sav_join) <- as.factor(c("MgPv","MgSa","PvSa"))
+#allsavComparisons <- data.frame(sav_join)
+#%>%select(Geneid,Padj_MgPv,Padj_MgSa,Padj_PvSa)
 
-```
+ 
+``` 
+
+
 
 
 ```{r}
