@@ -74,11 +74,54 @@ resSig <- TBcountsRes[ which(abs(TBcountsRes$log2FoldChange) > 0.5 ), ]
 resSighead <- head( resSig[ order( resSig$log2FoldChange ), ] )
 resSigtail <- tail( resSig[ order( resSig$log2FoldChange ), ] )
 
-#making file of rownames, or the genes that are considered significantly  expressed, to enter in trypan database
-file_to_write<-paste(rownames(resSig), collapse="\t")
-write.table(file_to_write, file="TBschulz_gene")
-length(rownames(resSig))
+resSig$fcsign <- sign(resSig$log2FoldChange)
+resSig <-  resSig[which(abs(resSig$fcsign) != 0),]
+
+#creating negative and positive logfold change data sets
+resSig_log.pos <- resSig[which(resSig$fcsign != -1),]
+resSig_log.neg <- resSig[which(resSig$fcsign == -1),]
+
+##### for pos log fold change
+resSig_log.pos$fcsign <- sign(resSig_log.pos$log2FoldChange) #fcsign stands for the log2foldchange sign
+resSig_log.pos <-  resSig_log.pos[which(abs(resSig_log.pos$fcsign) != 0),] #filtering out foldchanges = 0
+resSig_log.pos$logP = -log10(resSig_log.pos$pvalue) 
+resSig_log.pos <-  resSig_log.pos[which(abs(resSig_log.pos$logP) != 0),] 
+resSig_log.pos$metric= resSig_log.pos$logP  #calculating metric = log10(pvalue) 
+resSig_log.pos$Gene <- rownames(resSig_log.pos) #creating column Gene for dataframe
+gsea_schulz_log.pos <-resSig_log.pos[,c("Gene", "metric")]
+gsea_schulz_df_log.pos
+  #creating data frame
+gsea_schulz_df_log.pos <- data.frame(gsea_schulz_log.pos)
+rownames(gsea_schulz_df_log.pos) <- NULL
+gsea_schulz_df_log.pos <- gsea_schulz_df_log.pos[which(gsea_schulz_df_log.pos$metric != -Inf),] #removing metric where = -Inf
+gsea_schulz_df_log.pos <- gsea_schulz_df_log.pos[which(gsea_schulz_df_log.pos$metric != Inf),]
+  #creating ranks for fgsea
+gseaDat_schulz_log.pos <- filter(gsea_schulz_df_log.pos, !is.na(Gene))
+ranks_log.pos <- gsea_schulz_df_log.pos$metric
+names(ranks_log.pos) <- gseaDat_schulz_log.pos$Gene
+
+
+##### For neg log fold change
+resSig_log.neg$fcsign <- sign(resSig_log.neg$log2FoldChange) #fcsign stands for the log2foldchange sign
+resSig_log.neg <-  resSig_log.neg[which(abs(resSig_log.neg$fcsign) != 0),] #filtering out foldchanges = 0
+resSig_log.neg$logP = -log10(resSig_log.neg$pvalue) 
+resSig_log.neg <-  resSig_log.neg[which(abs(resSig_log.neg$logP) != 0),] 
+resSig_log.neg$metric=  resSig_log.neg$logP  #calculating metric = log10(pvalue) 
+resSig_log.neg$Gene <- rownames(resSig_log.neg) #creating column Gene for dataframe
+gsea_schulz_log.neg <-resSig_log.neg[,c("Gene", "metric")]
  
+
+  #creating data frame
+gsea_schulz_df_log.neg <- data.frame(gsea_schulz_log.neg)
+rownames(gsea_schulz_df_log.neg) <- NULL
+gsea_schulz_df_log.neg <- gsea_schulz_df_log.neg[which(gsea_schulz_df_log.neg$metric != -Inf),] #removing metric   where = -Inf
+gsea_schulz_df_log.neg <- gsea_schulz_df_log.neg[which(gsea_schulz_df_log.neg$metric != Inf),] 
+  #creating ranks for fgsea
+gseaDat_schulz_log.neg <- filter(gsea_schulz_df_log.neg, !is.na(Gene))
+ranks_log.neg <- gsea_schulz_df_log.neg$metric
+names(ranks_log.neg) <- gseaDat_schulz_log.neg$Gene
+
+
 
 #GSEA -- MAKING DATA TABLES AND RUNNING FGSEA
   #Making metric rank for 0-12h comparison
@@ -88,7 +131,7 @@ resSig$fcsign <- sign(resSig$log2FoldChange) #fcsign stands for the log2foldchan
 resSig <-  resSig[which(abs(resSig$fcsign) != 0),] #filtering out foldchanges = 0
 resSig$logP = -log10(resSig$pvalue) 
 resSig <-  resSig[which(abs(resSig$logP) != 0),] 
-resSig$metric= resSig$logP/resSig$fcsign #calculating metric = log10(pvalue)/fcsign
+resSig$metric= resSig$logP #calculating metric = log10(pvalue)/fcsign
 resSig$Gene <- rownames(resSig) #creating column Gene for dataframe
 gsea_schulz <-resSig[,c("Gene", "metric")]
 
@@ -101,11 +144,16 @@ gsea_schulz_df <- data.frame(gsea_schulz)
 rownames(gsea_schulz_df) <- NULL
 gsea_schulz_df <- gsea_schulz_df[which(gsea_schulz_df$metric != -Inf),] #removing metric where = -Inf
 gsea_schulz_df <- gsea_schulz_df[which(gsea_schulz_df$metric != Inf),]
-
+ 
 #creating stats and pathways for gsea
 gseaDat_schulz <- filter(gsea_schulz_df, !is.na(Gene))
 ranks <- gsea_schulz_df$metric
 names(ranks) <- gseaDat_schulz$Gene
+
+
+
+
+
 
 ```
 
@@ -174,40 +222,42 @@ PvSa_list <- rownames(PvSa)
  
 #creating full list for all savage 
 sav_all_list$MgSa <- MgSa_list
-sav_all_list$MgPv <- MgPv_list 
-sav_all_list$PvSa <- PvSa_list 
+sav_all_list$MgPv <- MgPv_list
+sav_all_list$PvSa <- PvSa_list
 
 #FGSEA
 
 fgseaRes_all <- fgsea(pathways = as.list(sav_all_list), stats = ranks, minSize = 1,  nperm = 10000)
- 
+fgseaRes_all_pos <- fgsea(pathways = as.list(sav_all_list), stats = ranks_log.pos, minSize = 1,  nperm = 10000)
+fgseaRes_all_neg <- fgsea(pathways = as.list(sav_all_list), stats = ranks_log.neg, minSize = 1,  nperm = 10000)
+attach(mtcars)
+par(mfrow = c(1,2))
+plotEnrichment(pathway = sav_all_list$PvSa,
+               stats  = ranks_log.neg) + labs(title = "MgSa neg log fold")
+plotEnrichment(pathway = sav_all_list$MgSa,
+               stats  = ranks_log.neg) + labs(title ="MgPv neg log fold")
+plotEnrichment(pathway = sav_all_list$MgPv,
+               stats  = ranks_log.neg) + labs(title ="PvSa neg log fold")
 
 plotEnrichment(pathway = sav_all_list$PvSa,
-               stats  = ranks) 
+               stats  = ranks_log.pos) + labs(title ="MgSa pos log fold")
 plotEnrichment(pathway = sav_all_list$MgSa,
-               stats  = ranks) 
+               stats  = ranks_log.pos) + labs(title ="MgPv pos log fold")
 plotEnrichment(pathway = sav_all_list$MgPv,
-               stats  = ranks) 
+               stats  = ranks_log.pos) + labs(title ="PvSa pos log fold")
 
+plotEnrichment(pathway = sav_all_list$PvSa,
+               stats  = ranks ) + labs(title ="MgSa")
+plotEnrichment(pathway = sav_all_list$MgSa,
+               stats  = ranks ) + labs(title ="MgPv")
+plotEnrichment(pathway = sav_all_list$MgPv,
+               stats  = ranks ) + labs(title ="PvSa")
 
 ```
 
 ```{r}
  
-plotEnrichment(sav_all_list[[head(fgseaRes_all[order(pval), ], 1)$pathway]],
-               ranks) + labs(title=head(fgseaRes_all[order(pval), ], 1)$pathway)
-
-countsToCluster <- select(TBcounts, Geneid, `RpoS%`, replicate, normCount) %>%
-  unite(cond.samp, `RpoS%`, replicate, sep = "_") %>% spread(cond.samp, normCount)
-# only keep the genes that are in the regulon
-countsToCluster <- countsToCluster %>%  filter(Geneid %in% regulated.genes$Geneid) 
-# save the Geneids and make these the names of the rows, keeping only the columns with counts.
-Geneids <- countsToCluster$Geneid
-countsToCluster <- countsToCluster %>% select(-Geneid)
-rownames(countsToCluster) <- Geneids
-#generate dissmilarity matrix based on spearman correlation
-dissimilarity.matrix <- 1 - cor(t(countsToCluster), method = "spearman")
-
+ 
 ```
   
   
