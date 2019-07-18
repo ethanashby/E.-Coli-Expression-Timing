@@ -75,7 +75,7 @@ norm_counts_contrast <- bind_rows(contrast_list[[1]],contrast_list[[2]],contrast
 ```
 
 ```{r}
-##T_0 and T comparison
+##T_0 and T WT comparison
 
 contrast_list_0 = c()
 contrast_vect = c(30,60,90,120,150)
@@ -115,13 +115,17 @@ colnames(norm_counts_contrast_0) <- c("Geneid","contrast")
 
 ec_intersection <- inner_join(norm_counts_contrast_0,norm_counts_contrast, by = c("Geneid","contrast"))
 
-ec_intersection
+EC_gene_name <- distinct(data.frame(ec_intersection$Geneid))
+
+colnames(EC_gene_name) <- "Geneid"
+
+EC_DEGs <- left_join(EC_gene_name, ec_norm_counts, by = "Geneid") %>%
+  select(-sig)
+
+EC_DEGs
 
 table(ec_intersection$contrast)
 
-hi <- ec_intersection[which(ec_intersection$contrast == "150"),]
-
-contrast_list_0[[5]]
 ```
 
 
@@ -156,4 +160,3 @@ ec_counts_sum %>%
   facet_wrap(~contrast) +
   theme(legend.position = "none")
 ```
-
