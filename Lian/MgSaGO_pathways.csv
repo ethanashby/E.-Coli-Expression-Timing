@@ -1,0 +1,1062 @@
+Pathway Id,Pathway,Unique Gene Count,Genes
+1CMET2-PWY,<i>N</i><sup>10</sup>-formyl-tetrahydrofolate biosynthesis,1,Tb927.7.5480 | Tb927.7.5480
+1CMET2-PWY,<i>N</i><sup>10</sup>-formyl-tetrahydrofolate biosynthesis,1,Tb927.7.5480 | Tb927.7.5480
+ACETOACETATE-DEG-PWY,acetoacetate degradation (to acetyl CoA),1,Tb927.8.2540 | Tb927.8.2540
+ALANINE-VALINESYN-PWY,L-alanine biosynthesis I,1,Tb927.2.4590
+ALANINE-VALINESYN-PWY,alanine biosynthesis I,1,Tb927.2.4590
+ALL-CHORISMATE-PWY,superpathway of chorismate metabolism,2,Tb927.11.5090 | Tb927.7.5480
+ANAEROFRUCAT-PWY,homolactic fermentation,3,Tb927.1.3830 | Tb927.1.700 | Tb927.1.710
+ANAGLYCOLYSIS-PWY,glycolysis III (from glucose),3,Tb927.1.3830 | Tb927.1.700 | Tb927.1.710
+ANAPHENOXI-PWY,L-phenylalanine degradation II (anaerobic),1,Tb927.11.5090
+ANARESP1-PWY,respiration (anaerobic),4,Tb927.10.13430 | Tb927.10.15410 | Tb927.11.900 | Tb927.3.4500
+ARG+POLYAMINE-SYN,superpathway of arginine and polyamine biosynthesis,2,Tb927.5.1310 | Tb927.5.3800
+ARGSYN-PWY,L-arginine biosynthesis I (via L-ornithine),1,Tb927.5.3800
+ARGSYNBSUB-PWY,L-arginine biosynthesis II (acetyl cycle),1,Tb927.5.3800
+ASPARAGINE-DEG1-PWY-1,L-asparagine degradation III (mammalian),1,Tb927.11.5090
+ASPARTATE-DEG1-PWY,L-aspartate degradation I,1,Tb927.11.5090
+ASPARTATESYN-PWY,aspartate biosynthesis,1,Tb927.11.5090
+ASPARTATESYN-PWY,L-aspartate biosynthesis,1,Tb927.11.5090
+ASPARTATESYN-PWY,aspartate biosynthesis,1,Tb927.11.5090
+ASPASN-PWY,superpathway of L-aspartate and L-asparagine biosynthesis,1,Tb927.11.5090
+ASPASN-PWY,superpathway of aspartate and asparagine biosynthesis; interconversion of aspartate and asparagine,1,Tb927.11.5090
+BENZCOA-PWY,anaerobic aromatic compound degradation (<i>Thauera aromatica</i>),2,Tb927.10.15910 | Tb927.11.5090
+BETSYN-PWY,glycine betaine biosynthesis I (Gram-negative bacteria),1,Tb927.10.470
+BRANCHED-CHAIN-AA-SYN-PWY,superpathway of branched chain amino acid biosynthesis,1,Tb927.2.4590
+CALVIN-PWY,Calvin-Benson-Bassham cycle,3,Tb927.1.700 | Tb927.1.710 | Tb927.8.6170
+CENTBENZCOA-PWY,benzoyl-CoA degradation II (anaerobic),1,Tb927.10.15910
+CENTFERM-PWY,pyruvate fermentation to butanoate,1,Tb927.8.2540 | Tb927.8.2540
+CHOLINE-BETAINE-ANA-PWY,choline degradation I,1,Tb927.10.470
+COLANSYN-PWY,colanic acid building blocks biosynthesis,1,Tb927.1.3830
+COLANSYN-PWY,colanic acid building blocks biosynthesis,2,Tb927.1.3830 | Tb927.4.1360
+COMPLETE-ARO-PWY,superpathway of aromatic amino acid biosynthesis,1,Tb927.11.5090
+CYSTEINE-DEG-PWY,L-cysteine degradation I,1,Tb927.10.11970
+DENOVOPURINE2-PWY,superpathway of purine nucleotides <i>de novo</i> biosynthesis II,3,Tb927.10.2540 | Tb927.10.5760 | Tb927.10.7230
+DENOVOPURINE2-PWY,superpathway of purine nucleotides <i>de novo</i> biosynthesis II,5,Tb927.10.1570 | Tb927.10.2540 | Tb927.10.5760 | Tb927.10.7230 | Tb927.11.7480
+DETOX1-PWY-1,reactive oxygen species degradation,3,Tb927.7.1120 | Tb927.7.1130 | Tb927.7.1140
+DRIBOPMET-PWY,(deoxy)ribose phosphate degradation,1,Tb927.8.6170
+DRIBOPMET-PWY,(deoxy)ribose phosphate degradation,1,Tb927.8.6170
+ERGOSTEROL-SYN-PWY,superpathway of ergosterol biosynthesis I,3,Tb927.11.15530 | Tb927.8.2540 | Tb927.8.2540 | Tb927.8.6110
+ERGOSTEROL-SYN-PWY-1,superpathway of ergosterol biosynthesis,4,Tb927.11.15530 | Tb927.11.6210 | Tb927.8.2540 | Tb927.8.6110
+FAO-PWY,fatty acid &beta;-oxidation I,1,Tb927.8.2540
+FAO-PWY,fatty acid &beta;-oxidation I,1,Tb927.8.2540
+FASYN-INITIAL-PWY,superpathway of fatty acid biosynthesis initiation (E. coli),1,Tb927.10.15910
+FASYN-INITIAL-PWY,superpathway of fatty acid biosynthesis initiation (E. coli),1,Tb927.10.15910
+FERMENTATION-PWY,mixed acid fermentation,4,Tb927.10.13430 | Tb927.10.15410 | Tb927.11.900 | Tb927.3.4500
+FOLSYN-PWY,superpathway of tetrahydrofolate biosynthesis and salvage,1,Tb927.7.5480
+GLUCONEO-PWY,gluconeogenesis I,5,Tb927.1.3830 | Tb927.1.700 | Tb927.1.710 | Tb927.10.15410 | Tb927.2.4210
+GLUCONEO-PWY,gluconeogenesis I,5,Tb927.1.3830 | Tb927.1.700 | Tb927.1.710 | Tb927.10.15410 | Tb927.2.4210
+GLUCONEO-PWY,gluconeogenesis I,5,Tb927.1.3830 | Tb927.1.700 | Tb927.1.710 | Tb927.10.15410 | Tb927.2.4210
+GLUDEG-II-PWY,L-glutamate degradation VII (to butanoate),1,Tb927.8.2540 | Tb927.8.2540
+GLUTATHIONESYN-PWY,glutathione biosynthesis,1,Tb927.10.12370
+GLUTATHIONESYN-PWY,glutathione biosynthesis,1,Tb927.10.12370
+GLUTATHIONESYN-PWY,glutathione biosynthesis,1,Tb927.10.12370
+GLUTDEG-PWY,L-glutamate degradation II,1,Tb927.11.5090
+GLUTDEG-PWY,glutamate degradation II,1,Tb927.11.5090
+GLUTOXA-PWY,glutamate degradation VII,3,Tb927.10.15410 | Tb927.11.5090 | Tb927.3.4500
+GLYCOLYSIS,glycolysis I,3,Tb927.1.3830 | Tb927.1.700 | Tb927.1.710
+GLYCOLYSIS,glycolysis I (from glucose 6-phosphate),3,Tb927.1.3830 | Tb927.1.700 | Tb927.1.710
+GLYCOLYSIS,glycolysis I (from glucose 6-phosphate),3,Tb927.1.3830 | Tb927.1.700 | Tb927.1.710
+GLYCOLYSIS-1,glycolysis I,3,Tb927.1.3830 | Tb927.1.700 | Tb927.1.710
+GLYCOLYSIS-E-D,superpathway of glycolysis and the Entner-Doudoroff pathway,3,Tb927.1.3830 | Tb927.1.700 | Tb927.1.710
+GLYCOLYSIS-TCA-GLYOX-BYPASS,"superpathway of glycolysis, pyruvate dehydrogenase, TCA, and glyoxylate bypass",7,Tb927.1.3830 | Tb927.1.700 | Tb927.1.710 | Tb927.10.13430 | Tb927.10.15410 | Tb927.11.900 | Tb927.3.4500
+GLYCOLYSIS-TCA-GLYOX-BYPASS,"superpathway of glycolysis, pyruvate dehydrogenase, TCA, and glyoxylate bypass",7,Tb927.1.3830 | Tb927.1.700 | Tb927.1.710 | Tb927.10.13430 | Tb927.10.15410 | Tb927.11.900 | Tb927.3.4500
+GLYOXYLATE-BYPASS,glyoxylate cycle,2,Tb927.10.13430 | Tb927.10.15410
+GLYOXYLATE-BYPASS,glyoxylate cycle,2,Tb927.10.13430 | Tb927.10.15410
+HEXITOLDEGSUPER-PWY,superpathway of hexitol degradation (bacteria),2,Tb927.1.700 | Tb927.1.710
+HEXITOLDEGSUPER-PWY,superpathway of hexitol degradation (bacteria),2,Tb927.1.700 | Tb927.1.710
+ILEUDEG-PWY,isoleucine degradation I,2,Tb927.2.4590 | Tb927.8.2540
+ILEUDEG-PWY,L-isoleucine degradation I,2,Tb927.2.4590 | Tb927.8.2540
+ILEUDEG-PWY,isoleucine degradation I,2,Tb927.2.4590 | Tb927.8.2540
+ILEUSYN-PWY,L-isoleucine biosynthesis I (from threonine),1,Tb927.2.4590
+LEU-DEG2-PWY,leucine degradation I,1,Tb927.2.4590
+LEU-DEG2-PWY,L-leucine degradation I,1,Tb927.2.4590
+LEUDEG-PWY,leucine degradation I,1,Tb927.2.4590
+LEUSYN-PWY,L-leucine biosynthesis,1,Tb927.2.4590
+LIPA-CORESYN-PWY,lipid A-core biosynthesis (<i>E. coli</i> K-12),6,Tb927.10.9600 | Tb927.11.5860 | Tb927.11.8170 | Tb927.7.300 | Tb927.7.6220 | Tb927.8.7150
+LPSSYN-PWY,superpathway of lipopolysaccharide biosynthesis,6,Tb927.10.9600 | Tb927.11.5860 | Tb927.11.8170 | Tb927.7.300 | Tb927.7.6220 | Tb927.8.7150
+LYSDEGII-PWY,L-lysine degradation III,2,Tb927.10.11970 | Tb927.10.15910
+MALATE-ASPARTATE-SHUTTLE-PWY,L-aspartate degradation II,2,Tb927.10.15410 | Tb927.11.5090
+MALATE-ASPARTATE-SHUTTLE-PWY,aspartate degradation II,2,Tb927.10.15410 | Tb927.11.5090
+MANGDPMET-PWY,GDP-mannose metabolism,1,Tb927.11.10370
+MANNOSYL-CHITO-DOLICHOL-BIOSYNTHESIS,dolichyl-diphosphooligosaccharide biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+METH-ACETATE-PWY,methanogenesis from acetate,1,Tb927.9.12040
+METHIONINE-DEG1-PWY,methionine degradation I (to homocysteine),1,Tb927.9.12040
+METHIONINE-DEG1-PWY,L-methionine degradation I (to L-homocysteine),1,Tb927.9.12040
+METHIONINE-DEG1-PWY,methionine degradation I (to homocysteine),1,Tb927.9.12040
+NAD-BIOSYNTHESIS-II,NAD salvage pathway III (to nicotinamide riboside),2,Tb927.10.7140 | Tb927.5.630
+NADPHOS-DEPHOS-PWY,NAD phosphorylation and dephosphorylation,2,Tb927.10.7140 | Tb927.5.630
+NONOXIPENT-PWY,pentose phosphate pathway (non-oxidative branch),1,Tb927.8.6170
+NONOXIPENT-PWY,pentose phosphate pathway (non-oxidative branch),1,Tb927.8.6170
+NONOXIPENT-PWY,pentose phosphate pathway (non-oxidative branch),1,Tb927.8.6170
+OANTIGEN-PWY,<i>O</i>-antigen building blocks biosynthesis (<i>E. coli</i>),1,Tb927.1.3830
+P1-PWY,purine and pyrimidine metabolism,5,Tb927.10.2540 | Tb927.10.5760 | Tb927.4.3320 | Tb927.7.1790 | Tb927.7.5480
+P105-PWY,TCA cycle IV (2-oxoglutarate decarboxylase),4,Tb927.10.13430 | Tb927.10.15410 | Tb927.11.900 | Tb927.3.4500
+P108-PWY,pyruvate fermentation to propanoate I,2,Tb927.10.15410 | Tb927.3.4500
+P121-PWY,adenine and adenosine salvage I,1,Tb927.7.1790
+P121-PWY,adenine and adenosine salvage I,1,Tb927.7.1790
+P122-PWY,heterolactic fermentation,3,Tb927.1.3830 | Tb927.1.700 | Tb927.1.710
+P124-PWY,Bifidobacterium shunt,4,Tb927.1.3830 | Tb927.1.700 | Tb927.1.710 | Tb927.8.6170
+P162-PWY,L-glutamate degradation V (via hydroxyglutarate),1,Tb927.8.2540 | Tb927.8.2540
+P163-PWY,L-lysine fermentation to acetate and butanoate,1,Tb927.8.2540 | Tb927.8.2540
+P165-PWY,superpathway of purines degradation in plants,2,Tb927.3.2960 | Tb927.7.4570
+P185-PWY,formaldehyde assimilation III (dihydroxyacetone cycle),3,Tb927.1.700 | Tb927.1.710 | Tb927.8.6170
+P21-PWY,pentose phosphate pathway (partial),1,Tb927.8.6170
+P21-PWY,pentose phosphate pathway (partial),1,Tb927.8.6170
+P23-PWY,reductive TCA cycle I,3,Tb927.10.15410 | Tb927.11.900 | Tb927.3.4500
+P23-PWY,reductive TCA cycle I,3,Tb927.10.15410 | Tb927.11.900 | Tb927.3.4500
+P3-PWY,gallate degradation III (anaerobic),1,Tb927.10.15910
+P321-PWY,benzoyl-CoA degradation III (anaerobic),1,Tb927.10.15910
+P341-PWY,glycolysis V (Pyrococcus),1,Tb927.1.3830
+P4-PWY,"superpathway of L-lysine, L-threonine and L-methionine biosynthesis I",1,Tb927.11.5090
+P42-PWY,incomplete reductive TCA cycle,2,Tb927.10.15410 | Tb927.3.4500
+P441-PWY,superpathway of <i>N</i>-acetylneuraminate degradation,2,Tb927.1.700 | Tb927.1.710
+P461-PWY,"hexitol fermentation to lactate, formate, ethanol and acetate",2,Tb927.1.700 | Tb927.1.710
+P542-PWY,choline-<i>O</i>-sulfate degradation,1,Tb927.10.470
+P82-PWY,TCA cycle variation IV,4,Tb927.10.13430 | Tb927.10.15410 | Tb927.11.900 | Tb927.3.4500
+PENTOSE-P-PWY,pentose phosphate pathway,1,Tb927.8.6170
+PENTOSE-P-PWY,pentose phosphate pathway,1,Tb927.8.6170
+PENTOSE-P-PWY,pentose phosphate pathway,1,Tb927.8.6170
+PHESYN,L-phenylalanine biosynthesis I,1,Tb927.11.5090
+PHOTOALL-PWY,oxygenic photosynthesis,3,Tb927.1.700 | Tb927.1.710 | Tb927.8.6170
+POLYAMSYN-PWY,superpathway of polyamine biosynthesis I,1,Tb927.5.1310
+POLYAMSYN-PWY,superpathway of polyamine biosynthesis I,1,Tb927.5.1310
+PPGPPMET-PWY,ppGpp biosynthesis,1,Tb927.10.7230
+PRPP-PWY,"superpathway of histidine, purine, and pyrimidine biosynthesis",4,Tb927.10.2540 | Tb927.10.5760 | Tb927.10.7230 | Tb927.5.3800
+PRPP-PWY,"superpathway of histidine, purine, and pyrimidine biosynthesis",6,Tb927.10.1570 | Tb927.10.2540 | Tb927.10.5760 | Tb927.10.7230 | Tb927.11.7480 | Tb927.5.3800
+PWY-1042,glycolysis IV (plant cytosol),2,Tb927.1.700 | Tb927.1.710
+PWY-1061,homogalacturonan biosynthesis,1,Tb927.9.12040
+PWY-1186,L-homomethionine biosynthesis,1,Tb927.10.11970
+PWY-1622,formaldehyde assimilation I (serine pathway),1,Tb927.10.15410
+PWY-1622,formaldehyde assimilation I (serine pathway),1,Tb927.10.15410
+PWY-1861,formaldehyde assimilation II (assimilatory RuMP Cycle),1,Tb927.8.6170
+PWY-1861,formaldehyde assimilation II (RuMP Cycle),1,Tb927.8.6170
+PWY-1901,aurone biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-1921,indole-3-acetate activation II,1,Tb927.11.10370
+PWY-1961,indole-3-acetate inactivation I,2,Tb927.7.300 | Tb927.8.7150
+PWY-1981,indole-3-acetate inactivation III,2,Tb927.7.300 | Tb927.8.7150
+PWY-2021,indole-3-acetate inactivation IV,2,Tb927.7.300 | Tb927.8.7150
+PWY-2083,isoflavonoid biosynthesis II,1,Tb927.9.12040
+PWY-2343,daidzein conjugates interconversion,1,Tb927.11.10370
+PWY-241,"C4 photosynthetic carbon assimilation cycle, NADP-ME type",1,Tb927.11.6280
+PWY-2421,indole-3-acetate degradation,1,Tb927.11.4700
+PWY-2541,phytosterol biosynthesis (plants),2,Tb927.11.15530 | Tb927.3.4650
+PWY-2582,brassinosteroid biosynthesis II,1,Tb927.11.4700
+PWY-2881,cytokinins 7-<i>N</i>-glucoside biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-2901,cytokinins 9-<i>N</i>-glucoside biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-2902,cytokinin-<i>O</i>-glucosides biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-3001,superpathway of L-isoleucine biosynthesis I,2,Tb927.11.5090 | Tb927.2.4590
+PWY-3097,superpathway of isoflavonoids (via naringenin),2,Tb927.5.1310 | Tb927.9.12040
+PWY-3542,choline biosynthesis II,1,Tb927.9.12040
+PWY-361,phenylpropanoid biosynthesis,1,Tb927.10.15910
+PWY-3781,aerobic respiration I (cytochrome c),5,Tb927.1.4100 | Tb927.10.8320 | Tb927.3.1410 | Tb927.4.4620 | Tb927.9.3170
+PWY-3781,aerobic respiration I (cytochrome c),10,Tb927.1.4100 | Tb927.10.8320 | Tb927.3.1410 | Tb927.4.4620 | Tb927.4.4990 | Tb927.5.1060 | Tb927.8.1890 | Tb927.8.7430 | Tb927.9.14160 | Tb927.9.3170
+PWY-3801,sucrose degradation II (sucrose synthase),1,Tb927.1.3830
+PWY-3801,sucrose degradation II (sucrose synthase),1,Tb927.1.3830
+PWY-3841,folate transformations II,1,Tb927.7.5480 | Tb927.7.5480
+PWY-3841,folate transformations II,1,Tb927.7.5480 | Tb927.7.5480
+PWY-4021,&beta;-alanine betaine biosynthesis,1,Tb927.9.12040
+PWY-4041,&gamma;-glutamyl cycle,2,Tb927.10.12260 | Tb927.10.12370
+PWY-4041,&gamma;-glutamyl cycle,2,Tb927.10.12260 | Tb927.10.12370
+PWY-4081,glutathione redox reactions I,3,Tb927.7.1120 | Tb927.7.1130 | Tb927.7.1140
+PWY-4081,glutathione-peroxide redox reactions,3,Tb927.7.1120 | Tb927.7.1130 | Tb927.7.1140
+PWY-4302,aerobic respiration III (alternative oxidase pathway),1,Tb927.10.7090
+PWY-4302-1,aerobic respiration (alternative oxidase pathway),1,Tb927.10.7090
+PWY-4421,curcumin glucoside biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-4502,wighteone and luteone biosynthesis,1,Tb927.5.1310
+PWY-4521,arsenite oxidation I (respiratory),5,Tb927.1.4100 | Tb927.10.8320 | Tb927.3.1410 | Tb927.4.4620 | Tb927.9.3170
+PWY-4681,kievitone biosynthesis,1,Tb927.5.1310
+PWY-4762,superpathway of choline biosynthesis,1,Tb927.9.12040
+PWY-4801,aloesone biosynthesis I,1,Tb927.10.15910
+PWY-4922,6-methoxymellein biosynthesis,1,Tb927.10.15910
+PWY-4942,sterculate biosynthesis,1,Tb927.10.7100
+PWY-5024,L-arginine degradation XI,1,Tb927.10.11970
+PWY-5041,<i>S</i>-adenosyl-L-methionine cycle II,1,Tb927.9.12040
+PWY-5044,purine nucleotides degradation I (plants),2,Tb927.3.2960 | Tb927.7.4570
+PWY-5047,gibberellin biosynthesis IV (<i>Gibberella fujikuroi</i>),1,Tb927.10.7100
+PWY-5048,rosmarinic acid biosynthesis I,1,Tb927.10.15910
+PWY-5054,D-sorbitol biosynthesis I,1,Tb927.1.3830
+PWY-5057,L-valine degradation II,1,Tb927.2.4590
+PWY-5059,pinobanksin biosynthesis,2,Tb927.10.15910 | Tb927.9.12040
+PWY-5071,superpathway of rosmarinic acid biosynthesis,1,Tb927.10.15910
+PWY-5076,L-leucine degradation III,1,Tb927.2.4590
+PWY-5078,L-isoleucine degradation II,1,Tb927.2.4590
+PWY-5079,L-phenylalanine degradation III,1,Tb927.11.5090
+PWY-5083,NAD/NADH phosphorylation and dephosphorylation,2,Tb927.10.7140 | Tb927.5.630
+PWY-5088,L-glutamate degradation VIII (to propanoate),2,Tb927.10.15410 | Tb927.3.4500
+PWY-5094,naringenin glycoside biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-5101,L-isoleucine biosynthesis II,1,Tb927.2.4590
+PWY-5103,L-isoleucine biosynthesis III,2,Tb927.10.11970 | Tb927.2.4590
+PWY-5104,L-isoleucine biosynthesis IV,1,Tb927.2.4590
+PWY-5105,hesperitin glycoside biosynthesis,3,Tb927.7.300 | Tb927.8.7150 | Tb927.9.12040
+PWY-5108,L-isoleucine biosynthesis V,1,Tb927.2.4590
+PWY-5109,fermentation to 2-methylbutanoate,1,Tb927.8.2540
+PWY-5129,sphingolipid biosynthesis (plants),7,Tb927.10.4040 | Tb927.10.9600 | Tb927.11.5860 | Tb927.11.8170 | Tb927.7.300 | Tb927.7.6220 | Tb927.8.7150
+PWY-5136,fatty acid &beta;-oxidation II (peroxisome),1,Tb927.8.2540
+PWY-5136,fatty acid &beta;-oxidation II (peroxisome),1,Tb927.8.2540
+PWY-5139,pelargonidin conjugates biosynthesis,3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-5154,L-arginine biosynthesis III (via <i>N</i>-acetyl-L-citrulline),1,Tb927.5.3800
+PWY-5159,<i>trans</i>-4-hydroxy-L-proline degradation II,1,Tb927.10.7100
+PWY-5160,rose anthocyanin biosynthesis I (via cyanidin 5-<i>O</i>-&beta;-<i>D</i>-glucoside),2,Tb927.7.300 | Tb927.8.7150
+PWY-5161,6'-deoxychalcone metabolism,2,Tb927.7.300 | Tb927.8.7150
+PWY-5177,glutaryl-CoA degradation,1,Tb927.8.2540 | Tb927.8.2540
+PWY-5184,toluene degradation VI (anaerobic),2,Tb927.10.15910 | Tb927.8.2540 | Tb927.8.2540
+PWY-5189,tetrapyrrole biosynthesis II (from glycine),1,Tb927.8.6060
+PWY-5209,methyl-coenzyme M oxidation to CO<sub>2</sub>,2,Tb927.10.15910 | Tb927.9.12040
+PWY-5268,salvianin biosynthesis,3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-5284,shisonin biosynthesis,3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-5286,anthocyanidin sophoroside metabolism,2,Tb927.7.300 | Tb927.8.7150
+PWY-5287,sanguinarine and macarpine biosynthesis,1,Tb927.9.12040
+PWY-5301,ajmaline and sarpagine biosynthesis,1,Tb927.9.12040
+PWY-5305,bixin biosynthesis,1,Tb927.9.12040
+PWY-5307,gentiodelphin biosynthesis,1,Tb927.10.15910
+PWY-5310,superpathway of anthocyanin biosynthesis (from delphinidin 3-<i>O</i>-glucoside),3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-5312,superpathway of anthocyanin biosynthesis (from pelargonidin 3-O-glucoside),3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-5313,superpathway of anthocyanin biosynthesis (from cyanidin and cyanidin 3-<i>O</i>-glucoside),3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-5320,kaempferol glycoside biosynthesis (Arabidopsis),2,Tb927.7.300 | Tb927.8.7150
+PWY-5321,quercetin glycoside biosynthesis (Arabidopsis),2,Tb927.7.300 | Tb927.8.7150
+PWY-5327,superpathway of L-lysine degradation,3,Tb927.10.11970 | Tb927.10.15910 | Tb927.8.2540 | Tb927.8.2540
+PWY-5328,superpathway of L-methionine salvage and degradation,2,Tb927.10.11970 | Tb927.9.12040
+PWY-5338,galactosylcyclitol biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-5339,chalcone 2'-<i>O</i>-glucoside biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-5342,ajugose biosynthesis I (galactinol-dependent),2,Tb927.7.300 | Tb927.8.7150
+PWY-5343,ajugose biosynthesis II (galactinol-independent),2,Tb927.7.300 | Tb927.8.7150
+PWY-5345,superpathway of L-methionine biosynthesis (by sulfhydrylation),1,Tb927.11.5090
+PWY-5347,superpathway of L-methionine biosynthesis (transsulfuration),1,Tb927.11.5090
+PWY-5353,"arachidonate biosynthesis I (6-desaturase, lower eukaryotes)",1,Tb927.10.15910
+PWY-5379,B series fagopyritols biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-5380,A series fagopyritols biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-5384,sucrose degradation IV (sucrose phosphorylase),1,Tb927.1.3830
+PWY-5392,reductive TCA cycle II,2,Tb927.10.15410 | Tb927.3.4500
+PWY-5397,crocetin biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-5399,betacyanin biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-5400,amaranthin biosynthesis,3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-5405,superpathway of betalain biosynthesis,3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-5437,L-threonine degradation I,1,Tb927.10.15910
+PWY-5448,aminopropanol biosynthesis,1,Tb927.6.2790
+PWY-5464,"superpathway of cytosolic glycolysis (plants), pyruvate dehydrogenase and TCA cycle",5,Tb927.1.700 | Tb927.1.710 | Tb927.10.13430 | Tb927.10.15410 | Tb927.3.4500
+PWY-5469,sesamin biosynthesis,1,Tb927.10.7090
+PWY-5472,bisbenzylisoquinoline alkaloid biosynthesis,1,Tb927.10.7100
+PWY-5475,pentagalloylglucose biosynthesis,1,Tb927.10.15910
+PWY-5477,gallotannin biosynthesis,1,Tb927.10.15910
+PWY-5478,superpathway of hydrolyzable tannin biosynthesis,1,Tb927.10.15910
+PWY-5479,6-methoxypodophyllotoxin biosynthesis,2,Tb927.10.7090 | Tb927.9.12040
+PWY-5484,glycolysis II (from fructose 6-phosphate),2,Tb927.1.700 | Tb927.1.710
+PWY-5484,glycolysis II (from fructose 6-phosphate),2,Tb927.1.700 | Tb927.1.710
+PWY-5514,UDP-<i>N</i>-acetyl-D-galactosamine biosynthesis II,1,Tb927.1.3830
+PWY-5529,superpathway of bacteriochlorophyll <i>a</i> biosynthesis,1,Tb927.8.6060
+PWY-561,superpathway of glyoxylate cycle and fatty acid degradation,5,Tb927.10.13430 | Tb927.10.15410 | Tb927.2.4210 | Tb927.3.4500 | Tb927.8.2540
+PWY-5659,GDP-mannose biosynthesis,1,Tb927.1.3830
+PWY-5659,GDP-mannose biosynthesis,1,Tb927.1.3830
+PWY-5660,taxol biosynthesis,1,Tb927.10.15910
+PWY-5665,vanillin biosynthesis I,1,Tb927.9.12040
+PWY-5666,&alpha;-solanine/&alpha;-chaconine biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-5672,ginsenosides biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-5676,acetyl-CoA fermentation to butanoate II,1,Tb927.8.2540 | Tb927.8.2540
+PWY-5686,uridine-5'-phosphate biosynthesis,1,Tb927.5.3800
+PWY-5686,UMP biosynthesis I,1,Tb927.5.3800
+PWY-5686-1,UMP biosynthesis,1,Tb927.5.3800
+PWY-5687,pyrimidine ribonucleotides interconversion,1,Tb927.10.7230
+PWY-5687,pyrimidine ribonucleotides interconversion,1,Tb927.10.7230
+PWY-5690,TCA cycle II (plants and fungi),3,Tb927.10.13430 | Tb927.10.15410 | Tb927.3.4500
+PWY-5710,capsaicin biosynthesis,1,Tb927.10.11970
+PWY-5723,Rubisco shunt,1,Tb927.8.6170
+PWY-5729,vestitol and sativan biosynthesis,1,Tb927.9.12040
+PWY-5741,ethylmalonyl-CoA pathway,1,Tb927.8.2540 | Tb927.8.2540
+PWY-5748,&gamma;-coniciene and coniine biosynthesis,2,Tb927.10.11970 | Tb927.9.12040
+PWY-5756,saponin biosynthesis II,2,Tb927.7.300 | Tb927.8.7150
+PWY-5759,saponin biosynthesis III,2,Tb927.7.300 | Tb927.8.7150
+PWY-5765,"1,3,5-trimethoxybenzene biosynthesis",1,Tb927.9.12040
+PWY-5773,gossypol biosynthesis,1,Tb927.9.12040
+PWY-5774,saponin biosynthesis IV,2,Tb927.7.300 | Tb927.8.7150
+PWY-5784,indole-3-acetate inactivation VIII,2,Tb927.7.300 | Tb927.8.7150
+PWY-5789,3-hydroxypropanoate/4-hydroxybutanate cycle,1,Tb927.8.2540 | Tb927.8.2540
+PWY-5793,maysin biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-5794,malonate degradation I (biotin-independent),1,Tb927.10.15910
+PWY-5797,indole-3-acetate inactivation VI,2,Tb927.7.300 | Tb927.8.7150
+PWY-5800,xylan biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-5802,alizarin biosynthesis,1,Tb927.5.1310
+PWY-5815,rubber biosynthesis,1,Tb927.5.1310
+PWY-5817,dodecaprenyl diphosphate biosynthesis,1,Tb927.5.1310
+PWY-5821,dalcochinin biosynthesis,1,Tb927.11.10370
+PWY-5822,trichloroethene degradation,2,Tb927.7.300 | Tb927.8.7150
+PWY-5826,hypoglycin biosynthesis,3,Tb927.10.11970 | Tb927.10.7090 | Tb927.11.4700
+PWY-5846,colchicine biosynthesis,2,Tb927.10.15910 | Tb927.9.12040
+PWY-5877,beta-carboline biosynthesis,1,Tb927.11.4700
+PWY-5884,wax esters biosynthesis I,1,Tb927.8.6640
+PWY-5893,tridecaprenyl diphosphate biosynthesis,1,Tb927.5.1310
+PWY-5898,superpathway of menaquinol-12 biosynthesis,1,Tb927.5.1310
+PWY-5899,superpathway of menaquinol-13 biosynthesis,1,Tb927.5.1310
+PWY-5903,bacillibactin biosynthesis,1,Tb927.10.15910
+PWY-5910,superpathway of geranylgeranyldiphosphate biosynthesis I (via mevalonate),2,Tb927.8.2540 | Tb927.8.2540 | Tb927.8.6110
+PWY-5913,partial TCA cycle (obligate autotrophs),5,Tb927.10.13430 | Tb927.10.15410 | Tb927.11.5090 | Tb927.11.900 | Tb927.3.4500
+PWY-5920,superpathway of <i>b</i> heme biosynthesis from glycine,1,Tb927.8.6060
+PWY-5926,afrormosin conjugates interconversion,2,Tb927.7.300 | Tb927.8.7150
+PWY-5934,iron reduction and absorption,1,Tb927.11.4430
+PWY-5936,xyloglucan biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-5965,fatty acid biosynthesis initiation III,1,Tb927.10.15910
+PWY-5965,fatty acid biosynthesis initiation III,1,Tb927.10.15910
+PWY-5975,furaneol and mesifurane biosynthesis,2,Tb927.10.15910 | Tb927.9.12040
+PWY-5976,dhurrin degradation,1,Tb927.11.10370
+PWY-5979,3-amino-5-hydroxybenzoate biosynthesis,1,Tb927.5.1310
+PWY-5984,rifamycin B biosynthesis,2,Tb927.10.15910 | Tb927.10.7100
+PWY-5987,sorgoleone biosynthesis,3,Tb927.10.15910 | Tb927.10.7090 | Tb927.9.12040
+PWY-5992,thalianol and derivatives biosynthesis,1,Tb927.10.7100
+PWY-5993,superpathway of rifamycin B biosynthesis,3,Tb927.10.15910 | Tb927.10.7100 | Tb927.5.1310
+PWY-5994,palmitate biosynthesis I (animals and fungi),1,Tb927.10.15910
+PWY-6000,&gamma;-linolenate biosynthesis II (animals),1,Tb927.10.7100
+PWY-6007,"(3<i>E</i>)-4,8-dimethylnona-1,3,7-triene biosynthesis II",1,Tb927.10.7100
+PWY-601,glucosinolate biosynthesis from tryptophan,1,Tb927.9.12040
+PWY-6010,apigenin glycosides biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-6015,vitexin and derivatives biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-6024,isovitexin glycosides biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-6039,chlorogenic acid biosynthesis I,1,Tb927.10.15910
+PWY-6045,methylthiopropanonate degradation II (demethylation),1,Tb927.9.12040
+PWY-6051,"2,4,6-trinitrotoluene degradation",2,Tb927.7.300 | Tb927.8.7150
+PWY-6056,dimethylsulfoniopropanoate degradation II (cleavage),1,Tb927.10.15910
+PWY-6074,zymosterol biosynthesis,1,Tb927.11.15530
+PWY-6074,zymosterol biosynthesis,2,Tb927.11.15530 | Tb927.11.6210
+PWY-6080,4-ethylphenol degradation (anaerobic),1,Tb927.8.2540
+PWY-6125,superpathway of guanosine nucleotides <i>de novo</i> biosynthesis II,1,Tb927.10.7230
+PWY-6125,superpathway of guanosine nucleotides <i>de novo</i> biosynthesis II,1,Tb927.10.7230
+PWY-6126,superpathway of adenosine nucleotides <i>de novo</i> biosynthesis II,3,Tb927.10.2540 | Tb927.10.5760 | Tb927.10.7230
+PWY-6126,superpathway of adenosine nucleotides <i>de novo</i> biosynthesis II,5,Tb927.10.1570 | Tb927.10.2540 | Tb927.10.5760 | Tb927.10.7230 | Tb927.11.7480
+PWY-6129,dolichol and dolichyl phosphate biosynthesis,1,Tb927.3.3340
+PWY-6142,gluconeogenesis II (<i>Methanobacterium thermoautotrophicum</i>),1,Tb927.1.3830
+PWY-6145,superpathway of CMP-sialic acids biosynthesis,3,Tb927.10.15910 | Tb927.11.10370 | Tb927.5.1310
+PWY-6146,<i>Methanobacterium thermoautotrophicum</i> biosynthetic metabolism,6,Tb927.1.3830 | Tb927.10.15410 | Tb927.11.5090 | Tb927.3.4500 | Tb927.8.2540 | Tb927.8.2540 | Tb927.8.6110
+PWY-6148,tetrahydromethanopterin biosynthesis,1,Tb927.9.12040
+PWY-6151,<i>S</i>-adenosyl-L-methionine cycle I,1,Tb927.9.12040
+PWY-6153,autoinducer AI-2 biosynthesis I,1,Tb927.9.12040
+PWY-6154,autoinducer AI-2 biosynthesis II (<i>Vibrio</i>),1,Tb927.9.12040
+PWY-6174,mevalonate pathway II (archaea),2,Tb927.8.2540 | Tb927.8.2540 | Tb927.8.6110
+PWY-621,sucrose degradation III,2,Tb927.1.3830 | Tb927.4.1360
+PWY-621,sucrose degradation III (sucrose invertase),1,Tb927.1.3830
+PWY-622,starch biosynthesis,1,Tb927.1.3830
+PWY-6239,luteolin glycosides biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-6262,demethylmenaquinol-8 biosynthesis II,1,Tb927.5.1310
+PWY-6263,superpathway of menaquinol-8 biosynthesis II,1,Tb927.5.1310
+PWY-6266,superpathway of flavones and derivatives biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-6279,myxol-2' fucoside biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-6286,spheroidene and spheroidenone biosynthesis,1,Tb927.9.12040
+PWY-6292,superpathway of L-cysteine biosynthesis (mammalian),1,Tb927.9.12040
+PWY-6297,tuberonate glucoside biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-6310,aloesone biosynthesis II,3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-6312,barbaloin biosynthesis,1,Tb927.10.15910
+PWY-6314,plumbagin biosynthesis,1,Tb927.10.15910
+PWY-6316,aromatic polyketides biosynthesis,1,Tb927.10.15910
+PWY-6318,"L-phenylalanine degradation IV (mammalian, via side chain)",1,Tb927.11.5090
+PWY-6320,phaselate biosynthesis,1,Tb927.10.15910
+PWY-6321,homotaurine degradation,1,Tb927.10.11970
+PWY-6322,phosphinothricin tripeptide biosynthesis,6,Tb927.10.11970 | Tb927.10.15910 | Tb927.10.9600 | Tb927.11.5860 | Tb927.11.8170 | Tb927.7.6220
+PWY-6328,L-lysine degradation X,1,Tb927.10.11970
+PWY-6339,syringate degradation,1,Tb927.9.12040
+PWY-6346,staurosporine biosynthesis,3,Tb927.7.300 | Tb927.8.7150 | Tb927.9.12040
+PWY-6348,phosphate acquisition,2,Tb927.10.7140 | Tb927.5.630
+PWY-6369,inositol diphosphates biosynthesis,4,Tb927.10.9600 | Tb927.11.5860 | Tb927.11.8170 | Tb927.7.6220
+PWY-6371,superpathway of inositol phosphate compounds,4,Tb927.10.9600 | Tb927.11.5860 | Tb927.11.8170 | Tb927.7.6220
+PWY-6373,acrylate degradation,1,Tb927.10.15910
+PWY-6378,putrebactin biosynthesis,1,Tb927.10.15910
+PWY-6379,alcaligin biosynthesis,1,Tb927.10.15910
+PWY-6385,peptidoglycan biosynthesis III (mycobacteria),2,Tb927.7.300 | Tb927.8.7150
+PWY-6395,superpathway of seleno-compound metabolism,1,Tb927.5.1310
+PWY-6397,mycolyl-arabinogalactan-peptidoglycan complex biosynthesis,3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-6401,hispidol and hispidol 4'-<i>O</i>-&beta;-<i>D</i>-glucoside biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-6403,carrageenan biosynthesis,1,Tb927.5.1310
+PWY-6404,superpathway of mycolyl-arabinogalactan-peptidoglycan complex biosynthesis,4,Tb927.1.3830 | Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-6407,yersiniabactin biosynthesis,1,Tb927.10.15910
+PWY-641,proanthocyanidins biosynthesis from flavanols,2,Tb927.7.300 | Tb927.8.7150
+PWY-6427,rot-2'-enonate biosynthesis,1,Tb927.9.12040
+PWY-6432,curcuminoid biosynthesis,1,Tb927.10.15910
+PWY-6435,4-hydroxybenzoate biosynthesis III (plants),1,Tb927.8.2540
+PWY-6442,spermidine hydroxycinnamic acid conjugates biosynthesis,1,Tb927.9.12040
+PWY-6453,stigma estolide biosynthesis,4,Tb927.10.13400 | Tb927.10.13700 | Tb927.10.13930 | Tb927.10.15910
+PWY-6477,gibberellin inactivation II (methylation),1,Tb927.9.12040
+PWY-6511,3-methylarginine biosynthesis,1,Tb927.10.11970
+PWY-6525,stellariose and mediose biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-6527,stachyose degradation,1,Tb927.11.10370
+PWY-6544,superpathway of C28 brassinosteroid biosynthesis,2,Tb927.10.7100 | Tb927.11.4700
+PWY-6545,pyrimidine deoxyribonucleotides <i>de novo</i> biosynthesis III,1,Tb927.10.7230
+PWY-6546,brassinosteroids inactivation,2,Tb927.7.300 | Tb927.8.7150
+PWY-6549,L-glutamine biosynthesis III,3,Tb927.10.13430 | Tb927.11.6280 | Tb927.11.900
+PWY-6581,"spirilloxanthin and 2,2'-diketo-spirilloxanthin biosynthesis",1,Tb927.9.12040
+PWY-6583,pyruvate fermentation to butanol I,1,Tb927.8.2540 | Tb927.8.2540
+PWY-6588,pyruvate fermentation to acetone,1,Tb927.8.2540 | Tb927.8.2540
+PWY-6590,superpathway of <i>Clostridium acetobutylicum</i> acidogenic fermentation,1,Tb927.8.2540 | Tb927.8.2540
+PWY-6594,superpathway of <i>Clostridium acetobutylicum</i> solventogenic fermentation,1,Tb927.8.2540 | Tb927.8.2540
+PWY-6595,superpathway of guanosine nucleotides degradation (plants),2,Tb927.3.2960 | Tb927.7.4570
+PWY-6596,adenosine nucleotides degradation I,2,Tb927.3.2960 | Tb927.7.4570
+PWY-6599,guanine and guanosine salvage II,2,Tb927.3.2960 | Tb927.7.4570
+PWY-6604,superpathway of <i>Clostridium acetobutylicum</i> acidogenic and solventogenic fermentation,1,Tb927.8.2540 | Tb927.8.2540
+PWY-6605,adenine and adenosine salvage II,1,Tb927.7.1790
+PWY-6606,guanosine nucleotides degradation II,2,Tb927.3.2960 | Tb927.7.4570
+PWY-6607,guanosine nucleotides degradation I,2,Tb927.3.2960 | Tb927.7.4570
+PWY-6610,adenine salvage,1,Tb927.7.1790
+PWY-6612,superpathway of tetrahydrofolate biosynthesis,1,Tb927.7.5480
+PWY-6614,tetrahydrofolate biosynthesis,1,Tb927.7.5480
+PWY-6621,salicylate glucosides biosynthesis I,2,Tb927.7.300 | Tb927.8.7150
+PWY-6623,salicylate glucosides biosynthesis II,2,Tb927.7.300 | Tb927.8.7150
+PWY-6624,salicylate glucosides biosynthesis III,2,Tb927.7.300 | Tb927.8.7150
+PWY-6626,cytidine-5'-diphosphate-glycerol biosynthesis,4,Tb927.10.9600 | Tb927.11.5860 | Tb927.11.8170 | Tb927.7.6220
+PWY-6627,salinosporamide A biosynthesis,2,Tb927.10.11970 | Tb927.10.15910
+PWY-6628,superpathway of L-phenylalanine biosynthesis,1,Tb927.11.5090
+PWY-6638,sulfolactate degradation III,1,Tb927.11.5090
+PWY-6641,superpathway of sulfolactate degradation,1,Tb927.11.5090
+PWY-6642,(<i>R</i>)-cysteate degradation,1,Tb927.11.5090
+PWY-6643,coenzyme M biosynthesis II,1,Tb927.11.5090
+PWY-6655,xanthan biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-6657,polyhydroxydecanoate biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-6658,acetan biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-6659,fusicoccin A biosynthesis,1,Tb927.5.1310
+PWY-6672,<i>cis</i>-genanyl-CoA degradation,1,Tb927.10.15910
+PWY-6673,caffeoylglucarate biosynthesis,1,Tb927.10.15910
+PWY-6679,jadomycin biosynthesis,1,Tb927.10.15910
+PWY-6681,neurosporaxanthin biosynthesis,1,Tb927.5.1310
+PWY-6682,dehydrophos biosynthesis,5,Tb927.10.11970 | Tb927.10.9600 | Tb927.11.5860 | Tb927.11.8170 | Tb927.7.6220
+PWY-6689,tRNA splicing I,1,Tb927.3.3340
+PWY-6692,Fe(II) oxidation,5,Tb927.1.4100 | Tb927.10.8320 | Tb927.3.1410 | Tb927.4.4620 | Tb927.9.3170
+PWY-6722,candicidin biosynthesis,3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-6728,methylaspartate cycle,4,Tb927.10.13430 | Tb927.10.15410 | Tb927.11.900 | Tb927.3.4500
+PWY-6733,sporopollenin precursors biosynthesis,1,Tb927.8.6640
+PWY-6735,starch degradation IV,1,Tb927.11.10370
+PWY-6736,sulfur volatiles biosynthesis,1,Tb927.9.12040
+PWY-6737,starch degradation V,1,Tb927.11.10370
+PWY-6739,pinitol biosynthesis II,1,Tb927.9.12040
+PWY-6749,CMP-legionaminate biosynthesis I,3,Tb927.10.11970 | Tb927.10.15910 | Tb927.11.10370
+PWY-6762,salicylate glucosides biosynthesis IV,2,Tb927.7.300 | Tb927.8.7150
+PWY-6766,salicin biosynthesis,1,Tb927.10.7090
+PWY-6784,cellulose and hemicellulose degradation (cellulolosome),2,Tb927.10.10000 | Tb927.11.10370
+PWY-6799,fatty acid biosynthesis (plant mitochondria),1,Tb927.10.15910
+PWY-6821,&kappa;-carrageenan degradation,1,Tb927.11.10370
+PWY-6830,superpathway of methanogenesis,1,Tb927.9.12040
+PWY-6831,pyrrolnitrin biosynthesis,1,Tb927.10.7100
+PWY-6835,6-gingerol biosynthesis,1,Tb927.9.12040
+PWY-6840,homoglutathione biosynthesis,1,Tb927.10.12370
+PWY-6842,glutathione-mediated detoxification II,1,Tb927.10.15910
+PWY-6848,rutin degradation,1,Tb927.11.10370
+PWY-6854,ethylene biosynthesis III (microbes),1,Tb927.11.4430
+PWY-6855,chitin degradation I (archaea),1,Tb927.11.10370
+PWY-6863,pyruvate fermentation to hexanol (engineered),1,Tb927.8.2540 | Tb927.8.2540
+PWY-6876,isopropanol biosynthesis (engineered),1,Tb927.8.2540 | Tb927.8.2540
+PWY-6883,pyruvate fermentation to butanol II (engineered),1,Tb927.8.2540 | Tb927.8.2540
+PWY-6886,1-butanol autotrophic biosynthesis (engineered),4,Tb927.1.700 | Tb927.1.710 | Tb927.8.2540 | Tb927.8.2540 | Tb927.8.6170
+PWY-6901,superpathway of glucose and xylose degradation,3,Tb927.1.700 | Tb927.1.710 | Tb927.8.6170
+PWY-6906,chitin derivatives degradation,1,Tb927.11.10370
+PWY-6920,6-gingerol analog biosynthesis (engineered),1,Tb927.10.15910
+PWY-6928,superpathway of cholesterol degradation I (cholesterol oxidase),2,Tb927.10.15910 | Tb927.8.2540
+PWY-6930,phenolic malonylglucosides biosynthesis,1,Tb927.10.15910
+PWY-6936,seleno-amino acid biosynthesis (plants),1,Tb927.5.1310
+PWY-6937,superpathway of testosterone and androsterone degradation,2,Tb927.10.15910 | Tb927.8.2540
+PWY-6944,androstenedione degradation,2,Tb927.10.15910 | Tb927.8.2540
+PWY-6945,cholesterol degradation to androstenedione I (cholesterol oxidase),2,Tb927.10.15910 | Tb927.8.2540
+PWY-6946,cholesterol degradation to androstenedione II (cholesterol dehydrogenase),2,Tb927.10.15910 | Tb927.8.2540
+PWY-6947,superpathway of cholesterol degradation II (cholesterol dehydrogenase),2,Tb927.10.15910 | Tb927.8.2540
+PWY-6948,sitosterol degradation to androstenedione,2,Tb927.10.15910 | Tb927.8.2540
+PWY-6955,lincomycin biosynthesis,1,Tb927.9.12040
+PWY-6958,icosapentaenoate biosynthesis I (lower eukaryotes),1,Tb927.10.15910
+PWY-6969,TCA cycle V (2-oxoglutarate:ferredoxin oxidoreductase),5,Tb927.10.11970 | Tb927.10.13430 | Tb927.10.15410 | Tb927.11.900 | Tb927.3.4500
+PWY-6971,oleandomycin biosynthesis,3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-6972,oleandomycin activation/inactivation,3,Tb927.11.10370 | Tb927.7.300 | Tb927.8.7150
+PWY-6973,"dTDP-D-olivose, dTDP-D-oliose and dTDP-D-mycarose biosynthesis",1,Tb927.9.12040
+PWY-6976,dTDP-L-mycarose biosynthesis,1,Tb927.9.12040
+PWY-6977,superpathway of erythromycin biosynthesis,1,Tb927.9.12040
+PWY-6978,plastoquinol-9 biosynthesis II,1,Tb927.9.12040
+PWY-6981,chitin biosynthesis,1,Tb927.1.3830
+PWY-699,brassinosteroid biosynthesis I,2,Tb927.10.7100 | Tb927.11.4700
+PWY-6992,"1,5-anhydrofructose degradation",1,Tb927.1.3830
+PWY-6996,daidzin and daidzein degradation,1,Tb927.11.10370
+PWY-7003,glycerol degradation to butanol,3,Tb927.1.700 | Tb927.1.710 | Tb927.8.2540 | Tb927.8.2540
+PWY-7018,paromomycin biosynthesis,3,Tb927.10.11970 | Tb927.7.300 | Tb927.8.7150
+PWY-702,methionine biosynthesis II,2,Tb927.5.1310 | Tb927.9.12040
+PWY-7025,gentamicin biosynthesis,1,Tb927.9.12040
+PWY-7029,terminal olefins biosynthesis II,1,Tb927.10.15910
+PWY-7037,protein <i>O</i>-glycosylation (Neisseria),2,Tb927.7.300 | Tb927.8.7150
+PWY-7045,mithramycin biosynthesis,4,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150 | Tb927.9.12040
+PWY-7049,"icosapentaenoate biosynthesis II (6-desaturase, mammals)",2,Tb927.10.15910 | Tb927.10.7100
+PWY-7050,icosapentaenoate biosynthesis IV (bacteria),1,Tb927.10.15910
+PWY-7053,docosahexaenoate biosynthesis I (lower eukaryotes),1,Tb927.10.15910
+PWY-7055,daphnetin modification,3,Tb927.7.300 | Tb927.8.7150 | Tb927.9.12040
+PWY-7056,daphnin interconversion,1,Tb927.11.10370
+PWY-7057,cichoriin interconversion,1,Tb927.11.10370
+PWY-7058,esculetin modification,3,Tb927.7.300 | Tb927.8.7150 | Tb927.9.12040
+PWY-7066,glycyrrhetinate biosynthesis,1,Tb927.10.7100
+PWY-7071,steviol glucoside biosynthesis (rebaudioside A biosynthesis),2,Tb927.7.300 | Tb927.8.7150
+PWY-7072,hopanoid biosynthesis (bacteria),1,Tb927.9.12040
+PWY-7074,phenylethanol glycoconjugate biosynthesis,3,Tb927.11.10370 | Tb927.7.300 | Tb927.8.7150
+PWY-7076,"3,5-dimethoxytoluene biosynthesis",1,Tb927.9.12040
+PWY-7077,<i>N</i>-acetyl-D-galactosamine degradation,4,Tb927.10.9600 | Tb927.11.5860 | Tb927.11.8170 | Tb927.7.6220
+PWY-7079,geodin biosynthesis,2,Tb927.10.7090 | Tb927.9.12040
+PWY-7091,linustatin bioactivation,1,Tb927.11.10370
+PWY-7094,fatty acid salvage,1,Tb927.8.2540
+PWY-7100,spinosyn A biosynthesis,3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-7104,dTDP-L-megosamine biosynthesis,2,Tb927.10.11970 | Tb927.9.12040
+PWY-7109,megalomicin A biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-7110,superpathway of megalomicin A biosynthesis,4,Tb927.10.11970 | Tb927.7.300 | Tb927.8.7150 | Tb927.9.12040
+PWY-7115,"C4 photosynthetic carbon assimilation cycle, NAD-ME type",3,Tb927.10.15410 | Tb927.11.5090 | Tb927.11.6280
+PWY-7117,"C4 photosynthetic carbon assimilation cycle, PEPCK type",3,Tb927.11.5090 | Tb927.11.6280 | Tb927.2.4210
+PWY-7119,sphingolipid recycling and degradation (yeast),1,Tb927.3.3340
+PWY-7124,ethylene biosynthesis V (engineered),5,Tb927.1.700 | Tb927.1.710 | Tb927.10.13430 | Tb927.11.900 | Tb927.8.6170
+PWY-7129,quercetin glucoside biosynthesis (<i>Allium</i>),2,Tb927.7.300 | Tb927.8.7150
+PWY-7133,quercetin glucoside degradation (<i>Allium</i>),1,Tb927.11.10370
+PWY-7134,rutin degradation (plants),1,Tb927.11.10370
+PWY-7135,emetine biosynthesis,2,Tb927.11.10370 | Tb927.9.12040
+PWY-7137,quercetin gentiotetraside biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-7139,sesaminol glucoside biosynthesis,3,Tb927.10.7090 | Tb927.7.300 | Tb927.8.7150
+PWY-7140,myricetin gentiobioside biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-7143,kaempferol gentiobioside biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-7145,genistin gentiobioside biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-7149,superpathway of polymethylated quercetin/quercetagetin glucoside biosynthesis (Chrysosplenium),3,Tb927.7.300 | Tb927.8.7150 | Tb927.9.12040
+PWY-7150,polymethylated quercetin glucoside biosynthesis I - quercetin series (Chrysosplenium),3,Tb927.7.300 | Tb927.8.7150 | Tb927.9.12040
+PWY-7151,polymethylated quercetin glucoside biosynthesis II - quercetagetin series (Chrysosplenium),3,Tb927.7.300 | Tb927.8.7150 | Tb927.9.12040
+PWY-7154,ergosterol biosynthesis II,1,Tb927.11.15530
+PWY-7155,7-dehydroporiferasterol biosynthesis,1,Tb927.9.12040
+PWY-7156,superpathway of ergosterol biosynthesis II,1,Tb927.11.15530
+PWY-7157,eupatolitin 3-<i>O</i>-glucoside biosynthesis,3,Tb927.7.300 | Tb927.8.7150 | Tb927.9.12040
+PWY-7158,L-phenylalanine degradation V,1,Tb927.8.2210
+PWY-7160,polymethylated myricetin biosynthesis (tomato),1,Tb927.9.12040
+PWY-7161,polymethylated quercetin biosynthesis,1,Tb927.9.12040
+PWY-7163,polymethylated kaempferol biosynthesis,1,Tb927.9.12040
+PWY-7166,kaempferide triglycoside biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-7168,flavonol acylglucoside biosynthesis I - kaempferol derivatives,1,Tb927.10.15910
+PWY-7169,hyperxanthone E biosynthesis,1,Tb927.5.1310
+PWY-7171,flavonol acylglucoside biosynthesis II - isorhamnetin derivatives,3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-7172,flavonol acylglucoside biosynthesis III - quercetin derivatives,1,Tb927.10.15910
+PWY-7176,UTP and CTP <i>de novo</i> biosynthesis,1,Tb927.10.7230
+PWY-7176,UTP and CTP <i>de novo</i> biosynthesis,1,Tb927.10.7230
+PWY-7183,pyrimidine nucleobases salvage I,1,Tb927.4.3320
+PWY-7184,pyrimidine deoxyribonucleotides <i>de novo</i> biosynthesis I,2,Tb927.10.7230 | Tb927.7.5480
+PWY-7184,pyrimidine deoxyribonucleotides <i>de novo</i> biosynthesis I,2,Tb927.10.7230 | Tb927.7.5480
+PWY-7186,superpathway of scopolin and esculin biosynthesis,4,Tb927.10.7090 | Tb927.7.300 | Tb927.8.7150 | Tb927.9.12040
+PWY-7187,pyrimidine deoxyribonucleotides <i>de novo</i> biosynthesis II,2,Tb927.10.7230 | Tb927.7.5480
+PWY-7187,pyrimidine deoxyribonucleotides <i>de novo</i> biosynthesis II,2,Tb927.10.7230 | Tb927.7.5480
+PWY-7191,kaempferol diglycoside biosynthesis (pollen-specific),2,Tb927.7.300 | Tb927.8.7150
+PWY-7192,quercetin diglycoside biosynthesis (pollen-specific),2,Tb927.7.300 | Tb927.8.7150
+PWY-7194,pyrimidine nucleobases salvage II,1,Tb927.4.3320
+PWY-7196,superpathway of pyrimidine ribonucleosides salvage,2,Tb927.10.7230 | Tb927.4.3320
+PWY-7197,pyrimidine deoxyribonucleotide phosphorylation,1,Tb927.10.7230
+PWY-7198,pyrimidine deoxyribonucleotides <i>de novo</i> biosynthesis IV,2,Tb927.10.7230 | Tb927.7.5480
+PWY-7199,pyrimidine deoxyribonucleosides salvage,1,Tb927.7.5480
+PWY-7200,superpathway of pyrimidine deoxyribonucleoside salvage,2,Tb927.10.7230 | Tb927.7.5480
+PWY-7205,CMP phosphorylation,1,Tb927.10.7230
+PWY-7208,superpathway of pyrimidine nucleobases salvage,2,Tb927.10.7230 | Tb927.4.3320
+PWY-7210,pyrimidine deoxyribonucleotides biosynthesis from CTP,2,Tb927.10.7230 | Tb927.7.5480
+PWY-7211,superpathway of pyrimidine deoxyribonucleotides <i>de novo</i> biosynthesis,3,Tb927.10.7230 | Tb927.5.3800 | Tb927.7.5480
+PWY-7212,baicalein metabolism,2,Tb927.7.300 | Tb927.8.7150
+PWY-7213,wogonin metabolism,2,Tb927.7.300 | Tb927.8.7150
+PWY-7216,(R)- and (S)-3-hydroxybutanoate biosynthesis (engineered),1,Tb927.8.2540 | Tb927.8.2540
+PWY-7218,photosynthetic 3-hydroxybutanoate biosynthesis (engineered),4,Tb927.1.700 | Tb927.1.710 | Tb927.8.2540 | Tb927.8.2540 | Tb927.8.6170
+PWY-7219,adenosine ribonucleotides <i>de novo</i> biosynthesis,2,Tb927.10.2540 | Tb927.10.5760
+PWY-7219,adenosine ribonucleotides <i>de novo</i> biosynthesis,4,Tb927.10.1570 | Tb927.10.2540 | Tb927.10.5760 | Tb927.11.7480
+PWY-7220,adenosine deoxyribonucleotides <i>de novo</i> biosynthesis II,1,Tb927.10.7230
+PWY-7220,adenosine deoxyribonucleotides <i>de novo</i> biosynthesis II,1,Tb927.10.7230
+PWY-7221,guanosine ribonucleotides <i>de novo</i> biosynthesis,1,Tb927.10.7230
+PWY-7221,guanosine ribonucleotides <i>de novo</i> biosynthesis,1,Tb927.10.7230
+PWY-7222,guanosine deoxyribonucleotides <i>de novo</i> biosynthesis II,1,Tb927.10.7230
+PWY-7222,guanosine deoxyribonucleotides <i>de novo</i> biosynthesis II,1,Tb927.10.7230
+PWY-7224,purine deoxyribonucleosides salvage,1,Tb927.10.7230
+PWY-7226,guanosine deoxyribonucleotides <i>de novo</i> biosynthesis I,1,Tb927.10.7230
+PWY-7227,adenosine deoxyribonucleotides <i>de novo</i> biosynthesis,1,Tb927.10.7230
+PWY-7228,superpathway of guanosine nucleotides <i>de novo</i> biosynthesis I,1,Tb927.10.7230
+PWY-7229,superpathway of adenosine nucleotides <i>de novo</i> biosynthesis I,3,Tb927.10.2540 | Tb927.10.5760 | Tb927.10.7230
+PWY-7230,ubiquinol-6 biosynthesis from 4-aminobenzoate (yeast),1,Tb927.5.1310
+PWY-7233,ubiquinol-6 bypass biosynthesis (eukaryotic),1,Tb927.5.1310
+PWY-7235,superpathway of ubiquinol-6 biosynthesis (eukaryotic),1,Tb927.5.1310
+PWY-7238,sucrose biosynthesis II,1,Tb927.1.3830
+PWY-724,"superpathway of lysine, threonine and methionine biosynthesis II",2,Tb927.5.1310 | Tb927.9.12040
+PWY-7245,superpathway NAD/NADP - NADH/NADPH interconversion (yeast),1,Tb927.11.900
+PWY-7252,luteolinidin 5-<i>O</i>-glucoside biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-7253,apigeninidin 5-<i>O</i>-glucoside biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-7254,TCA cycle VII (acetate-producers),3,Tb927.10.13430 | Tb927.11.900 | Tb927.3.4500
+PWY-7255,ergothioneine biosynthesis I (bacteria),1,Tb927.10.12370
+PWY-7256,cyanidin diglucoside biosynthesis (acyl-glucose dependent),1,Tb927.11.10370
+PWY-7261,anthocyanidin 3-malylglucoside biosynthesis (acyl-glucose dependent),1,Tb927.10.15910
+PWY-7265,lampranthin biosynthesis,1,Tb927.10.15910
+PWY-7268,NAD/NADP-NADH/NADPH cytosolic interconversion (yeast),1,Tb927.11.900
+PWY-7277,sphingolipid biosynthesis (mammals),1,Tb927.10.4040
+PWY-7279,aerobic respiration II (cytochrome c) (yeast),5,Tb927.1.4100 | Tb927.10.8320 | Tb927.3.1410 | Tb927.4.4620 | Tb927.9.3170
+PWY-7280,ternatin C3 biosynthesis,1,Tb927.10.15910
+PWY-7283,wybutosine biosynthesis,1,Tb927.9.4950
+PWY-7285,methylwyosine biosynthesis,2,Tb927.9.12040 | Tb927.9.4950
+PWY-7286,7-(3-amino-3-carboxypropyl)-wyosine biosynthesis,1,Tb927.9.4950
+PWY-7287,novobiocin biosynthesis,1,Tb927.9.12040
+PWY-7288,"fatty acid &beta;-oxidation (peroxisome, yeast)",1,Tb927.8.2540
+PWY-7298,nevadensin biosynthesis,1,Tb927.9.12040
+PWY-7301,dTDP-4-<i>O</i>-demethyl-&beta;-L-noviose biosynthesis,1,Tb927.9.12040
+PWY-7317,superpathway of dTDP-glucose-derived O-antigen building blocks biosynthesis,1,Tb927.10.15910
+PWY-7318,"dTDP-3-acetamido-3,6-dideoxy-&alpha;-D-glucose biosynthesis",1,Tb927.10.15910
+PWY-7321,ecdysteroid metabolism (arthropods),4,Tb927.10.9600 | Tb927.11.5860 | Tb927.11.8170 | Tb927.7.6220
+PWY-7323,superpathway of GDP-mannose-derived O-antigen building blocks biosynthesis,1,Tb927.1.3830
+PWY-7325,salvigenin biosynthesis,1,Tb927.9.12040
+PWY-7332,superpathway of UDP-<I>N</i>-acetylglucosamine-derived O-antigen building blocks biosynthesis,1,Tb927.1.3830
+PWY-7337,10-<i>cis</i>-heptadecenoyl-CoA degradation (yeast),1,Tb927.8.2540
+PWY-7338,"10-<i>trans</i>-heptadecenoyl-CoA degradation (reductase-dependent, yeast)",1,Tb927.8.2540
+PWY-7339,"10-<i>trans</i>-heptadecenoyl-CoA degradation (MFE-dependent, yeast)",1,Tb927.8.2540
+PWY-7340,"9-<i>cis</i>, 11-<i>trans</i>-octadecadienoyl-CoA degradation (isomerase-dependent, yeast)",1,Tb927.8.2540
+PWY-7343,UDP-glucose biosynthesis,1,Tb927.4.1360
+PWY-7345,superpathway of anaerobic sucrose degradation,3,Tb927.1.3830 | Tb927.1.700 | Tb927.1.710
+PWY-7347,sucrose biosynthesis III,1,Tb927.1.3830
+PWY-735,jasmonic acid biosynthesis,1,Tb927.8.2540
+PWY-7352,daunorubicin biosynthesis,3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-7354,aclacinomycin biosynthesis,1,Tb927.10.15910
+PWY-7363,papaverine biosynthesis,1,Tb927.9.12040
+PWY-7366,phosphatidylglycerol degradation,1,Tb927.3.3340
+PWY-7372,demethylmenaquinol-6 biosynthesis II,1,Tb927.5.1310
+PWY-7373,superpathway of demethylmenaquinol-6 biosynthesis II,1,Tb927.5.1310
+PWY-7378,aminopropanol phosphate biosynthesis II,1,Tb927.6.2790
+PWY-7382,lipoate biosynthesis and incorporation (yeast),1,Tb927.10.15910
+PWY-7383,"anaerobic energy metabolism (invertebrates, cytosol)",2,Tb927.10.15410 | Tb927.11.5090
+PWY-7384,"anaerobic energy metabolism (invertebrates, mitochondrial)",1,Tb927.3.4500
+PWY-7385,"1,3-propanediol biosynthesis (engineered)",1,Tb927.1.3830
+PWY-7389,superpathway of anaerobic energy metabolism (invertebrates),3,Tb927.10.15410 | Tb927.11.5090 | Tb927.3.4500
+PWY-7391,isoprene biosynthesis II (engineered),2,Tb927.8.2540 | Tb927.8.2540 | Tb927.8.6110
+PWY-7400,L-arginine biosynthesis IV (archaebacteria),1,Tb927.5.3800
+PWY-7401,crotonate fermentation (to acetate and cyclohexane carboxylate),2,Tb927.10.15910 | Tb927.8.2540 | Tb927.8.2540
+PWY-7402,benzoate fermentation (to acetate and cyclohexane carboxylate),2,Tb927.10.15910 | Tb927.8.2540 | Tb927.8.2540
+PWY-7405,aurachin RE biosynthesis,2,Tb927.10.15910 | Tb927.5.1310
+PWY-7407,"aurachin A, B, C and D biosynthesis",2,Tb927.10.15910 | Tb927.5.1310
+PWY-7412,mycinamicin biosynthesis,3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-7415,tylosin biosynthesis,1,Tb927.10.15910
+PWY-7419,FR-900098 and FR-33289 antibiotics biosynthesis,2,Tb927.10.11970 | Tb927.10.15910
+PWY-7438,superpathway of dTDP-glucose-derived antibiotic building blocks biosynthesis,2,Tb927.10.11970 | Tb927.9.12040
+PWY-7439,dTDP-&beta;-L-evernitrose biosynthesis,1,Tb927.9.12040
+PWY-7440,dTDP-&beta;-L-4-<i>epi</i>-vancosamine biosynthesis,2,Tb927.10.11970 | Tb927.9.12040
+PWY-7445,luteolin triglucuronide degradation,1,Tb927.11.10370
+PWY-7448,galloylated catechin biosynthesis,1,Tb927.10.15910
+PWY-7449,acylated cyanidin galactoside biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-7450,anthocyanidin modification (<i>Arabidopsis</i>),3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-7452,cyanidin dimalonylglucoside biosynthesis,1,Tb927.10.15910
+PWY-7458,violdelphin biosynthesis,3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-7460,2-<i>O</i>-acetyl-3-<i>O</i>-<i>trans</i>-coutarate biosynthesis,1,Tb927.10.15910
+PWY-7461,hydroxycinnamate sugar acid ester biosynthesis,1,Tb927.10.15910
+PWY-7463,<i>N</i>-methylanthraniloyl-&beta;-<i>D</i>-glucopyranose biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-7464,"cyanidin 3,7-diglucoside polyacylation biosynthesis",3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-7465,"3,3'-thiodipropanoate degradation",1,Tb927.10.15910
+PWY-7468,benzoyl-&beta;-<i>D</i>-glucopyranose biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-7470,phosphatidylcholine biosynthesis VII,1,Tb927.10.15910
+PWY-7473,avenacin A-1 biosynthesis,3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-7474,avenacin A-2 biosynthesis,1,Tb927.10.15910
+PWY-7475,des-methyl avenacin A-1 biosynthesis,3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-7476,superpathway of avenacin A biosynthesis,3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-7483,elloramycin biosynthesis,2,Tb927.10.15910 | Tb927.9.12040
+PWY-7485,tetracenomycin C biosynthesis,2,Tb927.10.15910 | Tb927.9.12040
+PWY-7487,(+)-secoisolariciresinol diglucoside biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-7491,podophyllotoxin glucosides metabolism,3,Tb927.11.10370 | Tb927.7.300 | Tb927.8.7150
+PWY-7493,paxilline and diprenylpaxilline biosynthesis,1,Tb927.5.1310
+PWY-7498,phenylpropanoids methylation (ice plant),1,Tb927.9.12040
+PWY-7510,rhizocticin A and B biosynthesis,1,Tb927.10.11970
+PWY-7517,brassicicene C biosynthesis,1,Tb927.9.12040
+PWY-7520,terrequinone A biosynthesis,1,Tb927.5.1310
+PWY-7523,L-arginine degradation XII,1,Tb927.10.11970
+PWY-7524,mevalonate pathway III (archaea),2,Tb927.8.2540 | Tb927.8.2540 | Tb927.8.6110
+PWY-7529,CMP-<i>N</i>-acetyl-7-<i>O</i>-acetylneuraminate biosynthesis,3,Tb927.10.15910 | Tb927.11.10370 | Tb927.5.1310
+PWY-7531,mannojirimycin biosynthesis,1,Tb927.10.11970
+PWY-7532,acetylaszonalenin biosynthesis,2,Tb927.10.15910 | Tb927.5.1310
+PWY-7533,gliotoxin biosynthesis,1,Tb927.9.12040
+PWY-7534,gliotoxin inactivation,1,Tb927.9.12040
+PWY-7536,2-amino-3-hydroxycyclopent-2-enone biosynthesis,1,Tb927.8.6060
+PWY-7540,aflatrem biosynthesis,2,Tb927.10.7100 | Tb927.5.1310
+PWY-7543,5-<i>N</i>-acetylardeemin biosynthesis,2,Tb927.10.15910 | Tb927.5.1310
+PWY-7547,prodigiosin biosynthesis,3,Tb927.10.11970 | Tb927.10.15910 | Tb927.9.12040
+PWY-7548,methylthiolincosamide biosynthesis,4,Tb927.10.9600 | Tb927.11.5860 | Tb927.11.8170 | Tb927.7.6220
+PWY-7555,&alpha;-cyclopiazonate biosynthesis,2,Tb927.10.15910 | Tb927.5.1310
+PWY-7559,glutathione degradation (DUG pathway - yeast),1,Tb927.10.12260
+PWY-7561,tenellin biosynthesis,2,Tb927.10.15910 | Tb927.10.7100
+PWY-7563,bassianin and desmethylbassianin biosynthesis,1,Tb927.10.15910
+PWY-7564,bacimethrin and bacimethrin pyrophosphate biosynthesis,1,Tb927.9.12040
+PWY-7565,aspyridone A biosynthesis,2,Tb927.10.15910 | Tb927.10.7100
+PWY-7569,arginomycin biosynthesis,5,Tb927.10.11970 | Tb927.11.4700 | Tb927.7.300 | Tb927.8.7150 | Tb927.9.12040
+PWY-7570,blasticidin S biosynthesis,5,Tb927.10.11970 | Tb927.11.4700 | Tb927.7.300 | Tb927.8.7150 | Tb927.9.12040
+PWY-7571,ferrichrome A biosynthesis,1,Tb927.8.6110
+PWY-7572,lolitrem B biosynthesis,2,Tb927.10.7100 | Tb927.5.1310
+PWY-7573,GDP-mycosamine biosynthesis,1,Tb927.10.11970
+PWY-7575,superpathway of candicidin biosynthesis,4,Tb927.10.11970 | Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-7577,ferrichrome biosynthesis,1,Tb927.10.15910
+PWY-7583,arachidonate biosynthesis II (bacteria),1,Tb927.10.15910
+PWY-7585,docosahexaenoate biosynthesis II (bacteria),1,Tb927.10.15910
+PWY-7591,okenone biosynthesis,1,Tb927.9.12040
+PWY-7592,"arachidonate biosynthesis III (6-desaturase, mammals)",2,Tb927.10.15910 | Tb927.10.7100
+PWY-7599,anditomin biosynthesis,2,Tb927.10.15910 | Tb927.5.1310
+PWY-7601,"arachidonate biosynthesis IV (8-detaturase, lower eukaryotes)",1,Tb927.10.15910
+PWY-7602,"icosapentaenoate biosynthesis V (8-desaturase, lower eukaryotes)",1,Tb927.10.15910
+PWY-7603,stephacidin A biosynthesis,1,Tb927.5.1310
+PWY-7605,roquefortine C biosynthesis,2,Tb927.10.7100 | Tb927.5.1310
+PWY-7606,"docosahexaenoate biosynthesis III (6-desaturase, mammals)",3,Tb927.10.15910 | Tb927.10.7100 | Tb927.8.2540
+PWY-7607,meleagrin biosynthesis,1,Tb927.9.12040
+PWY-7608,neoxaline biosynthesis,1,Tb927.9.12040
+PWY-7609,"superpathway of roquefortine, meleagrin and neoxaline biosynthesis",3,Tb927.10.7100 | Tb927.5.1310 | Tb927.9.12040
+PWY-7612,chaetoglobosin A biosynthesis,1,Tb927.10.15910
+PWY-7614,methiin metabolism,1,Tb927.9.12040
+PWY-7621,autoinducer CAI-1 biosynthesis,1,Tb927.10.15910
+PWY-7623,astaxanthin dirhamnoside biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-7624,nystatin biosynthesis,3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-7626,bacilysin biosynthesis,1,Tb927.10.11970
+PWY-7629,yatein biosynthesis II,1,Tb927.9.12040
+PWY-7631,arctigenin and isoarctigenin biosynthesis,1,Tb927.9.12040
+PWY-7633,calycosin 7-<i>O</i>-glucoside biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-7643,coniferyl alcohol 9-methyl ester biosynthesis,1,Tb927.9.12040
+PWY-7647,ulvan degradation,1,Tb927.11.10370
+PWY-7649,3-hydroxy-<i>L</i>-homotyrosine biosynthesis,1,Tb927.10.11970
+PWY-7653,griseofulvin biosynthesis,3,Tb927.10.15910 | Tb927.10.7100 | Tb927.9.12040
+PWY-7654,"(8<i>E</i>,10<i>E</i>)-dodeca-8,10-dienol biosynthesis",2,Tb927.10.7100 | Tb927.8.2540
+PWY-7655,dechlorogriseofulvin biosynthesis,1,Tb927.9.12040
+PWY-7656,<i>Spodoptera littoralis</i> pheromone biosynthesis,3,Tb927.10.15910 | Tb927.10.7100 | Tb927.8.6640
+PWY-7658,protein <I>N</i>-glycosylation (<i>Methanococcus voltae</i>),2,Tb927.7.300 | Tb927.8.7150
+PWY-7659,viridicatumtoxin biosynthesis,3,Tb927.10.15910 | Tb927.5.1310 | Tb927.9.12040
+PWY-7660,tryptoquialanine biosynthesis,1,Tb927.10.15910
+PWY-7661,protein <I>N</i>-glycosylation (<i>Haloferax volcanii</i>),3,Tb927.7.300 | Tb927.8.7150 | Tb927.9.12040
+PWY-7667,apicidin biosynthesis,1,Tb927.9.12040
+PWY-7668,apicidin F biosynthesis,1,Tb927.9.12040
+PWY-7669,equisetin biosynthesis,2,Tb927.10.15910 | Tb927.9.12040
+PWY-7670,fusaridione A biosynthesis,1,Tb927.10.15910
+PWY-7671,saframycin A biosynthesis,1,Tb927.10.15910
+PWY-7672,fusaric acid biosynthesis,1,Tb927.10.15910
+PWY-7673,fusarin C biosynthesis,2,Tb927.10.15910 | Tb927.9.12040
+PWY-7677,rosamicin biosynthesis,3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+PWY-7679,anthocyanidin acylglucoside and acylsambubioside biosynthesis,1,Tb927.10.15910
+PWY-7687,stipitatate biosynthesis,1,Tb927.10.15910
+PWY-7688,dTDP-D-ravidosamine and dTDP-4-acetyl-D-ravidosamine biosynthesis,1,Tb927.10.15910
+PWY-7689,8-<i>O</i>-methylfusarubin biosynthesis,2,Tb927.10.15910 | Tb927.9.12040
+PWY-7690,holomycin biosynthesis,1,Tb927.10.15910
+PWY-7691,"10,13-epoxy-11-methyl-octadecadienoate biosynthesis",1,Tb927.9.12040
+PWY-7692,bikaverin biosynthesis,2,Tb927.10.15910 | Tb927.9.12040
+PWY-7693,guadinomine B biosynthesis,1,Tb927.10.15910
+PWY-7694,zwittermicin A biosynthesis,1,Tb927.10.15910
+PWY-7695,aurofusarin biosynthesis,2,Tb927.10.15910 | Tb927.9.12040
+PWY-7696,citreoisocoumarin and bikisocoumarin biosynthesis,1,Tb927.10.15910
+PWY-7697,geranyl &beta;-primeveroside biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-7701,4-hydroxy-4-methyl-L-glutamate biosynthesis,1,Tb927.10.11970
+PWY-7702,sch210971 and sch210972 biosynthesis,1,Tb927.10.15910
+PWY-7703,"2,4-xylenol degradation to protocatechuate",1,Tb927.11.4700
+PWY-7706,dapdiamides biosynthesis,1,Tb927.10.15910
+PWY-7708,lyngbyatoxin biosynthesis,3,Tb927.10.15910 | Tb927.10.7100 | Tb927.5.1310
+PWY-7711,calonectrin biosynthesis,1,Tb927.10.15910
+PWY-7713,nivalenol biosynthesis,1,Tb927.10.15910
+PWY-7714,harzianum A and trichodermin biosynthesis,1,Tb927.10.15910
+PWY-7715,superpathway of trichothecene biosynthesis,1,Tb927.10.15910
+PWY-7716,penicillin G and penicillin V biosynthesis,1,Tb927.10.15910
+PWY-7719,CMP-diacetamido-8-epilegionaminic acid biosynthesis,2,Tb927.10.15910 | Tb927.5.1310
+PWY-7724,"icosapentaenoate biosynthesis III (8-desaturase, mammals)",1,Tb927.10.7100
+PWY-7725,"arachidonate biosynthesis V (8-detaturase, mammals)",1,Tb927.10.7100
+PWY-7726,"(4Z,7Z,10Z,13Z,16Z)-docosapentaenoate biosynthesis (6-desaturase)",3,Tb927.10.15910 | Tb927.10.7100 | Tb927.8.2540
+PWY-7727,"docosahexaenoate biosynthesis IV (4-desaturase, mammals)",2,Tb927.10.15910 | Tb927.10.7100
+PWY-7728,"(4Z,7Z,10Z,13Z,16Z)-docosa-4,7,10,13,16-pentaenoate biosynthesis II (4-desaturase)",2,Tb927.10.15910 | Tb927.10.7100
+PWY-7730,T-2 toxin biosynthesis,1,Tb927.10.15910
+PWY-7733,3-hydroxyquinaldate biosynthesis,1,Tb927.10.11970
+PWY-7735,echinomycin and triostin A biosynthesis,2,Tb927.10.15910 | Tb927.9.12040
+PWY-7737,thiocoraline biosynthesis,2,Tb927.10.15910 | Tb927.9.12040
+PWY-7739,aucuparin biosynthesis,1,Tb927.9.12040
+PWY-7746,mycobacterial sulfolipid biosynthesis,1,Tb927.10.15910
+PWY-7751,shinorine biosynthesis,1,Tb927.9.12040
+PWY-7767,L-leucine degradation IV (Stickland reaction),1,Tb927.2.4590
+PWY-7769,phosalacine biosynthesis,6,Tb927.10.11970 | Tb927.10.15910 | Tb927.10.9600 | Tb927.11.5860 | Tb927.11.8170 | Tb927.7.6220
+PWY-7778,2-methylpropene degradation,1,Tb927.8.2540 | Tb927.8.2540
+PWY-7779,methyl <i>tert</i>-butyl ether degradation,1,Tb927.8.2540 | Tb927.8.2540
+PWY-7782,plasmalogen biosynthesis,5,Tb927.10.13400 | Tb927.10.13700 | Tb927.10.13930 | Tb927.10.7100 | Tb927.8.6640
+PWY-7790,UMP biosynthesis II,1,Tb927.5.3800
+PWY-7791,UMP biosynthesis III,1,Tb927.5.3800
+PWY-7805,(aminomethyl)phosphonate degradation,1,Tb927.7.1790
+PWY-7807,glyphosate degradation III,1,Tb927.7.1790
+PWY-7814,dTDP-L-daunosamine biosynthesis,1,Tb927.10.11970
+PWY-7818,type IV lipoteichoic acid biosynthesis (<i>S. pneumoniae</i>),2,Tb927.7.300 | Tb927.8.7150
+PWY-7819,poly(3-O-&beta;-D-glucopyranosyl-<i>N</i>-acetylgalactosamine 1-phosphate) wall teichoic acid biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-7820,teichuronic acid biosynthesis (<i>B. subtilis</i> 168),2,Tb927.7.300 | Tb927.8.7150
+PWY-7824,prunasin and amygdalin biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-7826,<i>Amaryllidacea</i> alkaloids biosynthesis,3,Tb927.10.7100 | Tb927.11.4700 | Tb927.9.12040
+PWY-7835,superpathway of glycosphingolipids biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-7838,globo-series glycosphingolipids biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-7859,jasmonoyl-L-isoleucine inactivation,2,Tb927.7.300 | Tb927.8.7150
+PWY-7861,L-pipecolate biosynthesis,1,Tb927.10.11970
+PWY-7897,flavonoid di-C-glucosylation,2,Tb927.7.300 | Tb927.8.7150
+PWY-7907,"(2S,3E)-2-amino-4-methoxy-but-3-enoate biosynthesis",1,Tb927.10.15910
+PWY-7911,6'-dechloromelleolide F biosynthesis,1,Tb927.10.7100
+PWY-7921,protein <I>O</i>-mannosylation I (yeast),2,Tb927.7.300 | Tb927.8.7150
+PWY-7922,"protein <I>O</i>-mannosylation II (mammals, core M1 and core M2)",2,Tb927.7.300 | Tb927.8.7150
+PWY-7923,archaeosine biosynthesis II,1,Tb927.10.11970
+PWY-7930,pyoluteorin biosynthesis,1,Tb927.10.15910
+PWY-7948,4-oxopentanoate degradation,1,Tb927.8.2540
+PWY-7950,diadinoxanthin and fucoxanthin biosynthesis,1,Tb927.10.15910
+PWY-7954,tabtoxinine-&beta;-lactam biosynthesis,1,Tb927.10.15910
+PWY-7960,rhabduscin biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-7975,adenosylcobalamin biosynthesis from adenosylcobinamide-GDP II,4,Tb927.10.9600 | Tb927.11.5860 | Tb927.11.8170 | Tb927.7.6220
+PWY-7981,&alpha;-dystroglycan glycosylation,2,Tb927.7.300 | Tb927.8.7150
+PWY-7983,pseudomonine biosynthesis,1,Tb927.10.15910
+PWY-7984,acinetobactin biosynthesis,1,Tb927.10.15910
+PWY-7986,anguibactin biosynthesis,1,Tb927.10.15910
+PWY-7987,vanchrobactin biosynthesis,1,Tb927.10.15910
+PWY-7988,baumannoferrin biosynthesis,1,Tb927.10.15910
+PWY-7989,acinetoferrin biosynthesis,1,Tb927.10.15910
+PWY-7992,superpathway of menaquinol-8 biosynthesis III,1,Tb927.5.1310
+PWY-8000,vitamin K degradation,2,Tb927.7.300 | Tb927.8.7150
+PWY-8004,Entner-Doudoroff pathway I,2,Tb927.1.700 | Tb927.1.710
+PWY-8013,UDP-<i>N</i>-acetyl-D-galactosamine biosynthesis III,1,Tb927.1.3830
+PWY-8014,L-phenylalanine degradation VI (Stickland reaction),1,Tb927.11.5090
+PWY-8026,sterol biosynthesis (methylotrophs),1,Tb927.11.15530
+PWY-8031,epiberberine biosynthesis,2,Tb927.10.7100 | Tb927.9.12040
+PWY-8032,chloramphenicol biosynthesis,2,Tb927.10.11970 | Tb927.10.15910
+PWY-8035,streptovaricin biosynthesis,2,Tb927.10.15910 | Tb927.9.12040
+PWY-8036,chaxamycin biosynthesis,2,Tb927.10.15910 | Tb927.9.12040
+PWY-8038,naphthomycin biosynthesis,1,Tb927.10.15910
+PWY-8039,mitomycin biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-8043,ophthalmate biosynthesis,2,Tb927.10.11970 | Tb927.10.12370
+PWY-8045,cylindrospermopsin biosynthesis,1,Tb927.10.15910
+PWY-8047,bryostatin biosynthesis,2,Tb927.10.15910 | Tb927.9.12040
+PWY-8049,pederin biosynthesis,1,Tb927.10.15910
+PWY-8051,anandamide biosynthesis I,3,Tb927.10.13400 | Tb927.10.13700 | Tb927.10.13930
+PWY-8052,2-arachidonoylglycerol biosynthesis,3,Tb927.10.13400 | Tb927.10.13700 | Tb927.10.13930
+PWY-8053,anandamide biosynthesis II,3,Tb927.10.13400 | Tb927.10.13700 | Tb927.10.13930
+PWY-8055,palmitoyl ethanolamide biosynthesis,3,Tb927.10.13400 | Tb927.10.13700 | Tb927.10.13930
+PWY-822,fructan biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-83,monolignol glucosides biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY-84,resveratrol biosynthesis,1,Tb927.10.15910
+PWY-841,superpathway of purine nucleotides <i>de novo</i> biosynthesis I,3,Tb927.10.2540 | Tb927.10.5760 | Tb927.10.7230
+PWY-842,starch degradation I,1,Tb927.11.10370
+PWY-862,fructan degradation,1,Tb927.11.10370
+PWY-922,mevalonate pathway I,2,Tb927.8.2540 | Tb927.8.6110
+PWY-922,mevalonate pathway I,2,Tb927.8.2540 | Tb927.8.2540 | Tb927.8.6110
+PWY-922,mevalonate pathway I,2,Tb927.8.2540 | Tb927.8.6110
+PWY-I9,L-cysteine biosynthesis VI (from L-methionine),1,Tb927.9.12040
+PWY0-1061,superpathway of L-alanine biosynthesis,1,Tb927.2.4590
+PWY0-1061,superpathway of alanine biosynthesis,1,Tb927.2.4590
+PWY0-1300,2-<I>O</I>-&alpha;-mannosyl-D-glycerate degradation,1,Tb927.11.10370
+PWY0-1303,aminopropylcadaverine biosynthesis,1,Tb927.5.1310
+PWY0-1303,aminopropylcadaverine biosynthesis,1,Tb927.5.1310
+PWY0-1517,sedoheptulose bisphosphate bypass,4,Tb927.10.9600 | Tb927.11.5860 | Tb927.11.8170 | Tb927.7.6220
+PWY0-1546,muropeptide degradation,1,Tb927.10.12260
+PWY0-162,pyrimidine ribonucleotides <i>de novo</i> biosynthesis,2,Tb927.10.7230 | Tb927.5.3800
+PWY0-162,superpathway of pyrimidine ribonucleotides <i>de novo</i> biosynthesis,2,Tb927.10.7230 | Tb927.5.3800
+PWY0-162,superpathway of pyrimidine ribonucleotides <i>de novo</i> biosynthesis,2,Tb927.10.7230 | Tb927.5.3800
+PWY0-163,salvage pathways of pyrimidine ribonucleotides,2,Tb927.10.7230 | Tb927.4.3320
+PWY0-163,salvage pathways of pyrimidine ribonucleotides,2,Tb927.10.7230 | Tb927.4.3320
+PWY0-166,pyrimidine deoxyribonucleotides <i>de novo</i> biosynthesis I,2,Tb927.10.7230 | Tb927.7.5480
+PWY0-166,superpathway of pyrimidine deoxyribonucleotides <i>de novo</i> biosynthesis (<i>E. coli</i>),2,Tb927.10.7230 | Tb927.7.5480
+PWY0-166,superpathway of pyrimidine deoxyribonucleotides <i>de novo</i> biosynthesis (E. coli),2,Tb927.10.7230 | Tb927.7.5480
+PWY0-461,L-lysine degradation I,1,Tb927.10.11970
+PWY0-781,aspartate superpathway,1,Tb927.11.5090
+PWY0-781,aspartate superpathway,1,Tb927.11.5090
+PWY0-881,superpathway of fatty acid biosynthesis I (E. coli),1,Tb927.10.15910
+PWY1-3,polyhydroxybutanoate biosynthesis,2,Tb927.10.15910 | Tb927.8.2540 | Tb927.8.2540
+PWY18C3-1,cholesterol biosynthesis (plants),2,Tb927.11.15530 | Tb927.3.4650
+PWY18C3-10,triacylsucrose biosynthesis (<i>Solanum</i>),1,Tb927.10.15910
+PWY18C3-11,tetraacylsucrose biosynthesis (<i>Solanum</i>),1,Tb927.10.15910
+PWY18C3-12,superpathway of acylsucrose biosynthesis (cultivated tomato),1,Tb927.10.15910
+PWY18C3-15,acylsucrose biosynthesis (<i>Solanum pennellii</i>),1,Tb927.10.15910
+PWY18C3-16,acylsucrose biosynthesis (<i>Solanum habrochaites</i>),1,Tb927.10.15910
+PWY18C3-17,superpathway of acylsucrose biosynthesis (wild tomato),1,Tb927.10.15910
+PWY18C3-2,solasodine and soladulcidine biosynthesis,1,Tb927.10.11970
+PWY18C3-20,gentisate 5-<i>O</i>-&beta;-<i>D</i>-xylopyranoside biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY18C3-21,phenylpropanoid volatiles glycoconjugation (tomato),2,Tb927.7.300 | Tb927.8.7150
+PWY18C3-25,superpathway of methylsalicylate metabolism,2,Tb927.7.300 | Tb927.8.7150
+PWY18C3-3,&alpha;-tomatine biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+PWY18C3-4,solasodine glycosylation,2,Tb927.7.300 | Tb927.8.7150
+PWY18C3-5,&alpha;-tomatine degradation,1,Tb927.11.10370
+PWY18C3-6,superpathway of glycoalkaloid metabolism (Solanaceae),3,Tb927.10.11970 | Tb927.7.300 | Tb927.8.7150
+PWY18C3-8,monoacylsucrose biosynthesis (<i>Solanum</i>),1,Tb927.10.15910
+PWY18C3-9,diacylsucrose biosynthesis (<i>Solanum</i>),1,Tb927.10.15910
+PWY1A0-6325,actinorhodin biosynthesis,1,Tb927.10.15910
+PWY1G-2,superpathway of glycolysis and TCA variant VIII,3,Tb927.1.3830 | Tb927.1.700 | Tb927.1.710
+PWY1QP9-2,fructosyllysine and glucosyllysine degradation,4,Tb927.10.9600 | Tb927.11.5860 | Tb927.11.8170 | Tb927.7.6220
+PWY1V8-10,Erythroascorbate biosynthesis,1,Tb927.11.4700
+PWY1V8-11,Threonine metabolism,2,Tb927.6.2790 | Tb927.8.6060
+PWY1V8-3,Sterol pathway,2,Tb927.8.2540 | Tb927.8.6110
+PWY1V8-4,Succinate shunt,4,Tb927.10.15410 | Tb927.2.4210 | Tb927.3.4500 | Tb927.5.930
+PWY1V8-6,Trypanothine biosynthesis and peroxide metabolism,1,Tb927.10.12370
+PWY1V8-8,Acetate/acetyl-CoA metabolism,5,Tb927.10.1570 | Tb927.11.6280 | Tb927.11.7480 | Tb927.6.2790 | Tb927.8.6060
+PWY1V8-9,Succinate and Acetate/Acetyl CoA metabolism,9,Tb927.10.15410 | Tb927.10.1570 | Tb927.11.6280 | Tb927.11.7480 | Tb927.2.4210 | Tb927.3.4500 | Tb927.5.930 | Tb927.6.2790 | Tb927.8.6060
+PWY3DJ-12,ceramide <i>de novo</i> biosynthesis,1,Tb927.10.4040
+PWY3DJ-35471,L-ascorbate biosynthesis IV,1,Tb927.11.10370
+PWY3IU-0,succinic fermentation pathway,4,Tb927.10.15410 | Tb927.2.4210 | Tb927.3.4500 | Tb927.5.930
+PWY3IU-1,glycoinositolphospholipid (GIPL) biosynthesis,1,Tb927.10.10110
+PWY3IU-1054,fatty acid &beta;-oxidation,1,Tb927.8.2540
+PWY3IU-1370,<i>S</i>-adenosyl-L-methionine cycle,1,Tb927.9.12040
+PWY3IU-1460,superpathway of S-adenosylmethionine metabolism,1,Tb927.9.12040
+PWY3IU-157,ester phospholipid biosynthesis,4,Tb927.10.13400 | Tb927.10.13700 | Tb927.10.13930 | Tb927.9.12040
+PWY3IU-185,citrate degradation,1,Tb927.10.13430
+PWY3IU-196,methionine biosynthesis,2,Tb927.5.1310 | Tb927.9.12040
+PWY3IU-20,glycophosphatidylinositol (GPI) anchor biosynthesis,1,Tb927.10.10110
+PWY3IU-205,superpathway of phospholipid biosynthesis,4,Tb927.10.13400 | Tb927.10.13700 | Tb927.10.13930 | Tb927.9.12040
+PWY3IU-214,ergosterol biosynthesis,4,Tb927.11.15530 | Tb927.11.6210 | Tb927.3.4650 | Tb927.8.3240
+PWY3IU-235,folate metabolism,2,Tb927.7.5480 | Tb927.7.5480 | Tb927.9.12040
+PWY3IU-255,biopterin metabolism,1,Tb927.8.2210
+PWY3IU-2748,pyrimidine nucleotide metabolism (phosphotransfer and nucleotide modification),1,Tb927.10.7230
+PWY3IU-321,superpathway of mitochondrial fatty acid biosynthesis,1,Tb927.10.15910
+PWY3IU-39,oxaloacetate degradation to pyruvate,1,Tb927.10.15410
+PWY3IU-402,salvage pathways of purine nucleosides,3,Tb927.3.2960 | Tb927.7.1790 | Tb927.7.4570
+PWY3IU-445,purine nucleotide metabolism (phosphotransfer and nucleotide modification),3,Tb927.10.2540 | Tb927.10.5760 | Tb927.10.7230
+PWY3IU-493,aerobic respiration -- electron donor,10,Tb927.1.4100 | Tb927.10.8320 | Tb927.3.1410 | Tb927.4.4620 | Tb927.4.4990 | Tb927.5.1060 | Tb927.8.1890 | Tb927.8.7430 | Tb927.9.14160 | Tb927.9.3170
+PWY3IU-555,lipophosphoglycan (LPG) biosynthesis,1,Tb927.10.10110
+PWY3IU-61,"superpathway of glycolysis, pyruvate dehydrogenase and TCA cycle",7,Tb927.1.3830 | Tb927.1.700 | Tb927.1.710 | Tb927.10.13430 | Tb927.10.15410 | Tb927.11.900 | Tb927.3.4500
+PWY3IU-675,glycerolipid biosynthesis - initial steps,3,Tb927.10.13400 | Tb927.10.13700 | Tb927.10.13930
+PWY3IU-74,fatty acid elongation - unsaturated,1,Tb927.10.7100
+PWY3IU-78,aspartate degradation,1,Tb927.11.5090
+PWY3IU-93,superpathway of sterol biosynthesis,7,Tb927.11.15530 | Tb927.11.6210 | Tb927.2.4590 | Tb927.3.4650 | Tb927.8.2540 | Tb927.8.3240 | Tb927.8.6110
+PWY3IU-99,superpathway of central carbon metabolism,10,Tb927.1.3830 | Tb927.1.700 | Tb927.1.710 | Tb927.10.13430 | Tb927.10.15410 | Tb927.11.900 | Tb927.2.4210 | Tb927.3.4500 | Tb927.5.930 | Tb927.8.6170
+PWY3O-355,stearate biosynthesis III (fungi),1,Tb927.10.15910
+PWY3O-6,"dehydro-D-arabinono-1,4-lactone biosynthesis",1,Tb927.11.4700
+PWY66-201,nicotine degradation IV,2,Tb927.10.7100 | Tb927.11.4700
+PWY66-221,nicotine degradation V,2,Tb927.10.7100 | Tb927.11.4700
+PWY66-241,bupropion degradation,1,Tb927.11.4700
+PWY66-3,"cholesterol biosynthesis II (via 24,25-dihydrolanosterol)",2,Tb927.11.15530 | Tb927.3.4650
+PWY66-341,cholesterol biosynthesis I,2,Tb927.11.15530 | Tb927.3.4650
+PWY66-367,ketogenesis,2,Tb927.8.2540 | Tb927.8.2540 | Tb927.8.6110
+PWY66-368,ketolysis,2,Tb927.11.2690 | Tb927.8.2540 | Tb927.8.2540
+PWY66-374,C20 prostanoid biosynthesis,1,Tb927.7.3500
+PWY66-391,fatty acid &beta;-oxidation VI (peroxisome),1,Tb927.8.2540
+PWY66-398,TCA cycle III (animals),3,Tb927.10.13430 | Tb927.10.15410 | Tb927.3.4500
+PWY66-399,gluconeogenesis III,4,Tb927.1.3830 | Tb927.1.700 | Tb927.1.710 | Tb927.10.15410
+PWY66-4,cholesterol biosynthesis III (via desmosterol),2,Tb927.11.15530 | Tb927.3.4650
+PWY66-409,superpathway of purine nucleotide salvage,4,Tb927.10.2540 | Tb927.10.5760 | Tb927.10.7230 | Tb927.7.1790
+PWY66-425,L-lysine degradation II (L-pipecolate pathway),1,Tb927.10.11970
+PWY66-5,superpathway of cholesterol biosynthesis,4,Tb927.11.15530 | Tb927.3.4650 | Tb927.8.2540 | Tb927.8.2540 | Tb927.8.6110
+PWYQT-4450,"aliphatic glucosinolate biosynthesis, side chain elongation cycle",1,Tb927.10.11970
+PWYQT-4476,indole glucosinolate activation (herbivore attack),1,Tb927.11.4700
+PWYQT-4477,indole glucosinolate activation (intact plant cell),2,Tb927.5.1310 | Tb927.9.12040
+REDCITCYC,TCA cycle VIII (Helicobacter),4,Tb927.10.13430 | Tb927.11.2690 | Tb927.11.900 | Tb927.3.4500
+RIB-DRIBMET-PWY,superpathway of ribose and deoxyribose phosphate degradation,2,Tb927.11.1020 | Tb927.8.6170
+RIB-DRIBMET-PWY,superpathway of ribose and deoxyribose phosphate degradation,2,Tb927.11.1020 | Tb927.8.6170
+RIBOKIN-PWY,ribose degradation,1,Tb927.11.1020
+RIBOKIN-PWY,ribose phosphorylation,1,Tb927.11.1020
+RIBOKIN-PWY,ribose degradation,1,Tb927.11.1020
+RUMP-PWY,formaldehyde oxidation I,1,Tb927.1.3830
+RUMP-PWY,formaldehyde oxidation I,1,Tb927.1.3830
+SOPHOROSYLOXYDOCOSANOATE-SYN-PWY,sophorolipid biosynthesis,3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+SPHINGOLIPID-SYN-PWY,sphingolipid metabolism,7,Tb927.10.4040 | Tb927.10.9600 | Tb927.11.5860 | Tb927.11.8170 | Tb927.7.300 | Tb927.7.6220 | Tb927.8.7150
+SPHINGOLIPID-SYN-PWY,sphingolipid biosynthesis (yeast),1,Tb927.10.4040
+SPHINGOLIPID-SYN-PWY-1,sphingolipid biosynthesis,1,Tb927.10.4040
+SUCROSEUTIL2-PWY,sucrose degradation VII (sucrose 3-dehydrogenase),1,Tb927.11.10370
+SUCSYN-PWY,sucrose biosynthesis,1,Tb927.4.1360
+SUCSYN-PWY,sucrose biosynthesis I (from photosynthesis),3,Tb927.1.3830 | Tb927.1.700 | Tb927.1.710
+SUCUTIL-PWY,sucrose degradation I,1,Tb927.11.10370
+SUCUTIL-PWY,sucrose degradation I (sucrose phosphotransferase),1,Tb927.11.10370
+TCA,TCA cycle,4,Tb927.10.13430 | Tb927.10.15410 | Tb927.11.900 | Tb927.3.4500
+TCA,TCA cycle I (prokaryotic),4,Tb927.10.13430 | Tb927.10.15410 | Tb927.11.900 | Tb927.3.4500
+TCA,TCA cycle I (prokaryotic),4,Tb927.10.13430 | Tb927.10.15410 | Tb927.11.900 | Tb927.3.4500
+TCA-GLYOX-BYPASS,superpathway of glyoxylate bypass and TCA,4,Tb927.10.13430 | Tb927.10.15410 | Tb927.11.900 | Tb927.3.4500
+TCA-GLYOX-BYPASS,superpathway of glyoxylate bypass and TCA,4,Tb927.10.13430 | Tb927.10.15410 | Tb927.11.900 | Tb927.3.4500
+THRDLCTCAT-PWY,L-threonine degradation III (to methylglyoxal),1,Tb927.6.2790
+THREOCAT-PWY,superpathway of L-threonine metabolism,4,Tb927.10.15910 | Tb927.2.4590 | Tb927.6.2790 | Tb927.8.6060
+THREONINE-DEG2-PWY,L-threonine degradation II,2,Tb927.6.2790 | Tb927.8.6060
+THREONINE-DEG2-PWY,threonine degradation II,2,Tb927.6.2790 | Tb927.8.6060
+THRESYN-PWY,superpathway of L-threonine biosynthesis,1,Tb927.11.5090
+TRIGLSYN-PWY,triacylglycerol biosynthesis,3,Tb927.10.13400 | Tb927.10.13700 | Tb927.10.13930
+TRIGLSYN-PWY,diacylglycerol and triacylglycerol biosynthesis,4,Tb927.10.13400 | Tb927.10.13700 | Tb927.10.13930 | Tb927.10.15910
+TRIGLSYN-PWY,triacylglycerol biosynthesis,4,Tb927.10.13400 | Tb927.10.13700 | Tb927.10.13930 | Tb927.10.15910
+TRNA-CHARGING-PWY,tRNA charging pathway,1,Tb927.10.1500
+TRNA-CHARGING-PWY,tRNA charging,1,Tb927.10.1500
+TRYPTOPHAN-DEGRADATION-1,L-tryptophan degradation III (eukaryotic),1,Tb927.8.2540 | Tb927.8.2540
+UDPNACETYLGALSYN-PWY,UDP-<i>N</i>-acetyl-D-glucosamine biosynthesis II,1,Tb927.1.3830
+UDPNAGSYN-PWY,UDP-<i>N</i>-acetyl-D-glucosamine biosynthesis I,1,Tb927.1.3830
+UDPNAGSYN-PWY-1,UDP-<i>N</i>-acetyl-D-glucosamine biosynthesis I,1,Tb927.1.3830
+VALDEG-PWY,valine degradation I,2,Tb927.2.4590 | Tb927.6.1570
+VALDEG-PWY,L-valine degradation I,2,Tb927.2.4590 | Tb927.6.1570
+VALDEG-PWY,valine degradation I,2,Tb927.2.4590 | Tb927.6.1570
+VALSYN-PWY,L-valine biosynthesis,1,Tb927.2.4590
+ec00010,Glycolysis / Gluconeogenesis,9,Tb927.1.3830 | Tb927.1.700 | Tb927.1.710 | Tb927.10.9600 | Tb927.11.5860 | Tb927.11.8170 | Tb927.2.4210 | Tb927.4.1360 | Tb927.7.6220
+ec00020,Citrate cycle (TCA cycle),5,Tb927.10.13430 | Tb927.10.15410 | Tb927.11.900 | Tb927.2.4210 | Tb927.3.4500
+ec00030,Pentose phosphate pathway,3,Tb927.1.3830 | Tb927.11.1020 | Tb927.8.6170
+ec00051,Fructose and mannose metabolism,2,Tb927.7.300 | Tb927.8.7150
+ec00052,Galactose metabolism,6,Tb927.10.9600 | Tb927.11.5860 | Tb927.11.8170 | Tb927.7.300 | Tb927.7.6220 | Tb927.8.7150
+ec00062,Fatty acid elongation,1,Tb927.8.2540
+ec00071,Fatty acid degradation,1,Tb927.8.2540 | Tb927.8.2540
+ec00072,Synthesis and degradation of ketone bodies,3,Tb927.11.2690 | Tb927.8.2540 | Tb927.8.6110
+ec00073,"Cutin, suberine and wax biosynthesis",2,Tb927.11.4700 | Tb927.8.6640
+ec00100,Steroid biosynthesis,2,Tb927.11.15530 | Tb927.3.4650
+ec00130,Ubiquinone and other terpenoid-quinone biosynthesis,1,Tb927.11.10370
+ec00220,Arginine biosynthesis,2,Tb927.10.11970 | Tb927.11.5090
+ec00230,Purine metabolism,27,Tb927.10.13040 | Tb927.10.2540 | Tb927.10.5760 | Tb927.10.7230 | Tb927.11.13740 | Tb927.11.1480 | Tb927.11.1490 | Tb927.11.17040 | Tb927.11.5940 | Tb927.11.6350 | Tb927.3.2960 | Tb927.3.3340 | Tb927.4.3860 | Tb927.5.285b | Tb927.5.320 | Tb927.5.330 | Tb927.6.200 | Tb927.6.430 | Tb927.6.760 | Tb927.6.790 | Tb927.6.800 | Tb927.7.1790 | Tb927.7.4570 | Tb927.7.7470 | Tb927.7.7530 | Tb927.9.15660 | Tb927.9.5040
+ec00231,Puromycin biosynthesis,2,Tb927.10.7090 | Tb927.7.4480
+ec00240,Pyrimidine metabolism,4,Tb927.10.7230 | Tb927.4.3320 | Tb927.5.3800 | Tb927.7.5480
+ec00250,"Alanine, aspartate and glutamate metabolism",3,Tb927.10.11970 | Tb927.11.5090 | Tb927.5.3800
+ec00253,Tetracycline biosynthesis,1,Tb927.9.12040
+ec00260,"Glycine, serine and threonine metabolism",3,Tb927.10.470 | Tb927.6.2790 | Tb927.8.6060 | Tb927.8.6060
+ec00261,Monobactam biosynthesis,2,Tb927.10.15910 | Tb927.11.13470
+ec00270,Cysteine and methionine metabolism,6,Tb927.10.11970 | Tb927.10.12370 | Tb927.10.15410 | Tb927.11.5090 | Tb927.2.4590 | Tb927.9.12040
+ec00280,"Valine, leucine and isoleucine degradation",5,Tb927.11.2690 | Tb927.2.4590 | Tb927.6.1570 | Tb927.8.2540 | Tb927.8.2540 | Tb927.8.6110
+ec00281,Geraniol degradation,1,Tb927.8.2540
+ec00290,"Valine, leucine and isoleucine biosynthesis",1,Tb927.2.4590
+ec00300,Lysine biosynthesis,1,Tb927.10.11970
+ec00310,Lysine degradation,4,Tb927.10.15910 | Tb927.11.13470 | Tb927.8.2540 | Tb927.9.10100
+ec00330,Arginine and proline metabolism,4,Tb927.10.12260 | Tb927.10.15910 | Tb927.11.5090 | Tb927.9.6290
+ec00332,Carbapenem biosynthesis,2,Tb927.10.15910 | Tb927.9.12040
+ec00333,Prodigiosin biosynthesis,3,Tb927.10.11970 | Tb927.10.15910 | Tb927.9.12040
+ec00340,Histidine metabolism,3,Tb927.10.12260 | Tb927.10.15910 | Tb927.9.12040
+ec00350,Tyrosine metabolism,5,Tb927.10.15910 | Tb927.11.5090 | Tb927.7.300 | Tb927.8.7150 | Tb927.9.12040
+ec00360,Phenylalanine metabolism,3,Tb927.10.11970 | Tb927.11.5090 | Tb927.9.12040
+ec00361,Chlorocyclohexane and chlorobenzene degradation,1,Tb927.5.1310
+ec00362,Benzoate degradation,1,Tb927.8.2540 | Tb927.8.2540
+ec00363,Bisphenol degradation,1,Tb927.11.4700
+ec00380,Tryptophan metabolism,4,Tb927.10.11970 | Tb927.5.1310 | Tb927.8.2540 | Tb927.9.12040
+ec00400,"Phenylalanine, tyrosine and tryptophan biosynthesis",2,Tb927.10.11970 | Tb927.11.5090
+ec00401,Novobiocin biosynthesis,1,Tb927.11.5090
+ec00404,Staurosporine biosynthesis,1,Tb927.10.7100
+ec00410,beta-Alanine metabolism,1,Tb927.10.12260
+ec00440,Phosphonate and phosphinate metabolism,1,Tb927.10.11970
+ec00450,Selenocompound metabolism,3,Tb927.10.11970 | Tb927.10.1500 | Tb927.9.12040
+ec00480,Glutathione metabolism,6,Tb927.10.12370 | Tb927.11.900 | Tb927.7.1120 | Tb927.7.1130 | Tb927.7.1140 | Tb927.8.3060
+ec00500,Starch and sucrose metabolism,1,Tb927.1.3830
+ec00512,Mucin type O-glycan biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+ec00513,Various types of N-glycan biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+ec00515,Mannose type O-glycan biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+ec00520,Amino sugar and nucleotide sugar metabolism,8,Tb927.1.3830 | Tb927.10.9600 | Tb927.11.1310 | Tb927.11.15550 | Tb927.11.5860 | Tb927.11.8170 | Tb927.7.2700 | Tb927.7.6220
+ec00521,Streptomycin biosynthesis,4,Tb927.10.9600 | Tb927.11.5860 | Tb927.11.8170 | Tb927.7.6220
+ec00522,"Biosynthesis of 12-, 14- and 16-membered macrolides",3,Tb927.7.300 | Tb927.8.7150 | Tb927.9.12040
+ec00523,Polyketide sugar unit biosynthesis,2,Tb927.10.11970 | Tb927.9.12040
+ec00524,"Neomycin, kanamycin and gentamicin biosynthesis",4,Tb927.10.11970 | Tb927.7.300 | Tb927.8.7150 | Tb927.9.12040
+ec00531,Glycosaminoglycan degradation,1,Tb927.7.4570
+ec00561,Glycerolipid metabolism,3,Tb927.10.13400 | Tb927.10.13700 | Tb927.10.13930
+ec00563,Glycosylphosphatidylinositol (GPI)-anchor biosynthesis,4,Tb927.1.3130 | Tb927.10.10110 | Tb927.7.300 | Tb927.8.7150
+ec00564,Glycerophospholipid metabolism,4,Tb927.10.13400 | Tb927.10.13700 | Tb927.10.13930 | Tb927.10.15910
+ec00565,Ether lipid metabolism,5,Tb927.10.13400 | Tb927.10.13700 | Tb927.10.13930 | Tb927.10.15910 | Tb927.3.3340
+ec00571,Lipoarabinomannan (LAM) biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+ec00590,Arachidonic acid metabolism,5,Tb927.11.4700 | Tb927.7.1120 | Tb927.7.1130 | Tb927.7.1140 | Tb927.7.3500
+ec00591,Linoleic acid metabolism,1,Tb927.10.7100
+ec00592,alpha-Linolenic acid metabolism,3,Tb927.10.7100 | Tb927.11.10370 | Tb927.8.2540
+ec00600,Sphingolipid metabolism,8,Tb927.10.13400 | Tb927.10.13700 | Tb927.10.13930 | Tb927.10.4040 | Tb927.5.440 | Tb927.7.300 | Tb927.7.6850 | Tb927.8.7150
+ec00601,Glycosphingolipid biosynthesis - lacto and neolacto series,2,Tb927.7.300 | Tb927.8.7150
+ec00603,Glycosphingolipid biosynthesis - globo and isoglobo series,2,Tb927.7.300 | Tb927.8.7150
+ec00620,Pyruvate metabolism,5,Tb927.10.15410 | Tb927.11.6280 | Tb927.2.4210 | Tb927.3.4500 | Tb927.8.2540
+ec00623,Toluene degradation,1,Tb927.10.15910
+ec00624,Polycyclic aromatic hydrocarbon degradation,2,Tb927.11.4700 | Tb927.9.12040
+ec00625,Chloroalkane and chloroalkene degradation,1,Tb927.11.4700
+ec00626,Naphthalene degradation,2,Tb927.10.15910 | Tb927.11.4700
+ec00627,Aminobenzoate degradation,3,Tb927.10.15910 | Tb927.11.4700 | Tb927.9.12040
+ec00630,Glyoxylate and dicarboxylate metabolism,3,Tb927.10.13430 | Tb927.10.15410 | Tb927.8.2540
+ec00633,Nitrotoluene degradation,1,Tb927.10.7090
+ec00640,Propanoate metabolism,1,Tb927.8.2540
+ec00642,Ethylbenzene degradation,1,Tb927.8.2540
+ec00650,Butanoate metabolism,4,Tb927.10.15910 | Tb927.11.2690 | Tb927.8.2540 | Tb927.8.6110
+ec00670,One carbon pool by folate,1,Tb927.7.5480 | Tb927.7.5480
+ec00680,Methane metabolism,6,Tb927.10.15410 | Tb927.10.15910 | Tb927.10.9600 | Tb927.11.5860 | Tb927.11.8170 | Tb927.7.6220
+ec00710,Carbon fixation in photosynthetic organisms,7,Tb927.1.700 | Tb927.1.710 | Tb927.10.15410 | Tb927.11.5090 | Tb927.11.6280 | Tb927.2.4210 | Tb927.8.6170
+ec00720,Carbon fixation pathways in prokaryotes,6,Tb927.10.15410 | Tb927.11.6280 | Tb927.11.900 | Tb927.3.4500 | Tb927.5.930 | Tb927.8.2540
+ec00730,Thiamine metabolism,4,Tb927.10.2540 | Tb927.10.5760 | Tb927.10.7140 | Tb927.5.630
+ec00740,Riboflavin metabolism,2,Tb927.10.7140 | Tb927.5.630
+ec00760,Nicotinate and nicotinamide metabolism,2,Tb927.3.2960 | Tb927.7.4570
+ec00770,Pantothenate and CoA biosynthesis,1,Tb927.2.4590
+ec00780,Biotin metabolism,2,Tb927.10.7090 | Tb927.11.13470
+ec00790,Folate biosynthesis,2,Tb927.7.5480 | Tb927.8.2210
+ec00860,Porphyrin and chlorophyll metabolism,2,Tb927.5.1310 | Tb927.8.6060
+ec00900,Terpenoid backbone biosynthesis,2,Tb927.8.2540 | Tb927.8.6110
+ec00903,Limonene and pinene degradation,2,Tb927.10.15910 | Tb927.11.4700
+ec00904,Diterpenoid biosynthesis,1,Tb927.10.15910
+ec00906,Carotenoid biosynthesis,3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+ec00908,Zeatin biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+ec00930,Caprolactam degradation,1,Tb927.10.11970
+ec00940,Phenylpropanoid biosynthesis,2,Tb927.10.15910 | Tb927.9.12040
+ec00941,Flavonoid biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+ec00942,Anthocyanin biosynthesis,4,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150 | Tb927.9.12040
+ec00944,Flavone and flavonol biosynthesis,2,Tb927.7.300 | Tb927.8.7150
+ec00945,"Stilbenoid, diarylheptanoid and gingerol biosynthesis",3,Tb927.7.300 | Tb927.8.7150 | Tb927.9.12040
+ec00950,Isoquinoline alkaloid biosynthesis,5,Tb927.10.15910 | Tb927.10.7100 | Tb927.11.10370 | Tb927.11.5090 | Tb927.9.12040
+ec00960,"Tropane, piperidine and pyridine alkaloid biosynthesis",2,Tb927.10.15910 | Tb927.11.5090
+ec00965,Betalain biosynthesis,3,Tb927.10.15910 | Tb927.7.300 | Tb927.8.7150
+ec00966,Glucosinolate biosynthesis,2,Tb927.10.11970 | Tb927.2.4590
+ec00970,Aminoacyl-tRNA biosynthesis,1,Tb927.10.1500
+ec00981,Insect hormone biosynthesis,1,Tb927.10.7090
+ec00983,Drug metabolism - other enzymes,1,Tb927.10.7230
+ec00999,Biosynthesis of secondary metabolites - unclassified,2,Tb927.10.15910 | Tb927.5.1310
+ec01040,Biosynthesis of unsaturated fatty acids,2,Tb927.10.7100 | Tb927.10.7100 | Tb927.8.2540
+ec01051,Biosynthesis of ansamycins,5,Tb927.10.11970 | Tb927.7.300 | Tb927.8.6170 | Tb927.8.7150 | Tb927.9.12040
+ec01055,Biosynthesis of vancomycin group antibiotics,1,Tb927.10.11970
+ec01056,Biosynthesis of type II polyketide backbone,1,Tb927.10.15910
+ec01057,Biosynthesis of type II polyketide products,3,Tb927.7.300 | Tb927.8.7150 | Tb927.9.12040
+ec01059,Biosynthesis of enediyne antibiotics,5,Tb927.10.15910 | Tb927.10.7100 | Tb927.7.300 | Tb927.8.7150 | Tb927.9.12040
+ec01130,Biosynthesis of antibiotics,32,Tb927.1.3830 | Tb927.1.700 | Tb927.1.710 | Tb927.10.11970 | Tb927.10.13430 | Tb927.10.15410 | Tb927.10.15910 | Tb927.10.2540 | Tb927.10.5760 | Tb927.10.7090 | Tb927.10.7100 | Tb927.10.7230 | Tb927.10.9600 | Tb927.11.13470 | Tb927.11.15530 | Tb927.11.5090 | Tb927.11.5860 | Tb927.11.8170 | Tb927.11.900 | Tb927.2.4210 | Tb927.2.4590 | Tb927.3.4500 | Tb927.4.1360 | Tb927.5.1310 | Tb927.7.300 | Tb927.7.4480 | Tb927.7.6220 | Tb927.8.2540 | Tb927.8.2540 | Tb927.8.6110 | Tb927.8.6170 | Tb927.8.7150 | Tb927.9.12040

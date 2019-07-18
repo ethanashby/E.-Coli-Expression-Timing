@@ -1,0 +1,86 @@
+Pathway Id,Pathway,Unique Gene Count,Genes
+AERESPDON-PWY,aerobic respiration -- electron donors reaction list,3,Tb927.8.3380 | Tb927.8.6580 | Tb927.9.5960
+ARG+POLYAMINE-SYN,superpathway of arginine and polyamine biosynthesis,2,Tb927.10.4580 | Tb927.9.7770
+ASPARAGINESYN-PWY,asparagine biosynthesis II,1,Tb927.7.1110
+ASPARTATESYN-PWY,aspartate biosynthesis,1,Tb927.11.5090
+ASPASN-PWY,superpathway of aspartate and asparagine biosynthesis; interconversion of aspartate and asparagine,2,Tb927.11.5090 | Tb927.7.1110
+BSUBPOLYAMSYN-PWY,spermidine biosynthesis I,2,Tb927.10.4580 | Tb927.9.7770
+COA-PWY,coenzyme A biosynthesis I,1,Tb927.11.15270
+COLANSYN-PWY,colanic acid building blocks biosynthesis,1,Tb927.1.3830
+DENOVOPURINE2-PWY,superpathway of purine nucleotides <i>de novo</i> biosynthesis II,2,Tb927.10.11700 | Tb927.11.3650
+DETOX1-PWY,superoxide radicals degradation,1,Tb927.11.15910
+ERGOSTEROL-SYN-PWY-1,superpathway of ergosterol biosynthesis,2,Tb927.11.15530 | Tb927.11.6210
+FASYN-ELONG-PWY,fatty acid elongation -- saturated,1,Tb927.10.11930
+FASYN-INITIAL-PWY,superpathway of fatty acid biosynthesis initiation (E. coli),1,Tb927.10.15910
+GLUCONEO-PWY,gluconeogenesis I,4,Tb927.1.3830 | Tb927.1.700 | Tb927.10.2560 | Tb927.10.2890
+GLUTDEG-PWY,glutamate degradation II,1,Tb927.11.5090
+GLUTOXA-PWY,glutamate degradation VII,2,Tb927.10.2560 | Tb927.11.5090
+GLYCOLYSIS,glycolysis I (from glucose 6-phosphate),4,Tb927.1.3830 | Tb927.1.700 | Tb927.10.2890 | Tb927.3.3270
+GLYCOLYSIS-1,glycolysis I,5,Tb927.1.3830 | Tb927.1.700 | Tb927.10.2010 | Tb927.10.2890 | Tb927.3.3270
+GLYCOLYSIS-TCA-GLYOX-BYPASS,"superpathway of glycolysis, pyruvate dehydrogenase, TCA, and glyoxylate bypass",8,Tb927.1.3830 | Tb927.1.700 | Tb927.10.2560 | Tb927.10.2890 | Tb927.3.3270 | Tb927.8.3380 | Tb927.8.6580 | Tb927.9.5960
+GLYOXYLATE-BYPASS,glyoxylate cycle,1,Tb927.10.2560
+HEXITOLDEGSUPER-PWY,superpathway of hexitol degradation (bacteria),3,Tb927.1.700 | Tb927.10.2890 | Tb927.3.3270
+HOMOSER-THRESYN-PWY,threonine biosynthesis from homoserine,1,Tb927.7.4390
+LCTACACAT-PWY,lactate oxidation,3,Tb927.10.12700 | Tb927.10.7570 | Tb927.3.1790
+LIPASYN-PWY,phospholipases,1,Tb927.9.12700
+MALATE-ASPARTATE-SHUTTLE-PWY,aspartate degradation II,2,Tb927.10.2560 | Tb927.11.5090
+MANGDPMET-PWY,GDP-mannose metabolism,2,Tb927.11.10670 | Tb927.9.2080
+MANNOSYL-CHITO-DOLICHOL-BIOSYNTHESIS,dolichyl-diphosphooligosaccharide biosynthesis,1,Tb927.7.300
+METHIONINE-DEG1-PWY,methionine degradation I (to homocysteine),2,Tb927.11.9090 | Tb927.9.12040
+NONOXIPENT-PWY,pentose phosphate pathway (non-oxidative branch),1,Tb927.11.8970
+P1-PWY,purine and pyrimidine metabolism,4,Tb927.10.11700 | Tb927.10.1400 | Tb927.10.1470 | Tb927.10.880
+P121-PWY,adenine and adenosine salvage I,3,Tb927.10.1400 | Tb927.10.1470 | Tb927.11.3650
+P23-PWY,reductive TCA cycle I,1,Tb927.10.2560
+P61-PWY,UDP-glucose conversion,1,Tb927.11.7060
+P82-PWY,TCA cycle variation IV,1,Tb927.10.2560
+PENTOSE-P-PWY,pentose phosphate pathway,1,Tb927.11.8970
+PHOSLIPSYN-PWY,phospholipid biosynthesis I,1,Tb927.8.3530
+PHOSLIPSYN2-PWY,phospholipid biosynthesis II,2,Tb927.5.1140 | Tb927.8.3530
+PLPSAL-PWY,pyridoxal 5'-phosphate salvage I,1,Tb927.6.2740
+POLYAMINSYN3-PWY,superpathway of polyamine biosynthesis II,2,Tb927.10.4580 | Tb927.9.7770
+POLYAMSYN-PWY,superpathway of polyamine biosynthesis I,2,Tb927.10.4580 | Tb927.9.7770
+PRPP-PWY,"superpathway of histidine, purine, and pyrimidine biosynthesis",2,Tb927.10.11700 | Tb927.11.3650
+PWY-1622,formaldehyde assimilation I (serine pathway),2,Tb927.10.2560 | Tb927.10.2890
+PWY-1861,formaldehyde assimilation II (RuMP Cycle),2,Tb927.11.8970 | Tb927.3.3270
+PWY-3781,aerobic respiration I (cytochrome c),11,Tb927.1.4100 | Tb927.10.8320 | Tb927.3.1410 | Tb927.4.4620 | Tb927.5.1060 | Tb927.8.1890 | Tb927.8.3380 | Tb927.8.6580 | Tb927.9.14160 | Tb927.9.3170 | Tb927.9.5960
+PWY-3801,sucrose degradation II (sucrose synthase),1,Tb927.1.3830
+PWY-4302-1,aerobic respiration (alternative oxidase pathway),1,Tb927.10.7090
+PWY-5448,aminopropanol biosynthesis,1,Tb927.6.2790
+PWY-5484,glycolysis II (from fructose 6-phosphate),3,Tb927.1.700 | Tb927.10.2890 | Tb927.3.3270
+PWY-5659,GDP-mannose biosynthesis,1,Tb927.1.3830
+PWY-5667,CDP-diacylglycerol biosynthesis I,1,Tb927.8.3530
+PWY-5965,fatty acid biosynthesis initiation III,1,Tb927.10.15910
+PWY-6074,zymosterol biosynthesis,2,Tb927.11.15530 | Tb927.11.6210
+PWY-6125,superpathway of guanosine nucleotides <i>de novo</i> biosynthesis II,1,Tb927.10.11700
+PWY-6126,superpathway of adenosine nucleotides <i>de novo</i> biosynthesis II,1,Tb927.11.3650
+PWY-702,methionine biosynthesis II,3,Tb927.1.1270 | Tb927.11.9090 | Tb927.9.12040
+PWY-7219,adenosine ribonucleotides <i>de novo</i> biosynthesis,1,Tb927.11.3650
+PWY-7221,guanosine ribonucleotides <i>de novo</i> biosynthesis,1,Tb927.10.11700
+PWY-724,"superpathway of lysine, threonine and methionine biosynthesis II",4,Tb927.1.1270 | Tb927.11.9090 | Tb927.7.4390 | Tb927.9.12040
+PWY0-1319,CDP-diacylglycerol biosynthesis II,1,Tb927.8.3530
+PWY0-181,salvage pathways of pyrimidine deoxyribonucleotides,1,Tb927.10.880
+PWY0-781,aspartate superpathway,1,Tb927.11.5090
+PWY0-881,superpathway of fatty acid biosynthesis I (E. coli),2,Tb927.10.11930 | Tb927.10.15910
+PWY1G-2,superpathway of glycolysis and TCA variant VIII,5,Tb927.1.3830 | Tb927.1.700 | Tb927.10.2010 | Tb927.10.2890 | Tb927.3.3270
+PWY1V8-10,Erythroascorbate biosynthesis,1,Tb927.11.4700
+PWY1V8-11,Threonine metabolism,2,Tb927.6.2790 | Tb927.8.6060
+PWY1V8-2,Methionine salvage cycle,2,Tb927.10.4580 | Tb927.9.7770
+PWY1V8-4,Succinate shunt,1,Tb927.10.2560
+PWY1V8-5,trypanothione recycling,1,Tb927.3.3780
+PWY1V8-6,Trypanothine biosynthesis and peroxide metabolism,3,Tb927.10.4580 | Tb927.3.3780 | Tb927.9.7770
+PWY1V8-8,Acetate/acetyl-CoA metabolism,5,Tb927.10.12700 | Tb927.10.7570 | Tb927.3.1790 | Tb927.6.2790 | Tb927.8.6060
+PWY1V8-9,Succinate and Acetate/Acetyl CoA metabolism,6,Tb927.10.12700 | Tb927.10.2560 | Tb927.10.7570 | Tb927.3.1790 | Tb927.6.2790 | Tb927.8.6060
+PWY4FS-6,phosphatidylethanolamine biosynthesis II,1,Tb927.5.1140
+PWY4FS-6-1,phosphatidylethanolamine biosynthesis II,1,Tb927.5.1140
+PWY4FS-7,phosphatidylglycerol biosynthesis I (plastidic),1,Tb927.8.3530
+PWY4FS-8,phosphatidylglycerol biosynthesis II (non-plastidic),1,Tb927.8.3530
+PYRIDOXAMINEANABOLISM,pyridoxamine anabolism,1,Tb927.6.2740
+PYRUVDEHYD-PWY,pyruvate decarboxylation to acetyl CoA,3,Tb927.10.12700 | Tb927.10.7570 | Tb927.3.1790
+RUMP-PWY,formaldehyde oxidation I,1,Tb927.1.3830
+TCA,TCA cycle I (prokaryotic),4,Tb927.10.2560 | Tb927.8.3380 | Tb927.8.6580 | Tb927.9.5960
+TCA-GLYOX-BYPASS,superpathway of glyoxylate bypass and TCA,4,Tb927.10.2560 | Tb927.8.3380 | Tb927.8.6580 | Tb927.9.5960
+THREONINE-DEG2-PWY,threonine degradation II,2,Tb927.6.2790 | Tb927.8.6060
+TRIGLSYN-PWY,triacylglycerol biosynthesis,3,Tb927.10.13400 | Tb927.10.13700 | Tb927.10.15910
+UDPNAGSYN-PWY-1,UDP-<i>N</i>-acetyl-D-glucosamine biosynthesis I,1,Tb927.1.3830
+UNSAT-FA-ELONG-PWY,fatty acid elongation -- unsaturated,1,Tb927.10.11930
+VALDEG-PWY,valine degradation I,1,Tb927.6.1570
