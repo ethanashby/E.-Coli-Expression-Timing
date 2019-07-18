@@ -1,0 +1,647 @@
+---
+title: "Impulse_TB"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyr)
+library(shiny)
+library(ImpulseDE2)
+library(dplyr)
+library(DESeq2)
+library(readr)
+library(cluster)
+library(fgsea)
+library(data.table)
+```
+
+
+```{r}
+############################################ GET DEGs LIST ####################################################
+
+rawcounts <- read.table("18-5-23_Proc_ibet_TC_for_deseq.txt", header = TRUE) %>%
+  select(-ib_3h_1)
+
+rawcounts <- rawcounts %>%
+  dplyr::distinct(gene, .keep_all = TRUE)
+
+rownames(rawcounts) <- rawcounts$gene
+
+rawcounts <- rawcounts %>%
+  select(-gene)
+
+rawcounts <- rawcounts[rowSums(rawcounts) > 0,]
+
+coldata <- data.frame("time" = as.factor(c(rep("0h",3),rep("3h",2),rep("6h",3),rep("12h",3),rep("24h",3),rep("48h",3),rep("72h",3),rep("168h",3),rep("240h",3),rep("336h",3))),"rep" = as.factor(c(1,2,3,1,2,rep(c(1,2,3),8))))
+rownames(coldata) <- colnames(rawcounts)
+coldata
+
+dds <- DESeqDataSetFromMatrix(rawcounts,colData = coldata, ~ time + rep)
+
+dds_de <- DESeq(dds)
+
+norm_counts <- as.data.frame(counts(dds_de, normalized = TRUE)) %>%
+  mutate(gene = rownames(rawcounts))
+
+### filter results
+
+de_results <- results(dds_de, contrast = c("time", "12h", "0h"))
+
+resSig <- de_results
+
+resSig$gene <- norm_counts$gene
+
+resSig <- resSig[ which(resSig$padj <.01 ), ]
+
+resSig <- resSig[ which(abs(resSig$log2FoldChange) > 0.5), ]
+
+ind <- match(norm_counts$gene,resSig$gene)
+
+norm_counts$sig <- resSig$gene[ind]
+
+norm_counts$padj <- resSig$padj[ind]
+
+norm_counts$pval <- resSig$pvalue[ind]
+
+norm_counts$log2FoldChange <- resSig$log2FoldChange[ind]
+
+norm_counts <- norm_counts %>%
+  filter(!is.na(sig))
+
+pos_DEGs_metrics <- norm_counts %>%
+  filter(log2FoldChange > 0)
+rownames(pos_DEGs_metrics) <- pos_DEGs_metrics$gene
+pos_DEGs <- pos_DEGs_metrics %>%
+  select(-c(gene, sig, padj,pval,log2FoldChange))
+
+neg_DEGs_metrics <- norm_counts %>%
+  filter(log2FoldChange < 0)
+rownames(neg_DEGs_metrics) <- neg_DEGs_metrics$gene
+neg_DEGs <- neg_DEGs_metrics %>%
+  select(-c(gene, sig, padj,pval,log2FoldChange))
+
+rownames(norm_counts) <- norm_counts$gene
+norm_counts <- norm_counts %>%
+  select(-c(gene, sig, padj, pval, log2FoldChange))
+
+norm_counts
+```
+
+
+```{r}
+############################################ INTERSECT DEGs ####################################################
+
+annot <- as.data.frame(bind_cols("Time" = (x = c(0,0,0,3,3,rep(c(6,12,24,48,72,168,240,336),each = 3))),"Condition" =
+rep("case",29)))
+
+rownames(annot) <- colnames(rawcounts)
+
+annot <- annot %>%
+  mutate("Sample" = rownames(annot))
+
+annot
+
+matrawcounts <- as.matrix(rawcounts)
+
+impulse_results <- ImpulseDE2::runImpulseDE2(matrawcounts,annot,boolCaseCtrl = FALSE,scaQThres = 0.01, vecConfounders = NULL, scaNProc = 4)
+
+cross = length(intersect(impulse_results$vecDEGenes,resSig$gene))
+area1 = length(impulse_results$vecDEGenes)
+area2 = length(resSig$gene)
+
+library(VennDiagram)
+grid.newpage()
+draw.pairwise.venn(area1 = area1,area2 = area2, cross.area = cross)
+
+library(maSigPro)
+
+
+```
+
+```{r}
+############################################ CLUSTER BY T1 AND BETA #################################################
+
+annot <- as.data.frame(bind_cols("Time" = (x = c(0,0,0,3,3,rep(c(6,12,24,48,72,168,240,336),each = 3))),"Condition" =
+rep("case",29)))
+
+length(rownames(annot))
+
+length(colnames(rawcounts))
+rownames(annot) <- colnames(rawcounts)
+
+annot <- annot %>%
+  mutate("Sample" = rownames(annot))
+
+annot
+
+matrawcounts <- as.matrix(rawcounts)
+
+impulse_results <- ImpulseDE2::runImpulseDE2(matrawcounts,annot,boolCaseCtrl = FALSE,scaQThres = 0.01, vecConfounders = NULL, scaNProc = 4)
+
+test_data <- impulse_results@lsModelFits$case
+
+test_data <- subListExtract(test_data,"lsImpulseFit")
+
+test_data <- subListExtract(test_data, "vecImpulseParam")
+
+df_param <- c()
+
+for (i in 1:length(test_data)){
+df_param$beta[i] <- test_data[[i]][1]
+df_param$t1[i] <- test_data[[i]][5]
+df_param$gene[i] <- names(test_data)[i]
+df_param$h0[i] <- test_data[[i]][2]
+df_param$h1[i] <- test_data[[i]][3]
+}
+
+df_param <- data.frame(bind_cols("gene" = df_param$gene, "beta" = df_param$beta,"t1" = df_param$t1, "h0" = df_param$h0, "h1" = df_param$h1))
+
+df_param <- df_param %>%
+  mutate(beta = ifelse(h0 > h1,beta*-1,beta)) %>%
+  select(t1,beta,gene)
+  
+df_param
+
+df_param %>% 
+  filter(beta < 120,t1 < 100) %>%
+  ggplot()+
+  geom_point(aes(x = t1, y = beta), size = 0.5)
+
+rownames(df_param) <- df_param$gene
+
+df_param <- df_param %>%
+  select(-gene)
+
+df_param
+impulse_cluster <- cluster::pam(x = df_param, k = 5, diss = FALSE, pamonce = 5)
+
+clusters <- data.frame("cluster" = impulse_cluster$clustering, "gene" = names(impulse_cluster$clustering))
+
+impulse_medoids <- data.frame("medoids" = (impulse_cluster$medoids))
+
+colnames(impulse_medoids) <- c("t1","beta") 
+
+df_param <- df_param %>%
+  mutate(gene = rownames(df_param))
+                              
+cluster_df <- left_join(df_param, clusters, by = "gene")
+
+ggplot(data = cluster_df, aes(x = t1, y = beta, color = as.factor(cluster))) +
+  geom_point(size = 0.5) +
+#geom_point(aes(color = as.factor(~cluster)), size = 1) +
+#ylim(-23,23) +
+#xlim(-50,80) +
+theme(legend.position = "none") +
+geom_point(data = impulse_medoids, aes(x = t1, y = beta), color = "black") 
+#facet_wrap(facets = ~cluster)
+
+rawcounts$gene <- rownames(rawcounts)
+
+impulse_clustered <- left_join(clusters, data.frame(rawcounts), by = "gene")
+
+impulse_counts_tidy <- impulse_clustered %>%
+  gather(-c(gene,cluster), key="sample", value = "rawcount") %>%
+  mutate(sample2 = sample) %>%
+  separate(sample2, c("treat", "time", "rep"), "_") %>%
+  mutate(time = ifelse(time == "ib", 0, 
+                        ifelse(time == "3h", 3, 
+                               ifelse(time == "6h", 6,12))))
+impulse_counts_tidy
+
+impulse_counts_ave <- impulse_counts_tidy %>%
+  group_by(gene, treat, time, cluster) %>%
+  dplyr::summarise(avecount = mean(rawcount))
+
+impulse_counts_ave <- impulse_counts_ave %>%
+  filter(avecount > 0)
+
+impulse_counts_ave %>%
+  ggplot(aes(x=time, y=log2(avecount), group=gene, color = as.factor(cluster))) +
+  geom_line(alpha = .15) +
+  facet_wrap(~cluster) +
+  theme(legend.position = "none")
+```
+
+
+
+
+
+
+```{r}
+
+DEG_list <- norm_counts %>%
+  select(noo_ib_1,noo_ib_2,noo_ib_3,ib_3h_2, ib_3h_3,ib_6h_1,ib_6h_2,ib_6h_3,ib_12h_1,ib_12h_2,ib_12h_3, padj, pval, log2FoldChange, gene)
+
+DEG_counts <- DEG_list %>%
+  select(noo_ib_1,noo_ib_2,noo_ib_3,ib_3h_2, ib_3h_3, ib_6h_1,ib_6h_2,ib_6h_3,ib_12h_1,ib_12h_2,ib_12h_3,gene)
+
+rownames(DEG_counts) <- DEG_counts$gene
+
+DEG_counts <- select(DEG_counts, -gene)
+
+DEG_counts
+
+
+```
+
+
+
+```{r}
+############################################ CLUSTERING BY DESEQ DEGs ################################################
+
+k = 6
+
+dissimilarity_matrix <- 1 - cor(t(norm_counts),method = "pearson")
+
+DESeq_clusters <- cluster::pam(x = dissimilarity_matrix, k = k, pamonce = 5)
+
+plot(cluster::silhouette(DESeq_clusters, dissimilarity_matrix))
+
+sil <- rep(0,20)
+for (i in 2:20) {
+  k1to20 <- pam(x = dissimilarity_matrix, k = i, pamonce = 5)
+  ss <- silhouette(k1to20$clustering, dissimilarity_matrix)
+  sil[i] <- mean(ss[, 3])
+}
+
+plot(1:20, sil, type = "b", pch = 19, xlab = "Number of clusters k", ylab = "Average silhouette width") +
+abline(v = which.max(sil), lty = 2)
+cat("Average silhouette width optimal number of clusters:", which.max(sil), "\n")
+
+
+DESeq_clusters <- data.frame("cluster" = DESeq_clusters$clustering, "gene" = names(DESeq_clusters$clustering))
+
+DESeq_medoids <- data.frame("medoids" = (DESeq_clusters$medoids))
+
+norm_counts <- norm_counts %>%
+  mutate("gene" = rownames(norm_counts))
+
+left_join(neg_DEGs, neg_DEGs_metrics, by = "gene")
+
+DESeq_cluster_df <- left_join(norm_counts, DESeq_clusters, by = "gene")
+
+DESeq_cluster_counts <- DESeq_cluster_df #%>%
+  select(-c(padj,pval,log2FoldChange))
+
+DESeq_cluster_metric <- DESeq_cluster_df %>%
+  mutate("stat" = (-log10(DESeq_cluster_df$padj))) %>%
+  select(gene, stat, cluster) %>%
+  filter(stat != "-Inf") %>%
+  filter(stat != "Inf")
+
+DESeq_Pathways_list <-DESeq_cluster_metric$stat
+
+names(DESeq_Pathways_list) <- DESeq_cluster_metric$gene
+
+DESeq_cluster_list <- c()
+DESeq_cluster_list <- split(DESeq_cluster_metric, DESeq_cluster_df$cluster)
+
+
+DESeq_clusters <- c()
+for (i in 1:k) {
+  DESeq_clusters[[i]] <- DESeq_cluster_list[[i]]$stat
+  names(DESeq_clusters[[i]]) <- DESeq_cluster_list[[i]]$gene
+}
+
+counts_gath_norm <- DESeq_cluster_counts %>%
+  gather(-c(gene,cluster), key="sample", value = "rawcount") %>%
+  mutate(sample2 = sample) %>%
+  separate(sample2, c("treat", "time", "rep"), "_") %>%
+  mutate(time = ifelse(time == "ib", 0, 
+                        ifelse(time == "3h", 3, 
+                               ifelse(time == "6h", 6,
+                                      ifelse(time == "12h", 12,
+                                             ifelse(time == "24h", 24,
+                                                    ifelse(time == "48h", 48,
+                                                           ifelse(time == "3d", 72,
+                                                                  ifelse(time == "7d", 168,
+                                                                         ifelse(time == "10d", 240, 336))))))))))
+counts_gath_norm
+
+counts_sum_norm <- counts_gath_norm %>%
+  group_by(gene, treat, time, cluster) %>%
+  dplyr::summarise(avecount = mean(rawcount))
+counts_sum_norm <- counts_sum_norm %>%
+  filter(time <= 12)
+
+cluster_lists <- c()
+cluster_lists[1] <- counts_sum_norm %>% filter(cluster == 1)
+list_1 <- paste(cluster_lists[[1]], sep = "")
+write.csv(list_1, file = "tryp_cluster_1.csv")
+
+cluster_lists[2] <- counts_sum_norm %>% filter(cluster == 2)
+list_2 <- paste(cluster_lists[[2]], sep = "")
+write.csv(list_2, file = "tryp_cluster_2.csv")
+
+cluster_lists[3] <- counts_sum_norm %>% filter(cluster == 3)
+list_3 <- paste(cluster_lists[[3]], sep = "")
+write.csv(list_3, file = "tryp_cluster_3.csv")
+
+cluster_lists[4] <- counts_sum_norm %>% filter(cluster == 4)
+list_4 <- paste(cluster_lists[[4]], sep = "")
+write.csv(list_4, file = "tryp_cluster_4.csv")
+
+cluster_lists[5] <- counts_sum_norm %>% filter(cluster == 5)
+list_5 <- paste(cluster_lists[[5]], sep = "")
+write.csv(list_5, file = "tryp_cluster_5.csv")
+
+cluster_lists[6] <- counts_sum_norm %>% filter(cluster == 6)
+list_6 <- paste(cluster_lists[[6]], sep = "")
+write.csv(list_6, file = "tryp_cluster_6.csv")
+
+## for specific cluster
+#counts_sum_norm_cluster <- counts_sum_norm[ which(counts_sum_norm$cluster == 5),]
+
+cluster_1_bp <- read_delim("cluster_1.csv", 
+    "\t", escape_double = FALSE, trim_ws = TRUE) %>%
+  mutate("Type" = "Biological Processes")
+cluster_1_cc <- read_delim("cluster_1_cc.csv", 
+    "\t", escape_double = FALSE, trim_ws = TRUE) %>%
+  mutate("Type" = "Cellular Component")
+cluster_1_mf <- read_delim("cluster_1_mf.csv", 
+    "\t", escape_double = FALSE, trim_ws = TRUE) %>%
+  mutate("Type" = "Molecular Function")
+cluster_1 <- bind_rows(cluster_1_bp, cluster_1_cc, cluster_1_mf)
+cluster_1 <- cluster_1 %>% filter(cluster_1$Benjamini < .05)
+cluster_1$`Result gene list` <- strsplit(cluster_1$`Result gene list`, ",")
+cluster_1_list_bp <- cluster_1 %>%
+  filter(Type == "Biological Processes") %>%
+  as.list()
+names(cluster_1_list_bp$`Result gene list`) <- cluster_1_list_bp$Name
+cluster_1_list_bp <- cluster_1_list_bp$`Result gene list`
+
+cluster_2_bp <- read_delim("cluster_2.csv", 
+    "\t", escape_double = FALSE, trim_ws = TRUE) %>%
+  mutate("Type" = "Biological Processes")
+cluster_2_cc <- read_delim("cluster_2_cc.csv", 
+    "\t", escape_double = FALSE, trim_ws = TRUE) %>%
+  mutate("Type" = "Cellular Component")
+cluster_2_mf <- read_delim("cluster_2_mf.csv", 
+    "\t", escape_double = FALSE, trim_ws = TRUE) %>%
+  mutate("Type" = "Molecular Function")
+cluster_2 <- bind_rows(cluster_2_bp, cluster_2_cc, cluster_2_mf)
+cluster_2 <- cluster_2 %>% filter(cluster_2$Benjamini < .05)
+cluster_2$`Result gene list` <- strsplit(cluster_2$`Result gene list`, ",")
+cluster_2_list_bp <- cluster_2 %>%
+  filter(Type == "Biological Processes") %>%
+  as.list()
+names(cluster_2_list_bp$`Result gene list`) <- cluster_2_list_bp$Name
+cluster_2_list_bp <- cluster_2_list_bp$`Result gene list`
+
+cluster_3_bp <- read_delim("cluster_3.csv", 
+    "\t", escape_double = FALSE, trim_ws = TRUE) %>%
+  mutate("Type" = "Biological Processes")
+cluster_3_cc <- read_delim("cluster_3_cc.csv", 
+    "\t", escape_double = FALSE, trim_ws = TRUE) %>%
+  mutate("Type" = "Cellular Component")
+cluster_3_mf <- read_delim("cluster_3_mf.csv", 
+    "\t", escape_double = FALSE, trim_ws = TRUE) %>%
+  mutate("Type" = "Molecular Function")
+cluster_3 <- bind_rows(cluster_3_bp, cluster_3_cc, cluster_3_mf)
+cluster_3 <- cluster_3 %>% filter(cluster_3$Benjamini < .05)
+cluster_3$`Result gene list` <- strsplit(cluster_3$`Result gene list`, ",")
+cluster_3_list_bp <- cluster_3 %>%
+  filter(Type == "Biological Processes") %>%
+  as.list()
+names(cluster_3_list_bp$`Result gene list`) <- cluster_3_list_bp$Name
+cluster_3_list_bp <- cluster_3_list_bp$`Result gene list`
+
+cluster_4_bp <- read_delim("cluster_4.csv", 
+    "\t", escape_double = FALSE, trim_ws = TRUE) %>%
+  mutate("Type" = "Biological Processes")
+cluster_4_cc <- read_delim("cluster_4_cc.csv", 
+    "\t", escape_double = FALSE, trim_ws = TRUE) %>%
+  mutate("Type" = "Cellular Component")
+cluster_4_mf <- read_delim("cluster_4_mf.csv", 
+    "\t", escape_double = FALSE, trim_ws = TRUE) %>%
+  mutate("Type" = "Molecular Function")
+
+cluster_5_bp <- read_delim("cluster_5.csv", 
+    "\t", escape_double = FALSE, trim_ws = TRUE) %>%
+  mutate("Type" = "Biological Processes")
+cluster_5_cc <- read_delim("cluster_5_cc.csv", 
+    "\t", escape_double = FALSE, trim_ws = TRUE) %>%
+  mutate("Type" = "Cellular Component")
+cluster_5_mf <- read_delim("cluster_5_mf.csv", 
+    "\t", escape_double = FALSE, trim_ws = TRUE) %>%
+  mutate("Type" = "Molecular Function")
+
+cluster_6_bp <- read_delim("cluster_6.csv", 
+    "\t", escape_double = FALSE, trim_ws = TRUE) %>%
+  mutate("Type" = "Biological Processes")
+cluster_6_cc <- read_delim("cluster_6_cc.csv", 
+    "\t", escape_double = FALSE, trim_ws = TRUE) %>%
+  mutate("Type" = "Cellular Component")
+cluster_6_mf <- read_delim("cluster_6_mf.csv", 
+    "\t", escape_double = FALSE, trim_ws = TRUE) %>%
+  mutate("Type" = "Molecular Function")
+
+
+  
+###########CC
+
+GO_clusters <- list(data.frame(cluster_1), data.frame(cluster_2), data.frame(cluster_3), data.frame(cluster_4), data.frame(cluster_5), data.frame(cluster_6))
+
+
+counts_sum_norm_head %>%
+  ggplot(aes(x=time, y=avecount, group=gene, color = as.factor(cluster))) +
+  geom_line() +
+  ylim(0,30000) +
+  facet_wrap(~cluster) +
+  theme(legend.position = "none")
+```
+
+```{r}
+######################################## RUNNING GSEA WITH SAVAGE AS GENE SET #######################################
+
+## GET COUNT DATA
+
+savagecounts <- read.table("18-5-24_dedup_Savage_deseq_counts.txt", header = TRUE)
+
+head(savagecounts)
+
+
+rownames(savagecounts) <- savagecounts$gene
+savagecounts <- savagecounts %>% dplyr::select(-gene)
+
+## DESIGN
+
+coldata <- data.frame(row.names = colnames(savagecounts),
+                      reps = as.factor(c(1, 2, 3, 1, 2, 3, 4, 1, 2, 3)), 
+                      stage = as.factor(c("MG", "MG", "MG", "PV", "PV", "PV", "PV", "SA", "SA", "SA")))
+
+coldata
+
+ddsFullCountTable <- DESeqDataSetFromMatrix(countData = savagecounts, colData = coldata, design = ~ stage + reps)
+
+## RUN DESEQ
+
+savagedds <- DESeq(ddsFullCountTable)
+
+savage_counts_norm <- as.data.frame(counts(savagedds, normalized = TRUE)) %>%
+  mutate(gene = rownames(savagecounts))
+
+## COMPILE RESULTS
+savage_genes <- c()
+
+mg_sa_results <- results(savagedds, contrast = c("stage", "MG", "SA"))
+mg_sa_results <- mg_sa_results[which(mg_sa_results$padj < .01),]
+mg_sa_results$log2FoldChange <- mg_sa_results$log2FoldChange*-1
+mg_sa_results <- mg_sa_results[which(abs(mg_sa_results$log2FoldChange) > 1.5),]
+mg_sa_results$gene <- rownames(mg_sa_results)
+mg_sa_gene_list <- rownames(mg_sa_results)
+savage_genes$mg_sa <- mg_sa_gene_list
+
+
+mg_pv_results <- results(savagedds, contrast = c("stage", "MG", "PV"))
+mg_pv_results <- mg_pv_results[which(mg_pv_results$padj < .01), ]
+mg_pv_results$log2FoldChange <- mg_pv_results$log2FoldChange*-1
+mg_pv_results <- mg_pv_results[which(abs(mg_pv_results$log2FoldChange) > 1.5),]
+mg_pv_gene_list <- rownames(mg_pv_results)
+savage_genes$mg_pv <- mg_pv_gene_list
+
+
+pv_sa_results <- results(savagedds, contrast = c("stage", "PV", "SA"))
+pv_sa_results <- pv_sa_results[which(pv_sa_results$padj < .01), ]
+pv_sa_results$log2FoldChange <- pv_sa_results$log2FoldChange*-1
+pv_sa_results <- pv_sa_results[which(abs(pv_sa_results$log2FoldChange) > 1.5),]
+pv_sa_gene_list <- rownames(pv_sa_results)
+savage_genes$pv_sa <- pv_sa_gene_list
+
+## COMPILE RESULTS
+savage_genes_2 <- c()
+
+mg_sa_results_2 <- results(savagedds, contrast = c("stage", "MG", "SA"))
+mg_sa_results_2 <- mg_sa_results_2[which(mg_sa_results_2$padj < .01),]
+mg_sa_results_2 <- mg_sa_results_2[which(abs(mg_sa_results_2$log2FoldChange) > 1.5),]
+mg_sa_results_2$log2FoldChange <- mg_sa_results_2$log2FoldChange*-1
+mg_sa_gene_list_2 <- bind_cols("gene" = rownames(mg_sa_results_2), "padj" = mg_sa_results_2$padj)
+savage_genes_2$mg_sa <- mg_sa_gene_list_2
+
+mg_pv_results_2 <- results(savagedds, contrast = c("stage", "MG", "PV"))
+mg_pv_results_2 <- mg_pv_results_2[which(mg_pv_results_2$padj < .01), ]
+mg_pv_results_2 <- mg_pv_results_2[which(abs(mg_pv_results_2$log2FoldChange) > 1.5),]
+mg_pv_results_2$log2FoldChange <- mg_pv_results_2$log2FoldChange*-1
+mg_pv_gene_list_2 <- bind_cols("gene" = rownames(mg_pv_results_2), "padj" = mg_pv_results_2$padj)
+savage_genes_2$mg_pv <- mg_pv_gene_list_2
+
+pv_sa_results_2 <- results(savagedds, contrast = c("stage", "PV", "SA"))
+pv_sa_results_2 <- pv_sa_results_2[which(pv_sa_results_2$padj < .01), ]
+pv_sa_results_2 <- pv_sa_results_2[which(abs(pv_sa_results_2$log2FoldChange) > 1.5),]
+pv_sa_results_2$log2FoldChange <- pv_sa_results_2$log2FoldChange*-1
+pv_sa_gene_list_2 <- bind_cols("gene" = rownames(pv_sa_results_2), "padj" = pv_sa_results_2$padj)
+savage_genes_2$pv_sa <- pv_sa_gene_list_2
+
+## FILTER RESULTS
+
+cluster_metric <- c()
+
+DESeq_Pathways_list <- DESeq_Pathways_list[ which(DESeq_Pathways_list != "Inf")]
+DESeq_Pathways_list <- DESeq_Pathways_list[ which(DESeq_Pathways_list != "-Inf")]
+
+DESeq_clusters <- DESeq_clusters[ which(DESeq_clusters != "Inf")]
+DESeq_clusters <- DESeq_clusters[ which(DESeq_clusters != "-Inf")]
+
+fgsea_all <- c()
+
+for (i in 1:k) {
+  DESeq_clusters[[i]] <- DESeq_clusters[[i]][ which(DESeq_clusters[[i]] != "Inf")]
+  DESeq_clusters[[i]] <- DESeq_clusters[[i]][ which(DESeq_clusters[[i]] != "-Inf")]
+}
+
+## RUN GSEA
+
+for (i in 1:k) {
+  fgsea_all[[i]] <- fgsea(savage_genes, DESeq_clusters[[i]], nperm = 10000)
+}
+
+fgsea(savage_genes_2, DESeq_Pathways_list, nperm = 10000)
+
+plotEnrichment(savage_genes$mg_sa, DESeq_Pathways_list)
+
+fgsea_all
+
+fgsea_all[[1]]
+plotEnrichment(savage_genes$mg_sa, DESeq_clusters[[1]])
+
+fgsea_all[[2]]
+plotEnrichment(savage_genes$mg_sa, DESeq_clusters[[2]])
+
+fgsea_all[[3]]
+plotEnrichment(savage_genes$mg_sa, DESeq_clusters[[3]])
+
+fgsea_all[[4]]
+plotEnrichment(savage_genes$mg_sa, DESeq_clusters[[4]])
+
+fgsea_all[[5]]
+plotEnrichment(savage_genes$mg_sa, DESeq_clusters[[5]])
+
+```
+
+```{r}
+######################################## EXTRACT MOST EXTREME CLUSTER LIST ###########################################
+
+cluster_5 <- data.frame(DESeq_clusters[[5]])
+
+cluster_5$gene <- rownames(cluster_5)
+
+colnames(cluster_5) <- c("rank", "gene")
+
+cluster_5 <- cluster_5 %>%
+  select(-rank)
+
+mg_sa_5 <- data.frame(savage_genes$mg_sa)
+
+colnames(mg_sa_5) <- "gene"
+
+cluster_5_gene_list <- inner_join(cluster_5, mg_sa_5, by = "gene")
+```
+
+```{r}
+######################################## CHECKING EXTREME GENE EXPRESSIONS ###########################################
+
+xtreme_genes <- df_param %>%
+  mutate("rank" = df_param$h1-df_param$h0)
+
+xtreme_genes <- data.table::setorder(xtreme_genes, -rank)
+
+xtreme_genes <- xtreme_genes %>%
+  select(gene)
+
+xtreme_genes
+
+xtreme_counts <- left_join(xtreme_genes, norm_counts_1, by = "gene")
+
+rownames(xtreme_counts) <- xtreme_counts$gene
+
+xtreme_counts <- xtreme_counts[1:20,]
+xtreme_counts
+
+counts_gath_norm <- xtreme_counts %>%
+  gather(-gene, key="sample", value = "rawcount") %>%
+  mutate(sample2 = sample) %>%
+  separate(sample2, c("treat", "time", "rep"), "_") %>%
+  mutate(time = ifelse(time == "ib", 0, 
+                        ifelse(time == "3h", 3, 
+                               ifelse(time == "6h", 6,
+                                      ifelse(time == "12h", 12,
+                                             ifelse(time == "24h", 24,
+                                                    ifelse(time == "48h", 48,
+                                                           ifelse(time == "3d", 72,
+                                                                  ifelse(time == "7d", 168,
+                                                                         ifelse(time == "10d", 240, 336))))))))))
+counts_gath_norm
+
+counts_sum_norm <- counts_gath_norm %>%
+  group_by(gene, treat, time) %>%
+  dplyr::summarise(avecount = mean(rawcount))
+
+counts_sum_norm
+
+counts_sum_norm %>%
+  ggplot(aes(x=time, y=avecount, color=gene)) +
+  geom_line(alpha = .5) +
+  theme(legend.position = "none")
+```
