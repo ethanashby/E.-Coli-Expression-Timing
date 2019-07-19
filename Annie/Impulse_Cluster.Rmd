@@ -249,14 +249,12 @@ DEG_counts
 ```{r}
 ############################################ OPTIMAL K??? ##############################################
 plot(cluster::silhouette(DESeq_clusters, dissimilarity_matrix))
-
 sil <- rep(0,20)
 for (i in 2:20) {
   k1to20 <- pam(x = dissimilarity_matrix, k = i, pamonce = 5)
   ss <- silhouette(k1to20$clustering, dissimilarity_matrix)
   sil[i] <- mean(ss[, 3])
 }
-
 plot(1:20, sil, type = "b", pch = 19, xlab = "Number of clusters k", ylab = "Average silhouette width") +
 abline(v = which.max(sil), lty = 2)
 cat("Average silhouette width optimal number of clusters:", which.max(sil), "\n")
