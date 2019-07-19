@@ -55,7 +55,7 @@ resSig$gene <- norm_counts$gene
 
 resSig <- resSig[ which(resSig$padj <.01 ), ]
 
-resSig <- resSig[ which(abs(resSig$log2FoldChange) > 0.5), ]
+resSig <- resSig[ which(abs(resSig$log2FoldChange) > 1), ]
 
 ind <- match(norm_counts$gene,resSig$gene)
 
@@ -246,17 +246,8 @@ DEG_counts
 
 ```
 
-
-
 ```{r}
-############################################ CLUSTERING BY DESEQ DEGs ################################################
-
-k = 6
-
-dissimilarity_matrix <- 1 - cor(t(norm_counts),method = "pearson")
-
-DESeq_clusters <- cluster::pam(x = dissimilarity_matrix, k = k, pamonce = 5)
-
+############################################ OPTIMAL K??? ##############################################
 plot(cluster::silhouette(DESeq_clusters, dissimilarity_matrix))
 
 sil <- rep(0,20)
@@ -269,7 +260,17 @@ for (i in 2:20) {
 plot(1:20, sil, type = "b", pch = 19, xlab = "Number of clusters k", ylab = "Average silhouette width") +
 abline(v = which.max(sil), lty = 2)
 cat("Average silhouette width optimal number of clusters:", which.max(sil), "\n")
+```
 
+
+```{r}
+############################################ CLUSTERING BY DESEQ DEGs ##############################################
+
+k = 6
+
+dissimilarity_matrix <- 1 - cor(t(norm_counts),method = "pearson")
+
+DESeq_clusters <- cluster::pam(x = dissimilarity_matrix, k = k, pamonce = 5)
 
 DESeq_clusters <- data.frame("cluster" = DESeq_clusters$clustering, "gene" = names(DESeq_clusters$clustering))
 
@@ -277,8 +278,6 @@ DESeq_medoids <- data.frame("medoids" = (DESeq_clusters$medoids))
 
 norm_counts <- norm_counts %>%
   mutate("gene" = rownames(norm_counts))
-
-left_join(neg_DEGs, neg_DEGs_metrics, by = "gene")
 
 DESeq_cluster_df <- left_join(norm_counts, DESeq_clusters, by = "gene")
 
@@ -323,7 +322,7 @@ counts_gath_norm
 counts_sum_norm <- counts_gath_norm %>%
   group_by(gene, treat, time, cluster) %>%
   dplyr::summarise(avecount = mean(rawcount))
-counts_sum_norm <- counts_sum_norm %>%
+counts_sum_norm_head <- counts_sum_norm %>%
   filter(time <= 12)
 
 cluster_lists <- c()
@@ -448,7 +447,7 @@ GO_clusters <- list(data.frame(cluster_1), data.frame(cluster_2), data.frame(clu
 counts_sum_norm_head %>%
   ggplot(aes(x=time, y=avecount, group=gene, color = as.factor(cluster))) +
   geom_line() +
-  ylim(0,30000) +
+  ylim(0,10000) +
   facet_wrap(~cluster) +
   theme(legend.position = "none")
 ```
