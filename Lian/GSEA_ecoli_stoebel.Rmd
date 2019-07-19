@@ -1,0 +1,246 @@
+---
+title: "GSEA_ecoli_stoebel"
+author: "Lian Morales"
+date: "7/16/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+
+library("dplyr")
+library("tidyr")
+library("DESeq2")
+library(readr)
+library(devtools)
+library("DESeq2")
+library(readr)
+library(tidyr)
+library(ggplot2)
+library("vsn")
+library("hexbin")
+library("corrplot")
+library("tidyverse")
+library(stringr)
+library("Hmisc")
+library(cluster)
+library("mclust")
+
+#for GSEA
+library(doParallel)
+library(Biobase)
+library(biomaRt)
+library(fgsea)
+```
+
+```{r}
+
+ec_sens <- read.csv("ec_past_EX.csv") %>%
+  select(c(geneName, bNum, sensitivity))
+colnames(ec_sens) <- c("genename", "bnum",  "sensitivity")
+
+
+#length(ec_linear$sensitivity)
+#ec_linear <- ec_sens[which(ec_sens$sensitivity == "linear"),] 
+ec_linear<- ec_sens %>% filter(sensitivity == "linear")
+#ec_sensitive <- ec_sens[which(ec_sens$sensitivity == "sensitive"),]
+ec_sensitive <- ec_sens %>% filter(sensitivity == "sensitive")
+#ec_insensitive <- ec_sens[which(ec_sens$sensitivity == "insensitive"),]
+ec_sensitive <- ec_sens %>% filter(sensitivity == "insensitive")
+#ec_nsReg <- ec_sens[which(ec_sens$sensitivity == "nsRegulation"),]
+ec_sensitive <- ec_sens %>% filter(sensitivity == "nsRegulation")
+#making pathway list
+ec_all_list <- c()
+ec_all_list$linear <- as.character(ec_linear$genename)
+ec_all_list$sensitive <- as.character(ec_sensitive$genename)
+ec_all_list$insensitive <- as.character(ec_insensitive$genename)
+ec_all_list$nsReg <- as.character(ec_nsReg$genename)
+#View(ec_all_list)
+ 
+```
+
+
+
+```{r}
+
+ec_rawcounts <- read.table("LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.txt",header = TRUE)
+ 
+#format data for normalization
+
+ec_rawcounts_norm <- ec_rawcounts
+
+rownames(ec_rawcounts_norm) <- ec_rawcounts_norm$Geneid
+
+ec_rawcounts_norm <- ec_rawcounts_norm %>% dplyr::select(-Geneid)
+
+ec_coldata <- data.frame(names = colnames(ec_rawcounts_norm)) %>%
+  separate(names, c("treat", "rep_time"), "_") %>%
+  mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
+                        ifelse(substr(rep_time,start=1,stop = 1) == "B", 2, 3))) %>%
+  mutate(time = ifelse(substr(rep_time,start=3,stop = 3) == "1", 0,
+                      ifelse(substr(rep_time,start=3,stop = 3) == "2", 30,
+                             ifelse(substr(rep_time,start=3,stop = 3) == "3", 60,
+                                    ifelse(substr(rep_time,start=3,stop = 3) == "4", 90,
+                                           ifelse(substr(rep_time,start=3,stop = 3) == "5", 120, 150)))))) %>%
+  
+  mutate(treat = ifelse(treat == "JH01", "WT","dRpoS")) %>%
+  mutate(timetreat = paste(treat,time,sep = "")) %>%
+  select(-rep_time)
+rownames(ec_coldata) <- colnames(ec_rawcounts_norm)
+
+ 
+
+#########################################################################################################################
+#COMPARING - DE ANALYSIS - getting DE genes
+#########################################################################################################################
+#looking at WT continuous
+#ECcountsRes <- results(ec_dds_de, name = "time")
+#length(rownames(ECcountsRes))
+#ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+#WT_cont <- ECresSig
+#length(WT_cont)
+
+ec_dds <- DESeqDataSetFromMatrix(ec_rawcounts_norm, colData = ec_coldata, design = ~timetreat)
+ec_dds_de <- DESeq(ec_dds)
+
+#looking at WT0  to WT30
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT0", "WT30"))
+ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+WT0_WT30 <- ECresSig
+
+
+#looking at WT0  to WT60
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT0", "WT60"))
+ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+WT0_WT60 <- ECresSig
+
+
+#looking at WT0  to WT90
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT0", "WT90"))
+ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+WT0_WT90 <- ECresSig
+
+
+
+#looking at WT0  to WT120
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT0", "WT120"))
+ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+WT0_WT120 <- ECresSig
+
+
+#looking at WT0  to WT150
+ECcountsRes <- results(ec_dds_de, contrast = c("timetreat", "WT150","WT0"))
+ECresSig <- ECcountsRes[ which(ECcountsRes$padj < 0.01 ), ]
+WT0_WT150 <- ECresSig
+length(rownames(WT0_WT150))
+```
+
+
+```{r}
+ 
+##creating ranking data frame for gsea 
+
+#making big data set 'allcomp' with all comparisons to make code easier. Splitting after by 'comparison' 
+WT60 <- data.frame(Gene = rownames(WT0_WT60), pvalue = WT0_WT60$pvalue, padj = WT0_WT60$padj, comparison = "WT060")
+WT90 <- data.frame(Gene = rownames(WT0_WT90), pvalue = WT0_WT90$pvalue, padj = WT0_WT90$padj, comparison = "WT090")
+WT120 <- data.frame(Gene = rownames(WT0_WT120), pvalue = WT0_WT120$pvalue, padj = WT0_WT120$padj, comparison = "WT0120")
+WT150 <- data.frame(Gene = rownames(WT0_WT150), pvalue = WT0_WT150$pvalue, padj = WT0_WT150$padj, comparison = "WT0150")
+allcomp <- rbind(WT60,WT90, WT120,WT150)
+#View(gsea_allcomp)
+
+allcomp$logP <- -log10(allcomp$pvalue) #calculating metric == -log10(pvalue)
+allcomp <-  allcomp[which(abs(allcomp$logP) != 0),] #filtering out p-values 
+allcomp$metric <- allcomp$logP 
+gsea_allcomp <- allcomp[,c("Gene","metric","comparison")]
+
+##filtering out big dataset -- creating data frames for each comparison 
+gsea_WT0_WT60_df<- gsea_allcomp %>% filter(comparison == "WT060") %>%select(-comparison) 
+gsea_WT0_WT90_df_e <- gsea_allcomp %>% filter(comparison == "WT090") %>%select(-comparison) 
+gsea_WT0_WT120_df_e <- gsea_allcomp %>% filter(comparison == "WT0120") %>%select(-comparison) 
+gsea_WT0_WT150_df_e <- gsea_allcomp %>% filter(comparison == "WT0150") %>%select(-comparison)
+
+ 
+```
+
+
+```{r}
+
+#creating data frames with comparison  
+wt060 <- data.frame(Gene = gsea_WT0_WT60_df$Gene, metric = gsea_WT0_WT60_df$metric, comparison = "WT060")#, comparison = "60")
+wt090 <- data.frame(Gene = gsea_WT0_WT90_df$Gene, metric = gsea_WT0_WT90_df$metric, comparison = "WT090")
+wt0120 <- data.frame(Gene = gsea_WT0_WT120_df$Gene, metric = gsea_WT0_WT120_df$metric, comparison = "WT0120")
+wt0150 <- data.frame(Gene = gsea_WT0_WT150_df$Gene, metric = gsea_WT0_WT150_df$metric, comparison = "WT0150")
+
+all <- rbind(wt060,wt090,wt0120,wt0150)
+ 
+nameTable <- read.table("nameMapping.txt", header = T, sep = "\t")
+#ec_Counts <- gsea_WT0_WT120_df
+ec_Counts <- all
+bnum = "b[0-9]{4}"
+ec_Counts$GeneidBackup = ec_Counts$Gene
+ec_Counts <- ec_Counts %>% separate(GeneidBackup, c("feature", "rest"), sep="[:]")
+ec_Counts <- ec_Counts %>% filter(feature %in% c("CDS")) 
+genename = ":[a-z]{3}.."
+ec_cds <- ec_Counts %>% filter(feature %in% c("CDS")) 
+ec_Counts$genename <- str_extract(ec_Counts$Gene, genename)
+ec_Counts$bnum <- str_extract(ec_Counts$Gene, bnum)
+ec_Counts <- ec_Counts %>% separate(genename, into = c("colon", "genename"), sep = ":") %>%
+  select(-colon)
+ 
+all <- ec_Counts %>% select(Gene,genename, metric, comparison)
+#View(all)
+gsea_WT0_WT60_df <- all %>% filter(comparison == "WT060") 
+gsea_WT0_WT90_df <- all %>% filter(comparison == "WT090") 
+gsea_WT0_WT120_df <- all %>% filter(comparison == "WT0120") 
+gsea_WT0_WT150_df <- all %>% filter(comparison == "WT0150") 
+
+#View(gsea_WT0_WT150_df)
+
+#creating stats and pathways for gsea
+  #060
+gseaDat_WT0_WT60 <- filter(gsea_WT0_WT60_df, !is.na(Gene))
+ranks_WT0_WT60 <- gsea_WT0_WT60_df$metric
+names(ranks_WT0_WT60) <- gseaDat_WT0_WT60$Gene
+
+  #090
+gseaDat_WT0_WT90 <- filter(gsea_WT0_WT90_df, !is.na(Gene))
+ranks_WT0_WT90 <- gsea_WT0_WT90_df$metric
+names(ranks_WT0_WT90) <- gseaDat_WT0_WT90$Gene
+
+  #0120
+gseaDat_WT0_WT120 <- filter(gsea_WT0_WT120_df, !is.na(Gene))
+ranks_WT0_WT120 <- gsea_WT0_WT120_df$metric
+names(ranks_WT0_WT120) <- gseaDat_WT0_WT120$Gene
+
+  #0150
+gseaDat_WT0_WT150 <- filter(gsea_WT0_WT150_df, !is.na(genename))
+ranks_WT0_WT150 <- gsea_WT0_WT150_df$metric
+names(ranks_WT0_WT150) <- gseaDat_WT0_WT150$genename
+ 
+ 
+
+```
+
+```{r}
+
+fgseaRes_WT060 <- fgsea(pathways = as.list(ec_all_list), stats = ranks_WT0_WT60, minSize = 1,  nperm = 1000)
+fgseaRes_WT090 <- fgsea(pathways = as.list(ec_all_list), stats = ranks_WT0_WT90, minSize = 1,  nperm = 1000)
+fgseaRes_WT0120 <- fgsea(pathways = as.list(ec_all_list), stats = ranks_WT0_WT120, minSize = 1,  nperm = 1000)
+fgseaRes_WT0150 <- fgsea(pathways = as.list(ec_all_list), stats = ranks_WT0_WT150, minSize = 1,  nperm = 1000)
+
+#View(fgseaRes_WT0150)
+
+plotEnrichment(pathway = ec_all_list$sensitive, stats = ranks_WT0_WT150)
+plotEnrichment(pathway = ec_all_list$insensitive, stats = ranks_WT0_WT150)
+plotEnrichment(pathway = ec_all_list$linear, stats = ranks_WT0_WT150)
+plotEnrichment(pathway = ec_all_list$nsReg, stats = ranks_WT0_WT150)
+plotEnrichment(pathway = sav_all_list$PvSa,
+               stats  = ranks_log.neg) + labs(title = "MgSa neg log fold")
+#View(sav_all_list)
+head(fgseaRes_WT0150)
+head(head(ec_all_list))
+
+```

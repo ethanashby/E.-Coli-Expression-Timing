@@ -1,0 +1,232 @@
+---
+title: "T.brucei data 1"
+author: "Lian Morales"
+date: "6/5/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE)
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("goseq")
+library("dplyr")
+library("tidyr")
+library("DESeq2")
+library("edgeR")
+library(readr)
+library(devtools)
+library(Biobase)
+library(goseq)
+
+
+
+savagecounts <- read.table("18-5-24_dedup_Savage_deseq_counts.txt", header = TRUE)
+
+
+
+```
+
+```{r}
+ 
+#Creating Data matrix 
+ 
+
+rownames(savagecounts) <- savagecounts$gene #renames the gene row
+savagecounts <- savagecounts %>% dplyr :: select(-"gene") #this gets rid of the name gene in table
+coldata <- data.frame(rownames = colnames(savagecounts),
+                    reps = as.factor(c(1, 2, 3, 1, 2, 3 ,4,
+                                     1, 2 ,3)), 
+                    stage = as.factor(c("MG","MG","MG","PV","PV","PV","PV","SA","SA","SA")))
+
+ddsFullCountTable <- DESeqDataSetFromMatrix(
+   countData = savagecounts,
+   colData = coldata,
+   design = ~ reps + stage)
+ddsFullCountTable
+
+```
+
+```{r}
+ 
+#DESeq2 getting DE genes
+ 
+savagecounts_dds <- DESeq(ddsFullCountTable )
+
+```
+
+
+```{r}
+ 
+#Comparisons of all 
+#MG and SA
+#create diss matrix for counts
+
+savageRes_MgSa <- results( savagecounts_dds ,contrast = c("stage",  "MG","SA"))
+resSig <- savageRes_MgSa[ which(savageRes_MgSa$padj < 0.01 ), ]
+MgSa <- resSig
+
+#MG and PV
+savageRes_MgPv <- results( savagecounts_dds ,contrast = c("stage",  "MG","PV"))
+resSig <- savageRes_MgPv[ which(savageRes_MgPv$padj < 0.01 ), ]
+MgPv <- resSig
+ 
+#PV and SA
+savageRes_PvSa <- results( savagecounts_dds ,contrast = c("stage",  "PV","SA"))
+resSig <- savageRes_PvSa[ which(savageRes_PvSa$padj < 0.01 ), ]
+PvSa <- resSig
+ 
+ 
+#pasting the rownames function -- for uploading into the tryp database
+ 
+#file_to_write<-paste(rownames(resSig), collapse="\t")
+#write.table(file_to_write, file="sav_gene") #look up in file directory, then delete quotation marks as well as the first rows that are not genes
+
+
+```
+
+
+```{r}
+ 
+#MAKING PADJ DATAFRAME
+ 
+
+#MgSa
+sav_MgSa <-  data.frame(rownames(MgSa), MgSa$pvalue,MgSa$padj)
+colnames(sav_MgSa) <- c("Geneid","Pvalue_MgSa","Padj_MgSa")
+
+#MgPv
+sav_MgPv <-  data.frame(rownames(MgPv), MgPv$pvalue,MgPv$padj)
+colnames(sav_MgPv) <- c("Geneid","Pvalue_MgPv","Padj_MgPv")
+
+#PvSa
+sav_PvSa <-  data.frame(rownames(PvSa),PvSa$pvalue,PvSa$padj)
+colnames(sav_PvSa) <- c("Geneid", "Pvalue_PvSa","Padj_PvSa")
+ 
+
+sav_data <- data.frame(rownames(savagecounts))
+colnames(sav_data) <- "Geneid"
+
+length(sav_MgSa$Geneid)
+
+sav_MgPv_path_df <- data.frame(rownames(MgPv))
+colnames(sav_MgPv_path_df) <- "pathway"
+
+sav_MgSa_path_df <- data.frame(rownames(MgSa))
+colnames(sav_MgSa_path_df) <- "pathway"
+
+sav_PvSa_path_df <- data.frame(rownames(PvSa))
+colnames(sav_PvSa_path_df) <- "pathway"
+
+MgSa_list <- as.list(sav_MgSa_path_df)
+MgPv_list <- as.list(sav_MgPv_path_df)
+PvSa_list <- as.list(sav_PvSa_path_df)
+#SAV_JOIN ALL PADJ AND GENES FROM SAV DATA AND COMPARISONS
+#padj data table with all pvalues from all comparisons, and full gene list from savage 
+#install.packages("plyr")
+#library(plyr)
+#sav_join_2 <- sav_data %>% dplyr::select(  "Geneid" )
+#sav_join_2<- sav_MgPv %>% full_join(sav_join, by.x = Geneid) %>% select(Geneid,Padj_MgPv)
+#sav_join_2<- sav_MgSa %>% full_join(sav_join, by.x = Geneid) %>%select(Geneid,Padj_MgPv,Padj_MgSa)
+#sav_join_2<- sav_PvSa %>% full_join(sav_join, by.x = Geneid) %>% select(Geneid,Padj_MgPv,Padj_MgSa,Padj_PvSa)
+#cbind(sav_MgPv,sav_MgSa,sav_PvSa)
+gene_mgpv <-data.frame(sav_MgPv$Geneid)
+colnames(gene_mgpv) <- "Geneid"
+gene_mgsa <- data.frame(sav_MgSa$Geneid)
+colnames(gene_mgsa) <- "Geneid"
+gene_pvsa <-data.frame(sav_PvSa$Geneid)
+colnames(gene_pvsa) <- "Geneid"
+sav_join <- data.frame(rownames(TBcounts))
+colnames(sav_join) <- "Geneid"
+sav_join <- sav_join %>% full_join(list(gene_mgpv,gene_mgsa,gene_pvsa), by =  Geneid)
+colnames(sav_join) <- as.factor(c("MgPv","MgSa","PvSa"))
+#allsavComparisons <- data.frame(sav_join)
+#%>%select(Geneid,Padj_MgPv,Padj_MgSa,Padj_PvSa)
+
+ 
+``` 
+
+
+
+
+```{r}
+
+#########################################################################################################################
+#VENN DIAGRAMS
+#########################################################################################################################
+library(VennDiagram)
+
+#MGSA AND MGPV
+area_MgSa <- length(rownames(MgSa))
+area_MgPv <- length(rownames(MgPv))
+
+cross <- length(intersect(rownames(MgSa), rownames(MgPv)))
+
+grid.newpage()
+draw.pairwise.venn(area1= area_MgSa, area2 = area_MgPv, cross.area = cross, category = c("MgSa","MgPv"),lty = rep("blank",2),fill = c("light blue", "light green"))
+
+```
+
+
+
+
+
+```{r}
+#########################################################################################################################
+#OTHER ANALYSIS -- GRAPHS
+#########################################################################################################################
+
+rld <- rlog( savagecounts_dds )
+head( assay(rld) )
+
+
+par( mfrow = c( 1, 2 ) )
+plot( log2( 1+counts(savagecounts_dds, normalized=TRUE)[, 1:2] ), col="#00000020", pch=20, cex=0.3 )
+plot( assay(rld)[, 1:2], col="#00000020", pch=20, cex=0.3 )
+
+
+
+
+#Distance matrix
+sav_sampleDists <- dist( t( assay(rld) ) )
+sav_sampleDists
+
+
+#HeatMap
+sampleDistMatrix <- as.matrix( sav_sampleDists )
+rownames(sampleDistMatrix) <- paste( savagecounts_dds$reps,savagecounts_dds$stage, sep="-" )
+colnames(sampleDistMatrix) <- paste( rld$reps,rld$stage, sep="-" )
+library( "gplots" )
+library( "RColorBrewer" )
+colours = colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
+heatmap.2( sampleDistMatrix, trace="none", col=colours)
+
+
+sampleDistMatrix
+
+
+library("ggplot2")
+library( "RColorBrewer" )
+ramp <- 1:3/3
+cols <- c(rgb(ramp, 0, 0),
+          rgb(0, ramp, 0),
+          rgb(0, 0, ramp),
+          rgb(ramp, 0, ramp))
+
+print(plotPCA( rld, intgroup = c("reps", "stage"), ntop = 500, returnData = FALSE), col = cols)
+
+
+
+ library( "genefilter" )
+topVarGenes <- head( order( rowVars( assay(rld) ), decreasing=TRUE ), 35 )
+
+
+heatmap.2( assay(rld)[ topVarGenes, ], scale="row",
+     trace="none", dendrogram="column",
+     col = colorRampPalette( rev(brewer.pal(9, "RdBu")) )(255))
+#This heat map shows that our genes cluster together, which is good, and is expected. Also using the dendrogram(the tree) we can see that the MG and the PCV are more closely related than the SA, and more closely which stages 1,2,3,4 are more closely related. 
+```
+
+
+

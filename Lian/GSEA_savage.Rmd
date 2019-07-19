@@ -1,0 +1,118 @@
+---
+title: "GSEA"
+author: "Lian Morales"
+date: "7/9/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("GSEABase")
+library(doParallel)
+library(SeqGSEA)
+library(Biobase)
+library(biomaRt)
+library(fgsea)
+library("dplyr")
+library("tidyr")
+library("DESeq2")
+library("edgeR")
+library(readr)
+library(devtools)
+library(goseq)
+browseVignettes("GSEABase")
+
+
+install.packages(" HTSeq")
+savagecounts <- read.table("18-5-24_dedup_Savage_deseq_counts.txt", header = TRUE)
+rownames(savagecounts) <- savagecounts$gene #renames the gene row
+savagecounts <- savagecounts %>% dplyr :: select(-"gene") #this gets rid of the name gene in table
+geneCounts <- getGeneCount(savagecounts)
+data(savagecounts)
+head(geneIds(savagecounts))
+
+head(supportedGenomes())
+head(supportedGeneIDs())
+
+temp_data =read.table(system.file("extdata","Li_sum.txt",
+                                     package="goseq"),sep="\t",
+                                     header=TRUE,
+                                     stringsAsFactors=FALSE)
+
+expr= temp_data[,-1]
+rownames(expr) = temp_data[,1]
+expr = expr[rowMeans(expr) > 5,]
+grp=factor(rep(c("Control","Treated"),times=c(4,3)))
+pdata  = data.frame(grp)
+de = DESeqDataSetFromMatrix(expr, pdata, ~grp)
+de_fit = DESeq(de)
+de_results = results(de_fit)
+de_results
+
+genes = as.integer(de_results$padj < 0.05)
+not_na = !is.na(genes)
+names(genes) = rownames(expr)
+genes = genes[not_na]
+head(genes)
+
+head(supportedGenomes(),n=12)[,1:4]
+geneIds <- geneIds(sav_MgPv)
+sav_MgPv$geneIds <- sav_MgPv$Gene
+?geneIds()
+
+
+
+
+file_to_write_2<-paste(sav_MgSa$Geneid, collapse="\t")
+write.table(file_to_write_2, file="sav_mgsa_genes")
+
+read_file("sav_mgsa_genes")
+
+View(examplePathways)
+gsea_MgSa$Gene <- rownames(MgSa)
+ names(ranks) <- MgSa$Geneid
+ View(ranks)
+ 
+ gseaDat <- filter(gsea_MgSa_df, !is.na(Gene))
+ ranks <- gsea_MgSa$metric
+ names(ranks) <- gseaDat$Gene
+ fgseaRes <- fgsea(sav_MgSa, ranks, minSize = 0, maxSize = 4, nperm = 10)
+
+
+```
+
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+
+fl <- system.file("extdata", "Broad.xml", package="GSEABase")
+gs2 <- getBroadSets(fl)[[1]] # actually, a list of two gene sets
+geneIds <- geneIds(gs2)
+geneIds 
+sav_MgPv$Geneid
+
+gs3 <- GeneSet(as.factor(sav_MgPv$Geneid))
+gs3
+gsl <- GeneSet(sav_MgSa,setIdentifier=.uniqueIdentifier())
+
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
