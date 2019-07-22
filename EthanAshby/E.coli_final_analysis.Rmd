@@ -1,0 +1,482 @@
+---
+title: "Sensitive and Insensitive Genes in the Timing of the RpoS regulon in Response to Exponential Growth"
+author: "Ethan Ashby"
+output: pdf_document
+---
+##Abstract
+
+
+##Introduction
+  E. coli possesses a general stress response to a variety of environmental stresses (Battesti *et al* 2011, Hengge 2011) ranging from osmotic shock to nutrient starvation. A key transcription factor coordinating this response is RpoS, which can regulate up to one quarter of the bacteria's genome (preliminary data from Prof Dan Stoebel). However, the RpoS regulon is not a static, 'switch-like' mechanism; rather, the RpoS regulon is a highly complex regulatory network influenced by several factors including the duration/degree of stress (Lange and Hengge-Aronis 1994), processes like transcription, translation, and mRNA degradation (Lange and Hengge-Aronis 1994), other proteins (Pratt and Silhavy 1998), competition between transcription factors for RNA polymerase (Farewell *et al.* 1998), and even strain type (Hryckowian *et al.* 2014, Chiang *et al.* 2011). 
+  
+  Prof Dan Stoebel previously showed that genes  expression increases linearly with Rpos concentration: these he dubbed 'linear' genes. However, several genes didn't follow this linear trend. Some genes initiated high levels of expression at relatively low Rpos concentrations: these he dubbed 'sensitive' genes. Other genes required a higher Rpos threshold to initiate transcription: these he dubbed 'insensitive' genes. In previous work, Prof Stoebel hypothesized that sensitivity to Rpos could be a mechanism to control the **timing** of genes involved in the general stress response. We aim to investigate this hypothesis using an *in silico* tool, ImpulseDE2. ImpulseDE2 is a serial Time Course (TC) Differential Expression tool which fits impulse/sigmoidal expression trajectory models, built off biologically meaningful parameters (like onset time for example). These models are then compared to constant/alternative models using the LRT to determine differential expression over time/between time courses.
+
+![alternative text here](./)
+
+**Important Note**: the following directories are tuned to where the files are on my computer! You must change the directories to be consistent with your computer.
+
+```{r, cache=TRUE}
+#load required packages and functions
+library(DESeq2)
+library(tidyverse)
+library(ImpulseDE2)
+library(maSigPro)
+library(Mfuzz)
+library(cluster)
+library(factoextra)
+library(VennDiagram)
+library(ggplot2)
+library(gridExtra)
+library(grid)
+library(gridGraphics)
+library(reshape2)
+foo<-function(){}
+sigmoid_function<-function(b, h_0, h_1, t_1, t){
+h_0 + (h_1-h_0)*(1/(1+exp(1)^(-b*(t-t_1))))
+}
+
+#read in data
+setwd('/Users/ethanashby/Desktop/E. Coli')
+allCounts <- read.csv("/Users/ethanashby/Desktop/E. Coli/LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.tsv", header = T, sep = "\t")
+
+```
+
+```{r, echo=F, cache=TRUE, include=F}
+#collect the geneids
+allCounts$GeneidBackup = allCounts$Geneid
+# note that the geneids here are really long and contain a lot of information. We are going to parse those out, and first... make a separate column for gene feature (CDS, AS_CDS, IGR, etc).
+```
+
+```{r, include=F, cache=TRUE}
+allCounts <- allCounts %>% separate(GeneidBackup, c("feature", "rest"), sep="[:]")
+allCounts %>% group_by(feature) %>% summarise(number_of_genes = n())
+# Now, we must extract the genenames from each Geneid. However, each feature has a slightly different pattern, and we will need to do the features separately. 
+
+# IGR's (this includes AS_IGRSs): 
+# IGR stands for intergenic region which means a region between coding sequences or different types of RNA. Therefore, we'll have a start.bnum and end.bnum as well as a start.genename and end.genename. Note that not all genes will have a bnum (only CDS/AS_CDS do)
+bnum = "b[0-9]{4}" # what do bnumbers look like?
+genename = ",[a-z]{3}[A-Z,]." # what does a genename look like? this is regexp lingo
+rna.name = ",rna[0-9].." # what does an RNA name look like?
+igr <- allCounts %>% filter(feature %in% c("IGR", "AS_IGR"))
+igr$GeneidBackup = igr$Geneid # store the Geneid
+igr <- igr %>% separate(GeneidBackup, c("Geneid1", "Geneid2"), sep = "[/]") # separate the first part of the Geneid which talks about the IGR's start gene (Geneid1) and the last part of the IGR Geneid which talks about that IGR's end gene (Geneid2). 
+igr$feature1 <- separate(igr, Geneid1, c("feature1", "rest"), sep = "[,]")$feature1
+igr$feature1 <- separate(igr, feature1, c("rest", "feature1"), sep = "[()]")$feature1 #start feature
+igr$feature2 <- separate(igr, Geneid2, c("feature2", "rest"), sep = "[,]")$feature2
+igr$start.gene <- case_when( #start gene name: many possibilities!
+    igr$feature1 == "CDS" ~ str_extract(igr$Geneid1, genename), #if the start feature was CDS, then the name is going to be genename style, so we extract a genename-type thing from Geneid1
+    TRUE ~ str_extract(igr$Geneid1, rna.name)) #otherwise, it's going to have an RNA-style name, so we extract the rna.name from Geneid1
+igr$end.gene <- case_when( #end gene neame: similar to above!
+    igr$feature2 == "CDS" ~ str_extract(igr$Geneid2, genename), # if the end feature was CDS, then we're looking for a genename-type bit from Geneid2
+    TRUE ~ str_extract(igr$Geneid2, rna.name)) #otherwise, it must be an RNA-style label of some sort. 
+igr$start.bnum <- case_when(
+    igr$feature1 == "CDS" ~ str_extract(igr$Geneid1, bnum), #bnums only exist for CDS, so we check if the feature is CDS before extracting a bnum from Geneid1
+    TRUE ~ "none") # if not CDS, then no bnum exists so we can put "none"
+igr$end.bnum <- case_when(
+    igr$feature2 == "CDS" ~ str_extract(igr$Geneid2, bnum), #same thing as above but for end bnum
+    TRUE ~ "none")
+# now get rid of all those pesky commas that got into our start.gene labels. I could have not included the punctuation in my regex pattern, but then str_extract() might have gotten confused with a less specific pattern
+igr <- igr %>% separate(start.gene, into = c("comma", "start.gene"), sep = "[,]") %>% select(-comma) %>% separate(end.gene, into = c("comma", "end.gene"), sep = "[,]") %>% select(-comma)
+allCounts <- full_join(igr, allCounts) #add this new information to allCounts!
+```
+
+```{r, echo=F, warning = F, message = F, include=F, cache=TRUE}
+# CDS
+# have bnum and genename columns
+# left join to allCounts
+genename = ":[a-z]{3}.." #new genename pattern
+#bnum pattern stays the same
+cds <- allCounts %>% filter(feature %in% c("AS_CDS", "CDS")) 
+cds$genename <- str_extract(cds$Geneid, genename) #extract those genenames!
+cds$bnum <- str_extract(cds$Geneid, bnum) # extract them bnums!
+#get rid of the pesky colon that was part of the pattern
+cds <- cds %>% separate(genename, into = c("colon", "genename"), sep = ":") %>%
+  select(-colon)
+allCounts <- full_join(allCounts, cds) #add the new info to allCounts
+```
+
+```{r, echo=F, warning = F, message = F, include=F, cache=TRUE}
+#ncRNA
+#ncRNA doesn't have bnums, but id's which we'll put in the genename column
+rna.name = ":rna[0-9].." #new rna.name pattern
+rna <- allCounts %>% filter(feature %in% c("ncRNA", "AS_ncRNA"))
+rna$genename <- str_extract(rna$Geneid, rna.name) #record those rna.names
+rna <- rna %>% separate(genename, into = c("colon", "genename"), sep = ":") %>%
+  select(-colon) #get rid of colon
+allCounts <- full_join(allCounts, rna) #update allCounts with ncRNA names!
+#rRNA
+rRNA <- allCounts %>% filter(feature %in% c("rRNA", "AS_rRNA"))
+rRNA$genename <- str_extract(rRNA$Geneid, rna.name) #same rna.name pattern exists as above, so extract those rna.names! And store the result as genename - I know. This is just for convenience's sake so we have a common column to refer to when we want the short hand name for a gene. 
+rRNA <- rRNA %>% separate(genename, into = c("colon", "genename"), sep = ":") %>%
+  select(-colon) #get rid of that colon
+allCounts <- full_join(allCounts, rRNA) #update allCounts
+#tRNA -- analogous to rRNA above. 
+tRNA <- allCounts %>% filter(feature %in% c("tRNA", "AS_tRNA"))
+tRNA$genename <- str_extract(tRNA$Geneid, rna.name)
+tRNA <- tRNA %>% separate(genename, into = c("colon", "genename"), sep = ":") %>%
+  select(-colon)
+allCounts <- full_join(tRNA, allCounts)
+# remove the NA rows we just created by full_joining while adding the ncRNA, rRNA, tRNA genenames
+allCounts <- filter(allCounts, feature %in% c("IGR", "AS_IGR") | genename != "NA")
+```
+
+We employed parsing code developed by Madison Hobbes to parse the gene identifiers, extract sequence type, gene names, and other useful info.
+
+We are primarily interested in Coding Sequences (CDS) of known genes for this particular project. Read count data was filtered by NA, 0 counts, CDS, and duplicate rows were resolved
+```{r Prepping Counts, cache=TRUE}
+#filter by CDS, NA, 0 sums, resolve duplicates
+ecounts<-allCounts %>% filter(feature=="CDS")
+ecounts<-ecounts[rowSums(is.na(ecounts)) != ncol(ecounts), ]
+ecounts<-subset(ecounts, rowSums(ecounts[,2:37])>0)
+ecounts<- ecounts %>% dplyr::distinct(genename, .keep_all=TRUE)
+rownames(ecounts)<-ecounts$genename
+ecounts<-ecounts[,2:37]
+```
+
+We then employed three *in silico* differential expression tools to identify DEGs between the two time courses. Previous research has shown that two-sample comparisons using DESeq2 and serial tools maSigPro and ImpulseDE2 are the best performing methods to identify differentially expressed genes in TC experiments. Morever, combining gene lists generated by multiple tools reduces false positives without compromising sensitivity and is thus recommended for optimal DEG identification in TC experiments. Using a shiny app created by Annie Cohen, we noticed that many of E. Coli's DEGs appeared montonically differentially expessed. To capture this global expression change, we ran the categorical DE tool DESeq2 a two-sample contrast across the ∆Rpos and WT strains at the final time point (150min), when expression differences between the two time courses were putatively maximized. Differential expression was assessed at the p=0.01 level.
+Next, maSigPro with naive dispersion params (default of 10) was run.
+Lastly, ImpulseDE2 (with dispersion estimates generated via the DESeq2 method) was run on the data.
+```{r DE Tools, cache=TRUE}
+####################################################################################################################
+#DESeq2
+####################################################################################################################
+colidesign<-data.frame(time=as.factor(rep(c("0", "30", "60", "90", "120", "150"), 6)), rep=as.factor(c(rep(1, 12), rep(2,12), rep(3,12))), treatment=as.factor(c(rep("WT",6), rep("treat",6), rep("WT",6), rep("treat",6), rep("WT",6), rep("treat",6))))
+
+ddsecoliCountTable <- DESeqDataSetFromMatrix(
+  countData = ecounts,
+  colData = colidesign,
+  design = ~ time + treatment +treatment:time)
+
+#ID'ed 1090 DEGs w/ padj<0.01
+ecolidds<-DESeq(ddsecoliCountTable)
+res<-results(ecolidds, contrast=list(c("treatment_WT_vs_treat","time150.treatmentWT")))
+res<-res[complete.cases(res),]
+res<- res[res$padj<0.01,]
+
+#####
+#ImpulseDE2
+#####
+stoebeldesign<-data.frame(Sample=colnames(ecounts), Condition=c(rep("case",6), rep("control",6), rep("case",6), rep("control",6), rep("case",6), rep("control",6)), Time=rep(c(0,30,60,90,120,150),6))
+
+impulse_ecoli<-ImpulseDE2::runImpulseDE2(as.matrix(ecounts), stoebeldesign, boolCaseCtrl=TRUE, vecConfounders=NULL, scaQThres = 0.01, boolIdentifyTransients = TRUE)
+
+
+###################################################################################################################################
+#Serial expression tool: NEXT maSigPro
+###################################################################################################################################
+
+#set up design
+Time<-rep(c(0,30,60,90,120,150),6)
+Replicate<-rep(1:3, 12)
+Control<-c(rep(0, 6), rep(1, 6), rep(0, 6), rep(1, 6), rep(0, 6), rep(1,6))
+delta_Rpos<-c(rep(1, 6), rep(0, 6), rep(1, 6), rep(0, 6), rep(1, 6), rep(0, 6))
+edesign<-cbind(Time, Replicate, Control, delta_Rpos)
+rownames(edesign)<-colnames(ecounts)
+
+#run maSigPro on DESeq2 Normalized Counts, theta=10, Q=0.01
+normecounts<-as.data.frame(counts(ecolidds, normalized=TRUE))
+stobdesign<-make.design.matrix(edesign, degree=5)
+
+#ID DEGs
+fits<-p.vector(normecounts, stobdesign, Q=0.01, MT.adjust = "BH", min.obs=6, counts=TRUE)
+#variable selection procedure to ID variables for each gene
+tsep<-T.fit(fits, step.method = "backward", alfa=0.01)
+
+#Get sig genes between delta_RpoS and Control
+sigs <- get.siggenes(tsep, rsq = 0.6, vars = "groups")
+maSigProGenes<-sigs$summary$delta_RposvsControl
+
+area1 <- length(intersect(rownames(res),maSigProGenes))
+area2<- length(intersect(impulse_ecoli$vecDEGenes,rownames(res)))
+area3 <- length(intersect(maSigProGenes, impulse_ecoli$vecDEGenes))
+area123<-length(intersect(intersect(maSigProGenes, impulse_ecoli$vecDEGenes), intersect(maSigProGenes,rownames(res))))
+draw.triple.venn(area1= length(rownames(res)), area2 = length(maSigProGenes), area3= length(impulse_ecoli$vecDEGenes), n12=area1, n23=area3, n13=area2, n123=area123, category = c("DESeq2 (0h-12h)","maSigPro (serial)", "ImpulseDE2 (serial)"), lty = rep("blank",3), fill = c("light blue", "light green", "pink"))
+```
+
+```{r DEGs, cache=TRUE}
+###################################################################################################################
+#Generate final DEG list: 1126 genes
+###################################################################################################################
+ecoli_DEGs<-unique(c(intersect(rownames(res),maSigProGenes), intersect(impulse_ecoli$vecDEGenes,rownames(res)), intersect(maSigProGenes, impulse_ecoli$vecDEGenes)))
+```
+
+```{r Sim & Visualize Random Trajectories, cache=TRUE}
+###################################################################################################################
+#Simulate Sigmoid/Impulse E. Coli Data to better understand parameter confidence & upholster timing conclusions
+###################################################################################################################
+DEmono<- impulse_ecoli$dfImpulseDE2Results[impulse_ecoli$dfImpulseDE2Results$isMonotonous==TRUE,] %>% filter(padj<0.01)
+DEtrans<-impulse_ecoli$dfImpulseDE2Results[impulse_ecoli$dfImpulseDE2Results$isTransient==TRUE,] %>% filter(padj<0.01)
+DEother<-impulse_ecoli$dfImpulseDE2Results %>% filter(padj<0.01) %>% filter(isTransient==FALSE) %>% filter(isMonotonous==FALSE)
+
+###################
+#Monotonic genes
+###################
+
+#times
+times<-rep(c(0,30,60,90,120,150),6)
+
+#design for sigmoid simulation through ImpulseDE2
+sigmoid_design<-data.frame(Sample=colnames(ecolidds)[grep("JH01", colnames(ecolidds))], Condition=c(rep("case",18)), Time=rep(c(0,30,60,90,120,150),3))
+
+#pull out sigmoid params for each of the monotonic DEGs
+monoDE<-DEmono$Gene
+monoparamsmat<-matrix(ncol=4, nrow=length(monoDE))
+for (i in 1:length(monoDE)){
+   monoparamsmat[i,]<-impulse_ecoli@lsModelFits[["case"]][[monoDE[i]]][["lsSigmoidFit"]][["vecSigmoidParam"]]}
+monoparamsdf<-as.data.frame(monoparamsmat)
+colnames(monoparamsdf)<-c("beta", "h0", "h1", "t")
+rownames(monoparamsdf)<-monoDE
+
+###Ex. select one gene (talB), extract impulse fit, and generate 100 simulated trajectories based off that one gene. Then plot all the trajectories and data on same plot. Plot distributions of sigmoid params for simulated data as well. May take a couple mins
+set.seed(10)
+genes<-c("talB", sample(monoDE, 9))
+genes<-c("talB")
+pdf("talB.pdf", onefile = TRUE)
+for (k in 1:length(genes)){
+geneparams<-monoparamsdf[match(genes[k], rownames(monoparamsdf)),]
+
+###extract means at each TP, scale by size factor
+size_facs<-sizeFactors(ecolidds)[grep("JH01", names(sizeFactors(ecolidds)))]
+means<-sigmoid_function(as.numeric(geneparams[1]), as.numeric(geneparams[2]), as.numeric(geneparams[3]), as.numeric(geneparams[4]), unique(times))
+repmeans<-c(rep(means, each=3))*size_facs
+
+#index to find dispersion for talB
+disp_index=match(genes[k], names(impulse_ecoli@vecDispersions))
+disp<-as.numeric(impulse_ecoli@vecDispersions[disp_index])
+
+#generate simulated read count data for 100 trajectories w/ proper NB noise
+differentially_expressed<-matrix(ncol=18, nrow=0)
+for (i in 1:100){
+  expressions<-c()
+  for (j in 1:18){
+    expressions<-c(expressions, rnbinom(n=1, mu=repmeans[j], size=disp))
+  }
+  differentially_expressed<-rbind(differentially_expressed, expressions)
+}
+  colnames(differentially_expressed)<-colnames(ecolidds)[grep("JH01", colnames(ecolidds))]
+  rownames(differentially_expressed)<-paste(rep("gene", 100), seq(1,100))
+
+  #set manual dispersions
+  dispersions<-rep(disp, 100)
+  names(dispersions)<-paste(rep("gene", 100), seq(1,100))
+  
+  #fit impulse models
+  sim_sigmoid<-ImpulseDE2::runImpulseDE2(differentially_expressed, sigmoid_design, boolCaseCtrl=FALSE, vecConfounders=NULL, boolIdentifyTransients=TRUE, scaNProc=12, scaQThres = 0.01, vecDispersionsExternal = dispersions, vecSizeFactorsExternal = size_facs)
+
+  #extract simulated params
+  sim_params_to_plot<-matrix(ncol=4, nrow=100)
+  for (i in 1:100){
+    sim_params_to_plot[i,]<-sim_sigmoid@lsModelFits[["case"]][[rownames(sim_sigmoid$dfImpulseDE2Results, 100)[i]]][["lsSigmoidFit"]][["vecSigmoidParam"]]}
+  colnames(sim_params_to_plot)<-c("beta", "h0", "h1", "t")
+  sim_params_to_plot<-as.data.frame(sim_params_to_plot)
+
+#plot distributions of params
+b<-ggplot(sim_params_to_plot, aes(x=beta, y=..density..))+geom_density()+geom_vline(xintercept=a$beta, color="red")+ggtitle(paste("Param Dist. of 1000 E coli genes simulated from", genes[k], "w/ disp.=", round(disp, 2), sep=" "))+labs(subtitle=paste("Params: beta", round(as.numeric(a[1]), digits=2), ",", names(a[2]), round(as.numeric(a[2]), digits=2), ",", names(a[3]), round(as.numeric(a[3]), digits=2), ",", names(a[4]), round(as.numeric(a[4]), digits=2)))+theme(plot.title = element_text(size = 7, face = "bold"), plot.subtitle = element_text(size = 5, face = "italic"))
+c<-ggplot(sim_params_to_plot, aes(x=t, y=..density..))+geom_density()+geom_vline(xintercept=a$t, color="blue")+xlim(-50, 150)
+d<-ggplot(sim_params_to_plot, aes(x=h0-h1, y=..density..))+geom_density()+geom_vline(xintercept=a$h0-a$h1, color="green")
+
+#plot the initial trajectory on standard and log scales
+#par(mfrow=c(1,2))
+#plot(times[1:18], ecounts[match(genes[k], rownames(ecounts)), grep("JH01", colnames(ecounts))]*size_facs, main="Sigmoid fit of talB", xlab="time (mins)", ylab="counts")+lines(unique(times), means)
+#plot(times[1:18], log2(ecounts[match(genes[k], rownames(ecounts)), grep("JH01", colnames(ecounts))]*size_facs), main=paste("Sigmoid Fit of talB"), xlab="time (mins)", ylab="log2(counts)")+ lines(unique(times[1:18]), log2(means))
+
+#plot all expression trajectories on the same plot
+plot_trajectories<-matrix(nrow=6, ncol=101)
+rownames(plot_trajectories)<-unique(times)
+colnames(plot_trajectories)<-c("init", paste(rep("gene", 100), seq(1,100)))
+plot_trajectories[,1]<-means
+for (i in 1:100){
+  tmpsim<-sim_params_to_plot[i,]
+  plot_trajectories[,i+1]<-sigmoid_function(tmpsim$beta, tmpsim$h0, tmpsim$h1, tmpsim$t, unique(times))
+}
+
+counts_to_plot<-ecounts[match(genes[1], rownames(ecounts)),grep("JH01", colnames(ecounts))]*size_facs
+counts_to_plot<-rbind(counts_to_plot, differentially_expressed*size_facs)
+counts_to_plot<-as.data.frame(t(counts_to_plot))
+counts_to_plot$time<-times[1:18]
+
+df <- melt(counts_to_plot ,  id.vars = 'time', variable.name = 'series')
+
+plot_trajectories<-as.data.frame(plot_trajectories)
+plot_trajectories$time<-unique(times)
+plot_trajectories <- melt(plot_trajectories ,  id.vars = 'time', variable.name = 'series')
+e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value))) + geom_line(aes(color=series), alpha=0.5, size=0.3)+ geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+theme(legend.position ="none")+ggtitle(paste(genes[k], ": Plots of all expression trajectories (init in black)", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value), alpha=0.3), color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=sens_peak, linetype="dashed", color="cyan", size=0.5) +geom_vline(xintercept=insens_peak, linetype="dashed", color="magenta", size=0.5)+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)
+print(grid.arrange(b, c, d, ncol=1))
+print(e)}
+dev.off()
+```
+
+```{r Visualizing t params: mono, impulse, sens, insens, cache=TRUE}
+#########
+#Visualize t params from monotonic genes, impulse genes
+#########
+
+#Find sensitive and insensitive genes
+setwd("/Users/ethanashby/Desktop/E. Coli")
+library(gdata)
+sensitivity<-read.xls("Sensitivity.xlsx")
+#split the dataframe by sensitivity level
+sensitivity<-split(sensitivity, sensitivity$sensitivity)
+sensitive<-sensitivity$sensitive
+linear<-sensitivity$linear
+insensitive<-sensitivity$insensitive
+
+#sensitive params
+sensvec<-na.omit(sensitive$geneName)
+sensitivedf<-as.data.frame(matrix(ncol=4, nrow=length(sensvec)))
+for (i in 1:length(sensvec)){
+  index=match(sensvec[i], rownames(sigparamsdf))
+  sensitivedf[i,]<-sigparamsdf[index,]}
+colnames(sensitivedf)<-c("beta", "h0", "h1", "t")
+
+#insenstive params
+insensvec<-na.omit(insensitive$geneName)
+insensitivedf<-as.data.frame(matrix(ncol=4, nrow=length(insensvec)))
+for (i in 1:length(insensvec)){
+  index=match(insensvec[i], rownames(sigparamsdf))
+  insensitivedf[i,]<-sigparamsdf[index,]} 
+colnames(insensitivedf)<-c("beta", "h0", "h1", "t")
+
+#t params of montonic genes, looks somewhat bi/trimodal
+ggplot(monoparamsdf, aes(x=t))+geom_density(color="blue", fill="cyan", binwidth=0.5)+ xlim(50,75)+ggtitle("Distribution of sigmoid t params of 740 monotonic E. coli DEGs")
+
+#t1 params of transient genes... definitely bimodal
+transDE<-na.omit(DEtrans$Gene)
+transparamsmat<-matrix(ncol=6, nrow=length(transDE))
+for (i in 1:length(transDE)){
+   transparamsmat[i,]<-impulse_ecoli@lsModelFits[["case"]][[transDE[i]]][["lsImpulseFit"]][["vecImpulseParam"]]}
+transparamsdf<-as.data.frame(transparamsmat)
+colnames(transparamsdf)<-c("beta", "h0", "h1", "h2", "t1", "t2")
+rownames(transparamsdf)<-transDE
+ggplot(transparamsdf, aes(x=t1))+geom_density(color="blue", fill="cyan", alpha=0.5)+ xlim(50,100)+ggtitle("Distribution of 40 impulse t1 params of monotonic E. coli DEGs")
+
+#pull out t/t1 params of all sensitive genes
+sens_on<-matrix(ncol=1,nrow=0)
+for (i in 1:length(sensitive$geneName)){
+  if (sensitive$geneName[i] %in% rownames(monoparamsdf)){
+    index=match(sensitive$geneName[i], rownames(monoparamsdf))
+    sens_on<-rbind(sens_on, monoparamsdf$t[index])}
+  if (sensitive$geneName[i] %in% rownames(transparamsdf)){
+    index=match(sensitive$geneName[i], rownames(transparamsdf))
+    sens_on<-rbind(sens_on, transparamsdf$t1[index])}
+  if (sensitive$geneName[i] %in% linear_genes){
+    foo()
+  }}
+sens_on<-as.data.frame(sens_on)
+colnames(sens_on)<-"On_times"
+ggplot(sens_on, aes(x=On_times))+geom_density(color="blue", fill="cyan", alpha=0.5)+ xlim(50,100)+ggtitle("Distribution of onset times for 90 Sensitive E. coli DEGs")
+
+insens_on<-matrix(ncol=1,nrow=0)
+for (i in 1:length(insensitive$geneName)){
+  if (insensitive$geneName[i] %in% rownames(monoparamsdf)){
+    index=match(insensitive$geneName[i], rownames(monoparamsdf))
+    insens_on<-rbind(insens_on, monoparamsdf$t[index])}
+  if (insensitive$geneName[i] %in% rownames(transparamsdf)){
+    index=match(insensitive$geneName[i], rownames(transparamsdf))
+    insens_on<-rbind(insens_on, transparamsdf$t1[index])}
+  if (insensitive$geneName[i] %in% linear_genes){
+    foo()
+  }}
+insens_on<-as.data.frame(insens_on)
+colnames(insens_on)<-"On_times"
+ggplot(insens_on, aes(x=On_times))+geom_density(color="red", fill="magenta", alpha=0.5)+ xlim(50,100)+ggtitle("Distribution of onset times for 18 Insensitive E. coli DEGs")
+
+#rbind all the onset times
+sens_on$type<-rep("Sensitive", dim(sens_on)[1])
+insens_on$type<-rep("Insensitive", dim(insens_on)[1])
+on_times<-rbind(sens_on, insens_on)
+
+#plot the densities of the onset times
+ggplot(on_times, aes(x=On_times, color=type, fill=type))+geom_density(alpha=0.5)+ xlim(50,100)+ggtitle("Distribution of onset times for 90 Sensitive & 18 Insensitive E. coli DEGs")
+
+#Run Wilcox Rank Sum test on these t params, trimming off outliers (>70) for sens_on
+wilcox.test(sens_on$On_times[sens_on$On_times<70], insens_on$On_times, alternative="two.sided", mu=0, var.equal=FALSE, conf.level=0.95)
+#nearly significant... not significant at the p=0.05 level
+
+#extract peak t params for later plotting
+sens_peak<-density(sens_on$On_times)$x[which.max(density(sens_on$On_times)$y)]
+insens_peak<-density(insens_on$On_times)$x[which.max(density(insens_on$On_times)$y)]
+```
+
+```{r Sigmoid Sensitive/Insenstive Sims, cache=TRUE}
+#pull out 3 monotonic sensitive and 3 monotonic insensitive genes
+set.seed(11)
+genes<-c(as.vector(sensitive_genes[c(1,3,4)]), as.vector(insensitive_genes[c(5, 7, 8)]))
+pdf("sens_insens_linear.pdf", onefile = TRUE)
+for (k in 1:length(genes)){
+  if (is.na(monoparamsdf[match(genes[k], rownames(monoparamsdf)),])==TRUE){foo()}
+  else{
+  geneparams<-monoparamsdf[match(genes[k], rownames(monoparamsdf)),]
+
+###extract means at each TP, scale by size factor
+size_facs<-sizeFactors(ecolidds)[grep("JH01", names(sizeFactors(ecolidds)))]
+means<-sigmoid_function(as.numeric(geneparams[1]), as.numeric(geneparams[2]), as.numeric(geneparams[3]), as.numeric(geneparams[4]), unique(times))
+repmeans<-c(rep(means, each=3))*size_facs
+
+#index to find dispersion for talB
+disp_index=match(genes[k], names(impulse_ecoli@vecDispersions))
+disp<-as.numeric(impulse_ecoli@vecDispersions[disp_index])
+
+#generate simulated read count data for 100 trajectories w/ proper NB noise
+differentially_expressed<-matrix(ncol=18, nrow=0)
+for (i in 1:100){
+  expressions<-c()
+  for (j in 1:18){
+    expressions<-c(expressions, rnbinom(n=1, mu=repmeans[j], size=disp))
+  }
+  differentially_expressed<-rbind(differentially_expressed, expressions)
+}
+  colnames(differentially_expressed)<-colnames(ecolidds)[grep("JH01", colnames(ecolidds))]
+  rownames(differentially_expressed)<-paste(rep("gene", 100), seq(1,100))
+
+  #set manual dispersions
+  dispersions<-rep(disp, 100)
+  names(dispersions)<-paste(rep("gene", 100), seq(1,100))
+  
+  #fit impulse models
+  sim_sigmoid<-ImpulseDE2::runImpulseDE2(differentially_expressed, sigmoid_design, boolCaseCtrl=FALSE, vecConfounders=NULL, boolIdentifyTransients=TRUE, scaNProc=12, scaQThres = 0.01, vecDispersionsExternal = dispersions, vecSizeFactorsExternal = size_facs)
+
+  #extract simulated params
+  sim_params_to_plot<-matrix(ncol=4, nrow=100)
+  for (i in 1:100){
+    sim_params_to_plot[i,]<-sim_sigmoid@lsModelFits[["case"]][[rownames(sim_sigmoid$dfImpulseDE2Results, 100)[i]]][["lsSigmoidFit"]][["vecSigmoidParam"]]}
+  colnames(sim_params_to_plot)<-c("beta", "h0", "h1", "t")
+  sim_params_to_plot<-as.data.frame(sim_params_to_plot)
+
+#plot distributions of params
+b<-ggplot(sim_params_to_plot, aes(x=beta, y=..density..))+geom_density()+geom_vline(xintercept=a$beta, color="red")+ggtitle(paste("Param Dist. of 1000 E coli genes simulated from", genes[k], "w/ disp.=", round(disp, 2), sep=" "))+labs(subtitle=paste("Params: beta", round(as.numeric(a[1]), digits=2), ",", names(a[2]), round(as.numeric(a[2]), digits=2), ",", names(a[3]), round(as.numeric(a[3]), digits=2), ",", names(a[4]), round(as.numeric(a[4]), digits=2)))+theme(plot.title = element_text(size = 7, face = "bold"), plot.subtitle = element_text(size = 5, face = "italic"))
+c<-ggplot(sim_params_to_plot, aes(x=t, y=..density..))+geom_density()+geom_vline(xintercept=a$t, color="blue")+xlim(-50, 150)
+d<-ggplot(sim_params_to_plot, aes(x=h0-h1, y=..density..))+geom_density()+geom_vline(xintercept=a$h0-a$h1, color="green")
+
+#plot the initial trajectory on standard and log scales
+#par(mfrow=c(1,2))
+#plot(times[1:18], ecounts[match(genes[k], rownames(ecounts)), grep("JH01", colnames(ecounts))]*size_facs, main="Sigmoid fit of talB", xlab="time (mins)", ylab="counts")+lines(unique(times), means)
+#plot(times[1:18], log2(ecounts[match(genes[k], rownames(ecounts)), grep("JH01", colnames(ecounts))]*size_facs), main=paste("Sigmoid Fit of talB"), xlab="time (mins)", ylab="log2(counts)")+ lines(unique(times[1:18]), log2(means))
+
+#plot all expression trajectories on the same plot
+plot_trajectories<-matrix(nrow=6, ncol=101)
+rownames(plot_trajectories)<-unique(times)
+colnames(plot_trajectories)<-c("init", paste(rep("gene", 100), seq(1,100)))
+plot_trajectories[,1]<-means
+for (i in 1:100){
+  tmpsim<-sim_params_to_plot[i,]
+  plot_trajectories[,i+1]<-sigmoid_function(tmpsim$beta, tmpsim$h0, tmpsim$h1, tmpsim$t, unique(times))
+}
+
+counts_to_plot<-ecounts[match(genes[1], rownames(ecounts)),grep("JH01", colnames(ecounts))]*size_facs
+counts_to_plot<-rbind(counts_to_plot, differentially_expressed*size_facs)
+counts_to_plot<-as.data.frame(t(counts_to_plot))
+counts_to_plot$time<-times[1:18]
+
+df <- melt(counts_to_plot ,  id.vars = 'time', variable.name = 'series')
+
+plot_trajectories<-as.data.frame(plot_trajectories)
+plot_trajectories$time<-unique(times)
+plot_trajectories <- melt(plot_trajectories ,  id.vars = 'time', variable.name = 'series')
+e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value))) + geom_line(aes(color=series), alpha=0.5, size=0.3)+ geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+theme(legend.position ="none")+ggtitle(paste(genes[k], ": Plots of all expression trajectories (init in black)", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value), alpha=0.3), color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=sens_peak, linetype="dashed", color="cyan", size=0.5) +geom_vline(xintercept=insens_peak, linetype="dashed", color="magenta", size=0.5)+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)
+print(grid.arrange(b, c, d, ncol=1))
+print(e)}}
+dev.off()
+```
+
+
