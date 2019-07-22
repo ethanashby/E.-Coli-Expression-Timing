@@ -1,0 +1,6 @@
+ID	Name	Bgd count	Result count	Result gene list	Pct of bgd	Fold enrichment	Odds ratio	P-value	Benjamini	Bonferroni
+GO:0019216	regulation of lipid metabolic process	1	1	Tb927.8.1820,	100.0	134.12	inf	0.00745597120452	0.324159324056	1.0
+GO:0019218	regulation of steroid metabolic process	1	1	Tb927.8.1820,	100.0	134.12	inf	0.00745597120452	0.324159324056	1.0
+GO:0032509	endosome transport via multivesicular body sorting pathway	1	1	Tb927.11.10740,	100.0	134.12	inf	0.00745597120452	0.324159324056	1.0
+GO:0046890	regulation of lipid biosynthetic process	1	1	Tb927.8.1820,	100.0	134.12	inf	0.00745597120452	0.324159324056	1.0
+GO:0050810	regulation of steroid biosynthetic process	1	1	Tb927.8.1820,	100.0	134.12	inf	0.00745597120452	0.324159324056	1.0
