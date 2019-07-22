@@ -1,0 +1,119 @@
+---
+title: "E.coli Technical Report"
+output:
+  html_document:
+    df_print: paged
+---
+
+## Table of Contents
+**1.** Background on *E. coli*  
+**2.** RNA-Seq  
+**3.** Our Data  
+**4.** Determine Differentially Expressed Genes (DEGs)  
+**5.** Visualize Genes with Shiny App  
+**6.** Clustering
+
+## 1. Background
+$~$
+
+## 2. RNA-Seq
+$~$
+
+## 3. Our data
+$~$
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+library(ggplot2)
+library(tidyr)
+library(shiny)
+library(dplyr)
+library(DESeq2)
+library(readr)
+library(ImpulseDE2)
+library(maSigPro)
+```
+
+```{r}
+# import data
+ec_rawcounts <- read.table("LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.txt", header = TRUE)
+
+# assign Geneid as rownames and delete variable
+rownames(ec_rawcounts) <- ec_rawcounts$Geneid
+ec_rawcounts <- ec_rawcounts %>% dplyr::select(-Geneid)
+```
+
+## 4. Determine Differentially Expressed Genes (DEGs)
+$~$
+
+```{r}
+######################################################DESeq2#########################################################
+
+ec_coldata <- data.frame(names = colnames(ec_rawcounts)) %>%
+  separate(names, c("treat", "rep_time"), "_") %>%
+  mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
+                        ifelse(substr(rep_time,start=1,stop = 1) == "B", 2, 3))) %>%
+  mutate(time = ifelse(substr(rep_time,start=3,stop = 3) == "1", 0,
+                      ifelse(substr(rep_time,start=3,stop = 3) == "2", 30,
+                             ifelse(substr(rep_time,start=3,stop = 3) == "3", 60,
+                                    ifelse(substr(rep_time,start=3,stop = 3) == "4", 90,
+                                           ifelse(substr(rep_time,start=3,stop = 3) == "5", 120, 150)))))) %>%
+  mutate(treat = ifelse(treat == "JH01", "WT","dRpoS")) %>%
+  mutate(timetreat = paste(treat,time,sep = "")) %>%
+  select(-rep_time)
+rownames(ec_coldata) <- colnames(ec_rawcounts)
+```
+
+```{r, cache=TRUE}
+ec_dds <- DESeqDataSetFromMatrix(ec_rawcounts, colData = ec_coldata, design = ~ timetreat)
+ec_dds_de <- DESeq(ec_dds)
+```
+
+```{r}
+#################################################ImpulseDE2####################################################
+
+ec_design <- data.frame(Sample=colnames(ec_rawcounts),
+                        Condition=c(rep("case",6), rep("control",6), rep("case",6), rep("control",6), rep("case",6), rep("control",6)), 
+                        Time=rep(c(0,30,60,90,120,150),6))
+```
+
+```{r, cache=TRUE}
+impulse_ecoli <- ImpulseDE2::runImpulseDE2(as.matrix(ec_rawcounts), ec_design, boolCaseCtrl=TRUE, vecConfounders=NULL, scaQThres = 0.01, boolIdentifyTransients = TRUE)
+```
+
+```{r}
+#################################################maSigPro######################################################
+
+# set up design
+Time <- rep(c(0,30,60,90,120,150),6)
+Replicate <- rep(1:3, 12)
+Control <- c(rep(0, 6), rep(1, 6), rep(0, 6), rep(1, 6), rep(0, 6), rep(1,6))
+d_Rpos <- c(rep(1, 6), rep(0, 6), rep(1, 6), rep(0, 6), rep(1, 6), rep(0, 6))
+ec_design <- cbind(Time, Replicate, Control, d_Rpos)
+rownames(ec_design) <- colnames(ec_rawcounts)
+
+# run maSigPro on DESeq2 Normalized Counts, theta=10, Q=0.01
+ec_normcounts <- as.data.frame(counts(ec_dds_de, normalized=TRUE))
+ec_design <- make.design.matrix(ec_design, degree=5)
+```
+
+```{r, cache=TRUE}
+# ID DEGs
+fits <- p.vector(ec_normcounts, ec_design, Q=0.01, MT.adjust = "BH", min.obs=6, counts=TRUE)
+#variable selection procedure to ID variables for each gene
+tsep <- T.fit(fits, step.method = "backward", alfa=0.01)
+
+# Get sig genes between delta_RpoS and Control
+sigs <- get.siggenes(tsep, rsq = 0.6, vars = "groups")
+maSigProGenes<-sigs$summary$d_RposvsControl
+```
+
+```{r}
+# Intersect each gene list with another method to calculate gene list of DEGs found in 2 < methods
+
+DS_IM <- intersect(rownames(ec_normcounts), impulse_ecoli$vecDEGenes)
+IM_MA <- intersect(impulse_ecoli$vecDEGenes, maSigProGenes)
+MA_DS <- intersect(maSigProGenes, impulse_ecoli$vecDEGenes)
+
+EC_DEGs <- distinct(data.frame("Geneid" = c(DS_IM, IM_MA, MA_DS)))
+```
