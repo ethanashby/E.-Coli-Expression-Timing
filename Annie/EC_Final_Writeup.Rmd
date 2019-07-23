@@ -9,7 +9,8 @@ output:
 **1.** Background on *E. coli*  
 **2.** RNA-Seq  
 **3.** Our Data  
-**4.** Determine Differentially Expressed Genes (DEGs)  
+**4.** Normalization  
+**5.** Determine Differentially Expressed Genes (DEGs)  
 **5.** Visualize Genes with Shiny App  
 **6.** Clustering
 
@@ -43,8 +44,11 @@ rownames(ec_rawcounts) <- ec_rawcounts$Geneid
 ec_rawcounts <- ec_rawcounts %>% dplyr::select(-Geneid)
 ```
 
-## 4. Determine Differentially Expressed Genes (DEGs)
+## 4. Normalization
 $~$
+
+We tested out many normalization methods including DESeq2 and edgeR. DESeq2 is a normalization and differential expression analysis method that models RNA-Seq count data with a negative binomial (or negative-Poisson) distribution.
+
 
 ```{r}
 ######################################################DESeq2#########################################################
@@ -67,23 +71,67 @@ rownames(ec_coldata) <- colnames(ec_rawcounts)
 ```{r, cache=TRUE}
 ec_dds <- DESeqDataSetFromMatrix(ec_rawcounts, colData = ec_coldata, design = ~ timetreat)
 ec_dds_de <- DESeq(ec_dds)
+ec_normcounts <- as.data.frame(counts(ec_dds_de, normalized=TRUE))
 ```
 
-```{r}
-#################################################ImpulseDE2####################################################
+## 5. Determine Differentially Expressed Genes (DEGs)  
+### DESeq2
 
+```{r}
+EC_sig_genes <- c()
+
+# between WT0 and WT150
+de_results <- results(ec_dds_de, contrast = c("timetreat", "WT150","WT0"))
+  
+resSig <- de_results[ which(de_results$padj < 0.01 ), ]
+  
+resSig$Geneid <- rownames(resSig)
+
+ind <- match(ec_norm_counts$Geneid,resSig$Geneid)
+
+ec_norm_counts$sig <- resSig$Geneid[ind]
+
+EC_sig_genes$WT_compare <- ec_norm_counts %>%
+ filter(!is.na(ec_norm_counts$sig)) %>%
+ select(-sig)
+
+
+# between WT150 and dRpoS150
+de_results <- results(ec_dds_de, contrast = c("timetreat", "WT150","dRpoS150"))
+  
+resSig <- de_results[ which(de_results$padj < 0.01 ), ]
+  
+resSig$Geneid <- rownames(resSig)
+
+ind <- match(ec_norm_counts$Geneid,resSig$Geneid)
+
+ec_norm_counts$sig <- resSig$Geneid[ind]
+  
+EC_sig_genes$treat_compare <- ec_norm_counts %>%
+ filter(!is.na(ec_norm_counts$sig)) %>%
+ select(-sig)
+
+EC_sig_genes <- intersect(EC_sig_genes$WT_compare$Geneid, EC_sig_genes$treat_compare$Geneid)
+```
+
+
+
+
+### ImpulseDE2
+
+```{r}
 ec_design <- data.frame(Sample=colnames(ec_rawcounts),
                         Condition=c(rep("case",6), rep("control",6), rep("case",6), rep("control",6), rep("case",6), rep("control",6)), 
                         Time=rep(c(0,30,60,90,120,150),6))
 ```
 
 ```{r, cache=TRUE}
-impulse_ecoli <- ImpulseDE2::runImpulseDE2(as.matrix(ec_rawcounts), ec_design, boolCaseCtrl=TRUE, vecConfounders=NULL, scaQThres = 0.01, boolIdentifyTransients = TRUE)
+impulse_ecoli <- ImpulseDE2::runImpulseDE2(as.matrix(ec_rawcounts), ec_design, boolCaseCtrl=TRUE, vecConfounders=NULL, scaQThres = 0.01, scaNProc = 8, boolIdentifyTransients = TRUE)
 ```
 
-```{r}
-#################################################maSigPro######################################################
+### MaSigPro
 
+```{r}
 # set up design
 Time <- rep(c(0,30,60,90,120,150),6)
 Replicate <- rep(1:3, 12)
@@ -111,9 +159,9 @@ maSigProGenes<-sigs$summary$d_RposvsControl
 ```{r}
 # Intersect each gene list with another method to calculate gene list of DEGs found in 2 < methods
 
-DS_IM <- intersect(rownames(ec_normcounts), impulse_ecoli$vecDEGenes)
+DS_IM <- intersect(EC_sig_genes, impulse_ecoli$vecDEGenes)
 IM_MA <- intersect(impulse_ecoli$vecDEGenes, maSigProGenes)
-MA_DS <- intersect(maSigProGenes, impulse_ecoli$vecDEGenes)
+MA_DS <- intersect(maSigProGenes, EC_sig_genes)
 
 EC_DEGs <- distinct(data.frame("Geneid" = c(DS_IM, IM_MA, MA_DS)))
 ```
