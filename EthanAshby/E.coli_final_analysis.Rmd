@@ -1,23 +1,41 @@
 ---
 title: "Application of Sigmoidal Models to Elucidate the Timing of the RpoS Regulon in an E. Coli Stress Response"
-author: "Ethan Ashby, Annie Cohen, Lian Morales, Prof. Jo Hardin, Prof. Dan Stoebel, Prof. Danae Schulz"
+author: "Ethan Ashby^1,4^, Annie Cohen^2,4^, Lian Morales^3,4^, Prof. Jo Hardin^1^, Prof. Dan Stoebel^3^, Prof. Danae Schulz^3^"
 output: pdf_document
 ---
+Affiliation: ^1^ Pomona College, ^2^ Scripps College, ^3^ Harvey Mudd College, ^4^ NSF Data Science REU at HMC
 
-##Abstract
+## Abstract
   *E. coli* possesses a general stress response that coordinates physiological responses to a variety of stressful stimuli including nutrient starvation during exponential growth. A key transcription factor in the general stress response, RpoS, is involved in the transcription of approximately one quarter of *E. coli's* genome. Groups of genes were previously classified by their kinetics with respect to RpoS concentration: genes with expressions that increase linearly with RpoS concentration ('linear' genes), genes that are transcribed *more* than anticipated under the linear hypothesis at low RpoS concentrations ('sensitive' genes), genes that are transcribed *less* than anticipated under the linear hypothesis at low RpoS concentrations ('insensitive' genes). It was proposed that the graded RpoS sensitivity of these genes could function as a mechanism to control the *timing* of genes invovled in *E. coli's* response to stress. To address this question, DEGs were determined using a thoughtfully-constructed pipeline, and gene-wise sigmoidal models were fit to significant *E. coli* expression trajectories using ImpulseDE2. The variability and noise robustness of the models' parameters were assessed by simulations. Analysis of the biologically meaningful "onset time" parameter did not demonstrate a statistically nor biologically significant difference between the onset times for sensitive and insensitive genes. Implications and future research directions are discussed.
 
-##Introduction
-  E. coli possesses a general stress response to a variety of environmental stresses (Battesti *et al* 2011, Hengge 2011) ranging from osmotic shock to nutrient starvation. A key transcription factor coordinating this response is RpoS, which can regulate up to one quarter of the bacteria's genome (preliminary data from Prof Dan Stoebel). Simple interpretations of transcriptional networks often invoke an analogy of an on/off switch, in which the presence of a stimulus turns genes on and other genes off. However, these simple interpretations don't adequately describe the complex, dyanmic processes underlying a transcriptional response to environmental stimuli. There exists a limited understanding regarding the complex, dynamic nature of transcriptional responses, and the well-annotated, heavily-studied genome of E. coli presents an excellent model to study these regulatory circuits.
-  The RpoS regulon is not a static, 'switch-like' network; rather, the RpoS regulon is a highly complex regulatory network influenced by several factors including the duration/degree of stress (Lange and Hengge-Aronis 1994), processes like transcription, translation, and mRNA degradation (Lange and Hengge-Aronis 1994), other proteins (Pratt and Silhavy 1998), competition between transcription factors for RNA polymerase (Farewell *et al.* 1998), and even strain type (Hryckowian *et al.* 2014, Chiang *et al.* 2011). 
-  Prof Dan Stoebel previously showed that several genes expression increases linearly with Rpos concentration: these he dubbed 'linear' genes. However, several genes didn't follow this linear trend. Some genes initiated high levels of expression at relatively low Rpos concentrations: these he dubbed 'sensitive' genes. Other genes required a higher Rpos threshold to initiate transcription: these he dubbed 'insensitive' genes. In previous work, Prof Stoebel hypothesized that sensitivity to Rpos could be a mechanism to control the **timing** of genes involved in the general stress response. 
-  We aim to investigate this hypothesis using an *in silico* tool, ImpulseDE2. ImpulseDE2 is a serial Time Course (TC) Differential Expression tool which fits impulse/sigmoidal models to expression trajectories and compares these dynamics models to constant/reduced models using the LRT to determine differential expression over time/between time courses. The key advantage of ImpulseDE2's impulse/sigmoidal models is that they are built off biologically meaningful parameters (ex. onset time), allowing the parameters to be leveraged to directly address a biological question.
+## Introduction
+  E. coli possesses a general stress response to a variety of environmental stresses (Battesti *et al* 2011, Hengge 2011) ranging from osmotic shock to nutrient starvation. A key transcription factor coordinating this response is RpoS, which regulates one quarter of the bacteria's genome (preliminary data from Professor Dan Stoebel). Simple interpretations of transcriptional networks often invoke an analogy of an on/off switch, in which the presence of a stimulus turns some genes on and other genes off. However, these simple interpretations don't adequately describe the complex, dyanmic processes underlying many transcriptional responses to stimuli. Currently, there exists a limited understanding regarding the dynamic nature of transcriptional responses, and the well-annotated, heavily-studied genome of E. coli presents an excellent model to study these intricate regulatory circuits.
+  The RpoS regulon is not a static, 'switch-like' network; rather, the RpoS regulon is a highly complex regulatory circuit influenced by several factors including the duration/degree of stress (Lange and Hengge-Aronis 1994), processes like transcription, translation, and mRNA degradation (Lange and Hengge-Aronis 1994), other proteins (Pratt and Silhavy 1998), competition between transcription factors for RNA polymerase (Farewell *et al.* 1998), and even strain type (Hryckowian *et al.* 2014, Chiang *et al.* 2011). 
+  Fong and colleagues previously showed that several genes' expression increases linearly with Rpos concentration: these were dubbed 'linear' genes. However, several genes didn't follow this linear trend. Some genes initiated high levels of expression at relatively low RpoS concentrations: these were called 'sensitive' genes. Other genes required a higher RpoS threshold to initiate transcription: these he dubbed 'insensitive' genes (Fong *et al* 2017). Fong and colleagues hypothesized that sensitivity to Rpos could be a mechanism to control the **timing** of genes involved in the general stress response.
+  
+  ![(A) osmY: a linear gene (B) astA: a sensitive gene, (C) gadC: an insenstive gene. Figure obtained from Fong *et al* 2017](./Steobel_figure_sens_insens_linear.png)
+  
+  We aim to investigate this hypothesis using an *in silico* tool, ImpulseDE2. ImpulseDE2 is a serial Time Course (TC) Differential Expression tool which fits impulse/sigmoidal models to expression trajectories and compares these dynamics models to constant/reduced models using the LRT to determine differential expression over time and between time courses. The key advantage of ImpulseDE2 is that its models are parametrized by *biologically meaningful* parameters (ex. onset time), allowing researchers to leverage the parameter values to directly address biological questions (Figure 2).
+  
+  ![Sigmoid model for expression trajectories, parametrized by initial expression level (h0), onset time (t), onset slope (beta), and peak expression level (h1)](./Sig Model.png)
+  
+  ImpulseDE2 was applied to an time course (TC) RNA-Seq dataset generated by Professor Dan Stoebel. Two strains of *E. coli* - a WT strain and another strain, designated delta_RpoS, with the *rpos* gene knocked out - were allowed to grow exponentially for 150 minutes, inducing cell starvation and RpoS production (Figure 3). A thoughtful pipeline employing best-performing time course differential expression methods (DESeq2, NEXT maSigPro, and ImpulseDE2) was conducted on the dataset to identify differentially expressed genes. The onset time (t) parameter fitted by ImpulseDE2 was extracted for monotonically differentially expressed genes, and simulations were conducted to better understand and visualize the effects of dispersion, sample size, and outliers on all sigmoidal parameters. Then, statistical tests were applied to the timing parameters of sensitive and insensitive genes to mechanism of graded sensitivity to RpoS coordinating expression of genes in response to stress.
 
-![alternative text here](./)
 
-**Important Note**: the following directories are tuned to where the files are on my computer! You must change the directories to be consistent with your computer.
+```{r, cache=TRUE, eval=T, echo=F}
+#visualize RpoS kinetics
+rposconc<-read.csv("meanExpToStationaryRpoSLevels.csv", header=T)
+ggplot(rposconc, aes(x=Time, y=meanRpoS, color=Trial))+geom_point(aes(size=meanDensity))+ggtitle("RpoS Kinetics During Cell Starvation")+labs(subtitle="3 replicates per trial, 3 trials")+ylab("meanRpoS conc. (M)")
+```
+Figure 3: RpoS kinetics over 150 min starvation time course.
 
-```{r, cache=TRUE}
+
+## Methods
+### Data Pre-Processing
+RNA-Seq data was obtained in the form of read count data. Parsing code developed by Madison Hobbes was used to parse the gene identifiers, extract sequence type, gene names, and other useful information to subset the data.
+Since this experiment focuses on the kinetics of gene expression, the read count data was filtered for Coding Sequences (CDS's). Rows with NA counts and 0 counts were filtered out, and duplicate genes were resolved.
+
+```{r, cache=TRUE, include=FALSE}
 #load required packages and functions
 library(DESeq2)
 library(tidyverse)
@@ -40,16 +58,15 @@ h_0 + (h_1-h_0)*(1/(1+exp(1)^(-b*(t-t_1))))
 
 #read in data
 allCounts <- read.csv("LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.tsv", header = T, sep = "\t")
-
 ```
 
-```{r, echo=F, cache=TRUE, include=F}
+```{r, echo=F, cache=TRUE, include=FALSE, eval=TRUE}
 #collect the geneids
 allCounts$GeneidBackup = allCounts$Geneid
 # note that the geneids here are really long and contain a lot of information. We are going to parse those out, and first... make a separate column for gene feature (CDS, AS_CDS, IGR, etc).
 ```
 
-```{r, include=F, cache=TRUE}
+```{r, include=F, cache=TRUE, include=FALSE, eval=TRUE}
 allCounts <- allCounts %>% separate(GeneidBackup, c("feature", "rest"), sep="[:]")
 allCounts %>% group_by(feature) %>% summarise(number_of_genes = n())
 # Now, we must extract the genenames from each Geneid. However, each feature has a slightly different pattern, and we will need to do the features separately. 
@@ -82,7 +99,7 @@ igr <- igr %>% separate(start.gene, into = c("comma", "start.gene"), sep = "[,]"
 allCounts <- full_join(igr, allCounts) #add this new information to allCounts!
 ```
 
-```{r, echo=F, warning = F, message = F, include=F, cache=TRUE}
+```{r, echo=F, warning = F, message = F, include=F, cache=TRUE, eval=TRUE}
 # CDS
 # have bnum and genename columns
 # left join to allCounts
@@ -97,7 +114,7 @@ cds <- cds %>% separate(genename, into = c("colon", "genename"), sep = ":") %>%
 allCounts <- full_join(allCounts, cds) #add the new info to allCounts
 ```
 
-```{r, echo=F, warning = F, message = F, include=F, cache=TRUE}
+```{r, echo=F, warning = F, message = F, include=F, cache=TRUE, eval=TRUE}
 #ncRNA
 #ncRNA doesn't have bnums, but id's which we'll put in the genename column
 rna.name = ":rna[0-9].." #new rna.name pattern
@@ -120,12 +137,7 @@ tRNA <- tRNA %>% separate(genename, into = c("colon", "genename"), sep = ":") %>
 allCounts <- full_join(tRNA, allCounts)
 # remove the NA rows we just created by full_joining while adding the ncRNA, rRNA, tRNA genenames
 allCounts <- filter(allCounts, feature %in% c("IGR", "AS_IGR") | genename != "NA")
-```
 
-We employed parsing code developed by Madison Hobbes to parse the gene identifiers, extract sequence type, gene names, and other useful info.
-
-We are primarily interested in Coding Sequences (CDS) of known genes for this particular project. Read count data was filtered by NA, 0 counts, CDS, and duplicate rows were resolved
-```{r Prepping Counts, cache=TRUE}
 #filter by CDS, NA, 0 sums, resolve duplicates
 ecounts<-allCounts %>% filter(feature=="CDS")
 ecounts<-ecounts[rowSums(is.na(ecounts)) != ncol(ecounts), ]
@@ -133,12 +145,22 @@ ecounts<-subset(ecounts, rowSums(ecounts[,2:37])>0)
 ecounts<- ecounts %>% dplyr::distinct(genename, .keep_all=TRUE)
 rownames(ecounts)<-ecounts$genename
 ecounts<-ecounts[,2:37]
+head(ecounts)
 ```
 
-We then employed three *in silico* differential expression tools to identify DEGs between the two time courses. Previous research has shown that two-sample comparisons using DESeq2 and serial tools maSigPro and ImpulseDE2 are the best performing methods to identify differentially expressed genes in TC experiments. Morever, combining gene lists generated by multiple tools reduces false positives without compromising sensitivity and is thus recommended for optimal DEG identification in TC experiments. Using a shiny app created by Annie Cohen, we noticed that many of E. Coli's DEGs appeared montonically differentially expessed. To capture this global expression change, we ran the categorical DE tool DESeq2 a two-sample contrast across the ∆Rpos and WT strains at the final time point (150min), when expression differences between the two time courses were putatively maximized. Differential expression was assessed at the p=0.01 level.
-Next, maSigPro with naive dispersion params (default of 10) was run.
-Lastly, ImpulseDE2 (with dispersion estimates generated via the DESeq2 method) was run on the data.
-```{r DE Tools, cache=TRUE}
+### Identifying Differentially Expressed Genes
+  Three *in silico* differential expression tools to identify DEGs between the WT and delta_RpoS time courses. Previous research shows that two-sample comparisons using DESeq2 and serial tools maSigPro and ImpulseDE2 are the best performing methods to identify differentially expressed genes in TC experiments. Morever, combining gene lists generated by multiple tools reduces false positives without compromising sensitivity and is thus recommended for optimal DEG identification in TC experiments (Spies *et al.* 2019). 
+  
+  **DESeq2** is an algorithm that models the read counts using a negative binomial distribution and uses a trimmed mean method (TMM) to generate size factors and normalize the read count data across between-sample effects. DESeq2's main innovation is its Bayesian Shrunken Dispersion and LFC estimates, which improve stability and interpretability of these estimates (Love *et al* 2014). DESeq2 is one of the most widely accepted and empolyed algorithms for differential expression analysis. However, DESeq2 is not built to analyze serial (time course) data, and its categorical treatment of serial data leads to loss in predictive power. Thus, DESeq2 alone is not suited to identifying DEGs.
+  
+  **NEXT maSigPro** is a differential expression algorithm designed to analyze serial/TC RNA-Seq data. maSigPro models the gene expression value using polynomial regression with a NB Generalized Linear Model. The model's parameters are fit using maximum likelihood, and the log likelihood ratio test is applied to the full model and the null model (a flat/alternative model fit to a control time course). In the second step of maSigPro, the goodness of fit, R^2^, is computed for each optimized gene model, allowing filtering based on genes with clear expression trends. maSigPro requires data to be normalized *a priori* (we used the TMM method implemented through DESeq2) and contains a naive dispersion estimate of 10, which according to the authors does not have a substantial impact on downstream DEG identification. maSigPro is a robust DE tool designed for analysis and interpretation of serial/TC RNA-Seq data.
+  
+  **ImpulseDE2** is another differential expression algorithm designed to analyze serial/TC RNA-Seq data. ImpulseDE2 fits impulse/sigmoidal models to the read count data by estimating the parameters using the Broyden–Fletcher– Goldfarb–Shanno algorithm.  Gene-wise dispersion estimates are generated using the bayesian shrinkage approach used in DESeq2. Differential expression is assessed using the log likelihood ratio test comparing the likelihood of the alternative and null (flat or control fit) models.
+  
+  Using a shiny app created by Annie Cohen, we noticed that many of E. Coli's DEGs appeared montonically differentially expessed. To capture this global expression change, we ran the categorical DE tool DESeq2 a two-sample contrast across the delta_Rpos and WT strains at the final time point (150min), when expression differences between the two time courses were putatively maximized. maSigPro was run with default arguments and results were filtered by R^2^ of 0.6. ImpulseDE2 was run with defaults and with the specification to differentiate between transient (impulse) and monotonic (sigmoidal/linear) DEGs.
+  Genes that were identified as significantly differentially expressed at a Benjamini-Hochberg corrected p value of less than 0.01 by two or more tools were included in our DEG list.
+  
+```{r DE Tools, cache=TRUE, echo=FALSE, warning=F, message=F, error=F}
 ####################################################################################################################
 #DESeq2
 ####################################################################################################################
@@ -192,17 +214,20 @@ area1 <- length(intersect(rownames(res),maSigProGenes))
 area2<- length(intersect(impulse_ecoli$vecDEGenes,rownames(res)))
 area3 <- length(intersect(maSigProGenes, impulse_ecoli$vecDEGenes))
 area123<-length(intersect(intersect(maSigProGenes, impulse_ecoli$vecDEGenes), intersect(maSigProGenes,rownames(res))))
+
+#draw venn diagram of DEG overlaps
 draw.triple.venn(area1= length(rownames(res)), area2 = length(maSigProGenes), area3= length(impulse_ecoli$vecDEGenes), n12=area1, n23=area3, n13=area2, n123=area123, category = c("DESeq2 (0h-12h)","maSigPro (serial)", "ImpulseDE2 (serial)"), lty = rep("blank",3), fill = c("light blue", "light green", "pink"))
 ```
 
-```{r DEGs, cache=TRUE}
+```{r DEGs, cache=TRUE, eval=FALSE}
 ###################################################################################################################
 #Generate final DEG list: 1126 genes
 ###################################################################################################################
 ecoli_DEGs<-unique(c(intersect(rownames(res),maSigProGenes), intersect(impulse_ecoli$vecDEGenes,rownames(res)), intersect(maSigProGenes, impulse_ecoli$vecDEGenes)))
 ```
 
-```{r Sim & Visualize Random Trajectories, cache=TRUE}
+###
+```{r Sim & Visualize Random Trajectories, cache=TRUE, eval=FALSE}
 ###################################################################################################################
 #Simulate Sigmoid/Impulse E. Coli Data to better understand parameter confidence & upholster timing conclusions
 ###################################################################################################################
@@ -303,7 +328,7 @@ print(grid.arrange(b, c, d, ncol=1))
 print(e)}
 ```
 
-```{r Visualizing t params: mono, impulse, sens, insens, cache=TRUE}
+```{r Visualizing t params: mono, impulse, sens, insens, cache=TRUE, eval=FALSE}
 #########
 #Visualize t params from monotonic genes, impulse genes
 #########
@@ -393,7 +418,7 @@ sens_peak<-density(sens_on$On_times)$x[which.max(density(sens_on$On_times)$y)]
 insens_peak<-density(insens_on$On_times)$x[which.max(density(insens_on$On_times)$y)]
 ```
 
-```{r Sigmoid Sensitive/Insenstive Sims, cache=TRUE}
+```{r Sigmoid Sensitive/Insenstive Sims, cache=TRUE, eval=FALSE}
 #pull out 5 monotonic sensitive, 5 monotonic insensitive genes, 1 monotonic linear gene
 set.seed(11)
 genes<-c(as.vector(sample(sensitive$geneName[sensitive$geneName %in% monoDE], 5)), as.vector(sample(insensitive$geneName[insensitive$geneName %in% monoDE], 5)), as.vector(sample(linear$geneName[linear$geneName %in% monoDE], 1)))
@@ -469,7 +494,7 @@ print(grid.arrange(b, c, d, ncol=1))
 print(e)}
 ```
 
-```{r}
+```{r, eval=FALSE}
 #Visualize some of prof Stoebel's "genes of interest"
 set.seed(11)
 genesofinterest<-read.table("genesOfInterest.txt", sep="\t", header=TRUE)$geneName
@@ -546,3 +571,7 @@ print(grid.arrange(b, c, d, ncol=1))
 print(e)}
 ```
 
+## References:
+Fong, A. J. L., Shull, L. M., Batachari, L. E., Dillon, M., Evans, C., Becker, C. J., … Daniel, S.   (2017). Genome-Wide Transcriptional Response to Varying RpoS Levels in Escherichia coli K-12. Journal of Bacteriology, 199(7), 1–17.
+Love, M. I., Huber, W., & Anders, S. (2014). Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome Biology, 15(12), 1–21. https://doi.org/10.1186/s13059-014-0550-8
+Spies, D., Renz, P. F., Beyer, T. A., & Ciaudo, C. (2019). Comparative analysis of differential gene expression tools for RNA sequencing time course data. Briefings in Bioinformatics, 20(1), 1–11. https://doi.org/10.1093/bib/bbx115
