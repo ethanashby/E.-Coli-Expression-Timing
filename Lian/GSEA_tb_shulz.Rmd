@@ -267,11 +267,9 @@ MgPv_GObiopros <- read.table("MgPv_GObiopros.tab", sep = "\t",header = TRUE) %>%
   MgPv_GObiopros <- data.frame(MgPv_GObiopros, comparison = "MgPv_bio")
 PvSa_GObiopros <- read.table("PvSa_GObiopros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
   PvSa_GObiopros <- data.frame(PvSa_GObiopros, comparison = "PvSa_bio")
+  
 all_bio <- rbind(MgSa_GObiopros,MgPv_GObiopros,PvSa_GObiopros)
-
-#making Result.gene.list entry into list 
-all_bio$Result.gene.list <- gsub(',',',',all_bio$Result.gene.list,fixed=TRUE)
-all_bio$Result.gene.list <- strsplit(all_bio$Result.gene.list, ",")
+ 
 
 #MgSa Bio
 MgSa_GObiopros <- data.frame(all_bio %>% dplyr :: filter(comparison == "MgSa_bio"))
@@ -302,9 +300,11 @@ MgPv_GOcellpros <- read.table("MgPv_GOcellularpros.tab", sep = "\t",header = TRU
   MgPv_GOcellpros <- data.frame(MgPv_GOcellpros, comparison = "MgPv_cell")
 PvSa_GOcellpros <- read.table("PvSa_GOcellularpros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
   PvSa_GOcellpros <- data.frame(PvSa_GOcellpros, comparison = "PvSa_cell")
+  
 all_cell <- rbind(MgSa_GOcellpros, MgPv_GOcellpros,PvSa_GOcellpros)
 all_cell$Result.gene.list <- gsub(',',',',all_cell$Result.gene.list,fixed=TRUE)
 all_cell$Result.gene.list <- strsplit(all_cell$Result.gene.list, ",")
+
   #MGSA
 MgSa_GOcellpros <- data.frame(all_cell %>% filter(comparison == "MgSa_cell"))
 MgSa_GOcellpros_list <- as.list(MgSa_GOcellpros)
@@ -334,6 +334,7 @@ MgPv_GOmolepros <- read.table("MgPv_GOmolepros.tab", sep = "\t",header = TRUE) %
   MgPv_GOmolepros <- data.frame(MgPv_GOmolepros, comparison = "MgPv_mol")
 PvSa_GOmolepros <- read.table("PvSa_GOmolepros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
   PvSa_GOmolepros <- data.frame(PvSa_GOmolepros, comparison = "PvSa_mol")
+  
 all_mol <- rbind(MgSa_GOmolepros,MgPv_GOmolepros, PvSa_GOmolepros)
 all_mol$Result.gene.list <- gsub(',',',',all_mol$Result.gene.list,fixed=TRUE)
 all_mol$Result.gene.list <- strsplit(all_mol$Result.gene.list, ",")
@@ -548,13 +549,96 @@ fuzzyClust$Result.gene.list <- gsub(',',',',fuzzyClust$Result.gene.list,fixed=TR
 fuzzyClust$Result.gene.list <- strsplit(fuzzyClust$Result.gene.list, ",")
  
 View(fuzzyClust)
+View(GO)
+ 
+cluster1 <- data.frame(GO[1]) %>%dplyr::select(Cluster1.Name,Cluster1.Result.gene.list,Cluster1.Type) 
+cluster1$Cluster1.Result.gene.list <- gsub(',',',',cluster1$Cluster1.Result.gene.list,fixed=TRUE)
+cluster1$Cluster1.Result.gene.list <- strsplit(cluster1$Cluster1.Result.gene.list, ",")
+
+clust1_bio <- cluster1 %>% filter(Cluster1.Type == "Biological Process")
+clust1_bio_list <- as.list(clust1_bio)
+names(clust1_bio_list$Cluster1.Result.gene.list) <- clust1_bio_list$Cluster1.Name
+fuzzylist_1_bio <- clust1_bio_list$Cluster1.Result.gene.list
+#View(fuzzylist_1_bio)
+
+clust1_cell <- cluster1 %>% filter(Cluster1.Type == "Cellular Component")
+clust1_cell_list <- as.list(clust1_cell)
+names(clust1_cell_list$Cluster1.Result.gene.list) <- clust1_cell_list$Cluster1.Name
+fuzzylist_1_cell <- clust1_cell_list$Cluster1.Result.gene.list
+#View(fuzzylist_1_cell)
+
+clust1_mol <- cluster1 %>% filter(Cluster1.Type == "Molecular Function")
+clust1_mol_list <- as.list(clust1_mol)
+names(clust1_mol_list$Cluster1.Result.gene.list) <- clust1_mol_list$Cluster1.Name
+fuzzylist_1_mol <- clust1_mol_list$Cluster1.Result.gene.list
+
+ 
+cluster2 <- data.frame(GO[2])%>%dplyr::select(Cluster2.Name,Cluster2.Result.gene.list,Cluster2.Type) 
+cluster2$Cluster2.Result.gene.list <- gsub(',',',',cluster2$Cluster2.Result.gene.list,fixed=TRUE)
+cluster2$Cluster2.Result.gene.list <- strsplit(cluster2$Cluster2.Result.gene.list, ",")
+
+clust2_bio <- cluster2 %>% filter(Cluster2.Type == "Biological Process")
+clust2_bio_list <- as.list(clust2_bio)
+names(clust2_bio_list$Cluster2.Result.gene.list) <- clust2_bio_list$Cluster2.Name
+fuzzylist_2_bio <- clust2_bio_list$Cluster2.Result.gene.list
+#View(fuzzylist_2_bio)
+
+clust2_cell <- cluster2 %>% filter(Cluster2.Type == "Cellular Component")
+clust2_cell_list <- as.list(clust2_cell)
+names(clust2_cell_list$Cluster2.Result.gene.list) <- clust2_cell_list$Cluster2.Name
+fuzzylist_2_cell <- clust2_cell_list$Cluster2.Result.gene.list
+View(fuzzylist_2_cell)
+
+#clust2_mol <- cluster2 %>% filter(Cluster2.Type == "Molecular Function")
+#clust2_mol_list <- as.list(clust2_mol)
+#names(clust2_mol_list$Cluster2.Result.gene.list) <- clust2_mol_list$Cluster2.Name
+#fuzzylist_2_mol <- clust2_mol_list$Cluster2.Result.gene.list
+#View(fuzzylist_2_mol)
+
+#cluster3 <- data.frame(GO[3])%>%dplyr::select(Cluster3.Name,Cluster3.Result.gene.list,Cluster3.Type) 
+#clust3_bio <- cluster3 %>% filter(Cluster3.Type == "Biological Process")
+#clust3_cell <- cluster3 %>% filter(Cluster3.Type == "Cellular Component")
+#clust3_mol <- cluster3 %>% filter(Cluster3.Type == "Molecular Function")
+
+cluster4 <- data.frame(GO[4])%>%dplyr::select(Cluster4.Name,Cluster4.Result.gene.list,Cluster4.Type) 
+cluster4$Cluster4.Result.gene.list <- gsub(',',',',Cluster4.Result.gene.list$Cluster2.Result.gene.list,fixed=TRUE)
+cluster4$Cluster4.Result.gene.list <- strsplit(cluster2$Cluster2.Result.gene.list, ",")
+
+clust4_bio <- cluster4 %>% filter(Cluster4.Type == "Biological Process")
+clust4_cell <- cluster4 %>% filter(Cluster4.Type == "Cellular Component")
+clust4_mol <- cluster4 %>% filter(Cluster4.Type == "Molecular Function")
+
+#cluster5 <- data.frame(GO[5])%>%dplyr::select(Cluster5.Name,Cluster5.Result.gene.list,Cluster5.Type) 
+#clust5_bio <- cluster5 %>% filter(Cluster5.Type == "Biological Process")
+#clust5_cell <- cluster5 %>% filter(Cluster5.Type == "Cellular Component")
+#clust5_mol <- cluster5 %>% filter(Cluster5.Type == "Molecular Function")
+
+cluster6 <- data.frame(GO[6])%>%dplyr::select(Cluster6.Name,Cluster6.Result.gene.list,Cluster6.Type) 
+#clust6_bio <- cluster6 %>% filter(Cluster6.Type == "Biological Process")
+clust6_cell <- data.frame(cluster6 %>% filter(Cluster6.Type == "Cellular Component"))
+clust6_cell$Cluster6.Result.gene.list <- gsub(',',',',clust6_cell$Cluster6.Result.gene.list,fixed=TRUE)
+clust6_cell$Cluster6.Result.gene.list <- strsplit(clust6_cell$Cluster6.Result.gene.list, ",")
+clust6_cell_list <- as.list(clust6_cell)
+names(clust6_cell_list$Cluster6.Result.gene.list) <- clust6_cell_list$Cluster6.Name
+fuzzylist_6_bio <- clust6_cell_list$Cluster6.Result.gene.list
+
+#clust6_mol <- cluster6 %>% filter(Cluster6.Type == "Molecular Function")
+
+View(fuzzylist_6_bio)
+clust6_cell$Cluster6.Result.gene.list
+fuzzy_biopros$Result.gene.list
+
+#making Result.gene.list entry into list 
+clust6_cell$Cluster6.Result.gene.list <- gsub(',',',',clust6_cell$Cluster6.Result.gene.list,fixed=TRUE)
+clust6_cell$Cluster6.Result.gene.list <- strsplit(clust6_cell$Cluster6.Result.gene.list, ",")
+
 
 
 fuzzy_biopros <- data.frame(fuzzyClust %>% filter(Type == "Biological Process"))
 fuzzy_biopros_list <- as.list(fuzzy_biopros)
 names(fuzzy_biopros_list$Result.gene.list) <- fuzzy_biopros_list$Name
 fuzzylist_bio <- fuzzy_biopros_list$Result.gene.list
-#View(fuzzylist_bio)
+View(fuzzy_biopros_list)
 
 fuzzy_cellpros <- data.frame(fuzzyClust %>% filter(Type == "Cellular Component"))
 fuzzy_cellpros_list <- as.list(fuzzy_cellpros)
@@ -569,10 +653,24 @@ fuzzylist_mol <- fuzzy_molpros_list$Result.gene.list
 #iew(fuzzylist_mol)
 
 all_fuzzy <- c()
-all_fuzzy$bio <- fuzzylist_bio
-all_fuzzy$cell <- fuzzylist_cell
-all_fuzzy$mol <- fuzzylist_mol
+all_fuzzy$bio1 <- clust1_bio
+all_fuzzy$bio2 <- clust2_bio
+all_fuzzy$bio4 <- clust4_bio
+#all_fuzzy$bio6 <- clust6_bio
 
+all_fuzzy$cell1 <- clust1_cell
+all_fuzzy$cell2 <- clust2_cell
+all_fuzzy$cell4 <- clust4_cell
+all_fuzzy$cell6 <- clust6_cell
+
+all_fuzzy$mol1 <- clust1_mol
+#all_fuzzy$mol2 <- clust2_mol
+all_fuzzy$mol4 <- clust4_mol
+#all_fuzzy$mol6 <- clust6_mol
+
+View(all_fuzzy)
+library(fgsea)
+ 
 fgsea_all_pos_fuzzy <- c()
 fgsea_all_neg_fuzzy <- c()
 fgsea_all_fuzzy <- c()
@@ -581,10 +679,10 @@ fgsea_all_fuzzy <- c()
 #length(ranks_log.neg)
 #ranks
 #f
-for (i in 1:3){
-fgsea_all_pos_fuzzy[[i]] = fgsea(pathways = all_fuzzy[[i]], stats = ranks_log.pos, minSize = 15,  nperm = 1000)
-fgsea_all_neg_fuzzy[[i]] = fgsea(pathways = all_fuzzy[[i]], stats = ranks_log.neg, minSize = 15,  nperm = 1000)
-fgsea_all_fuzzy[[i]] = fgsea(pathways = all_fuzzy[[i]], stats = ranks, minSize = 15,  nperm = 1000)
+for (i in 1:9){
+fgsea_all_pos_fuzzy[[i]] = fgsea(pathways = as.list(all_fuzzy[[i]]), stats = ranks_log.pos, minSize = 15,  nperm = 1000)
+fgsea_all_neg_fuzzy[[i]] = fgsea(pathways = as.list(all_fuzzy[[i]]), stats = ranks_log.neg, minSize = 15,  nperm = 1000)
+fgsea_all_fuzzy[[i]] = fgsea(pathways = as.list(all_fuzzy[[i]]), stats = ranks, minSize = 15,  nperm = 1000)
 }
 
 names(fgsea_all_pos_fuzzy) <- names(all_fuzzy)

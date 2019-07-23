@@ -1,0 +1,318 @@
+---
+title: "Tryp_schulz_FinalWriteup"
+author: "Lian Morales"
+date: "7/22/2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,cache = TRUE)
+
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+
+library("dplyr")
+library("tidyr")
+library("DESeq2")
+library(readr)
+library(devtools)
+library("DESeq2")
+library(readr)
+library(tidyr)
+library(ggplot2)
+library("vsn")
+library("hexbin")
+library("corrplot")
+library("tidyverse")
+library(stringr)
+library("Hmisc")
+library(cluster)
+library("mclust")
+
+#for GSEA
+library(doParallel)
+library(Biobase)
+library(biomaRt)
+library(fgsea)
+```
+
+#Table of Contents
+1. Background
+2. RNA-Seq Overview
+3. Start With the Raw Read Counts
+4. Quality Control
+5. Normalize All Counts
+6. Differential Expression Analysis
+7. Grouping Methods
+8. GO Analysis
+9. GSEA 
+
+#1. Background 
+Trypanosoma brucei (T. brucei) is a protozoan parasite that causes African Trypanosomiasis, commonly known as sleeping sickness, in humans and other mammals. This parasite is transmitted into mammals through an insect vector, the Tsetse fly. During its infectious cycle, the parasite maintains several life stages throughout changing environments of insect and mammal. Of those most studied are trypanosoma in the Bloodstream form and the procyclic form. 
+ These life cycle stages differ in their cell-surface landscapes, cytochrome-associated metabolism in the mitochondrion, endocytic activity, cell-cycle checkpoints, and morphology. These profound biological changes are associated with cognizable changes in the parasite’s transcriptome (Savage et al, 2016), however, very little is known about how gene expression is regulated in T. brucei (Siegel et al, 2010).
+
+Upon entering a mammal, T.brucei undergoes biological and cell surface landscape changes, marking the distinction between bloodstream forms and procyclic form. Cell surface variant surface glycoproteins (VSG) are the differences between these two forms. T.brucei BF VSGs provides security to human body immune response. By varying ~2,500 distinct surface glycoprotein genes, the parasite can evade human/mammal antibody response and continue to infect host. 
+
+A known protein bromodomain,which are important transcriptional regulators in T. brucei. Has veen suggested to control cell fate through recognition of epigenetic modifications of histones (Di Micco et al 2014). Inhibition of bromodomain has been found to prohibit certain bloodstream form function, such as mobility, reproduction, and transcriptional factors. Cell-surface landscapes, and decrease in virulence in the BF have lead to hypothesis of turning into the PF. Therefore, the conclusion arises that bromodomain maintains main BF function and thus have implications that by inhibiting this protein, the trypanosome undergoes the transition of BF to PF, which is less virulent in human/mammal host. 
+
+This summer, we have looked at the result of research studying the effects of bromodomain inhibition in the trypanosome PF. Building off of past research, and understanding   Bromodomain inhibition in BF leads to transcriptomic and epitope change towards PF, we  measured gene expression in WT PF and bromodomain-inhibited PF over 2 week time course, Determined differentially expressed genes (DEGs) between these two conditions, and finally help predict the effect of bromodomain inhibition on gene expression in insect form through data analysis.  
+
+
+#2. RNA-Seq Overview
+RNA Sequencing (RNA-seq) is a way to measure gene expression in an organism. The RNA is extracted and RNA reads (sequences of A, G, C, and U) are aligned to the organism's genome. The higher the number of reads mapped to a certain gene, the more we can say that gene is expressed. The gene annotations come in different features, CDS (coding sequence), ncRNA, rRNA and tRNA. IGR is another feature which represents intergenic regions, spaces between two genes.
+
+The features rRNA and tRNA are removed as much as possible from the RNA that gets sequenced, but you will likely still find reads of those two features (though hopefully in small proportions). If you're working in a data set where the feature type is not specified, and each gene appears only once, each gene's read count is likely the sum of sens and antisens CDS reads. To keep it simple, in this demonstration we'll work with that type of situation. 
+
+#3. Starting with the raw read counts
+
+```{r}
+ 
+TBcounts <- read.table("18-5-23_Proc_ibet_TC_for_deseq.txt",header = TRUE) %>% dplyr ::select(-ib_3h_1) 
+TBcounts <- TBcounts %>% dplyr :: distinct(gene, .keep_all = TRUE) 
+#NORMALIZATION BY DESEQ2
+rownames(TBcounts) <- TBcounts$gene #renames the gene row
+TBcounts <- TBcounts %>% dplyr :: select(-"gene") #this gets rid of the name gene in table
+#creating new data frame for DESeq to analyze
+tb_new <- data.frame(rownames = colnames(TBcounts),
+                     reps = as.factor(c(1,2,3,1,2,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3)),
+                    stage = as.factor(c(rep("noo_ib",3), rep("ib_3h", 2), rep("ib_6h",3), rep("ib_12h",3),rep("ib_24h",3),rep("ib_48h",3),rep("ib_3d",3),rep("ib_7d",3),rep("ib_10d",3),rep("ib_14d",3))))
+rownames(tb_new) <- tb_new$rownames
+tb_new <- tb_new %>% dplyr ::select(-rownames)
+```
+ As you can see in the code above, the breakdown of our data invlolves separating the repetitions of the samples and times, or stages of the experiment. In the first line, we see that the treated sample 1 at 3 hours(ib_3h_1) is not included in our data analysis. This is becuase it is an outlier determined by Professor Schulz. 
+ For DESeq, the alrogithm requires the input of a new data table that includes the conditions of the samples. Here, tb_new includes reps, which are the number of repetitions per sample, and stage, which states wheter a sample is treated, ib, or utreated, noo_ib, as well as the time at which this sample was taken. 
+#4. Quality Control 
+In order to gather accurate results, the data must be filtered. Here, we filtered genes that had expression levels > 0. 
+#5. Normalize Raw Counts
+
+```{r,eval = FALSE}
+##dds stands for the DESeq Data Set
+TBcounts <- TBcounts[rowSums(TBcounts) > 0 ,]
+ddsFullCountTable <- DESeqDataSetFromMatrix(countData = TBcounts,
+                                            colData = tb_new, 
+                                            design = ~ reps + stage)
+
+TBcounts_dds <- DESeq(ddsFullCountTable)
+#calculating norm counts
+##DESeq2 :: allows to specify where this fcn comes from
+normDE_counts <- DESeq2::counts(TBcounts_dds, normalized = TRUE) 
+normDE_counts_df <- data.frame(normDE_counts)
+ 
+```
+
+We must normalize the counts because each sample is sequenced at a different depth in RNA Seq. The sequencing depth of each sample refers to the total raw read count (column sum) of that sample. If we simply used the raw read counts from the data table given us by RNASeq, we wouldn't be comparing apples to apples because of that difference in sequencing depth.
+
+We use DESeq's normalization technique which is a standard method for this type of analysis. DESeq normalizes by taking the raw count of that gene at that sample over the geometric mean of the raw read count for that gene across all samples. The algoritm then does this for all genes, and you get a sample-specific vector of numbers. Take the median of that vector, and you have the "size factor" for your sample. Size factors essentially tell us how deeply the sample is sequenced, and the ratio of the size factors of two different samples is an approximation of the ratio of their sequencing depths. ALthough there are numerous normalization techinques, such as edgeR, TKPM, ImpulseDE2, maSigPro, DESeq2 was preferable to the fast run time, as well as the simple and easy input. 
+
+```{r}
+#COMPARING - DE ANALYSIS - FOR GSEA
+
+#comparing stages noo_ib and ib_12h --- the stage of non inhibited bromodomain at time 0 to inhibited bromodomain at time point 12 hours
+TBcountsRes <- results( TBcounts_dds ,contrast = c("stage","ib_12h", "noo_ib"))
+
+
+#resSig stands for the results of the signigicant genes expressed in comparison of noo_ib and ib_6h
+resSig <- TBcountsRes[ which(TBcountsRes$padj < 0.01 ), ]
+resSig <- resSig[complete.cases(resSig),]
+resSig$gene <- rownames(resSig)
+resSig$fcsign <- sign(resSig$log2FoldChange) #fcsign stands for the log2foldchange sign
+
+#creating negative and positive logfold change data sets
+resSig_log.pos <- resSig[which(resSig$fcsign != -1),]
+resSig_log.neg <- resSig[which(resSig$fcsign == -1),]
+```
+
+For our analysis, we are comparing the 0 time point to the 12 hour time point to make our analysis. We chose this time point because gene expression and impulse for trypanosome delta-bromodomain will occur earlier in the experiment. 
+For further analysis, we group the positive, and negative logfold2 changes. This is becuase if a gene has a negative logfold2change, it will be a down regulated gene, and if it has a positive logfold2change, it will be an up regulated gene.Therefore, by splitting up the data into up and down regulated genes, we can succesfully, and clearly interpert and understand our results.
+
+#7. Grouping Methods
+
+In order to answer the biological questions of our data, we need to take statisitcal steps to gather information in order to prove, or answer the hypothesis at hand. Clustering our data is an example of this method. Here we are taking the fuzzy cluster GO analysis results, and preparing them for GSEA pipeline. 
+(cluster code here)
+
+Similar to analyzing our data, we must analyze 2015 Savage data, using the same pipeline: 
+  1. Run raw read counts
+  2. Filter/Quality Control
+  3. Run Differental Gene Expression Analysis
+  
+
+```{r setup, eval = FALSE}
+#DESEQ ON SAVAGE DATA - THREE COMPARISON MGSA MGPV PVSA
+
+savagecounts <- read.table("18-5-24_dedup_Savage_deseq_counts.txt", header = TRUE)
+
+ 
+#Creating Data matrix 
+rownames(savagecounts) <- savagecounts$gene #renames the gene row
+savagecounts <- savagecounts %>% dplyr :: select(-"gene") #this gets rid of the name gene in table
+coldata <- data.frame(rownames = colnames(savagecounts),
+                    reps = as.factor(c(1, 2, 3, 1, 2, 3 ,4,
+                                     1, 2 ,3)), 
+                    stage = as.factor(c(rep("MG",3),rep("PV",4), rep("SA",3))))
+
+ddsFullCountTable <- DESeqDataSetFromMatrix(
+   countData = savagecounts,
+   colData = coldata,
+   design = ~ reps + stage)
+#DESeq2 getting DE genes
+savagecounts_dds <- DESeq(ddsFullCountTable )
+```  
+ 
+ As you can see in the above chunk, savage data was run through the same pipeline, creating a new data frame for DESeq2 with variables reps, which are the repetition of the samples, and stage, which now represents the location of where the trypanosome was sampled: Migut, Proventiculus, Salivary gland. 
+ 
+```{r}
+########CREATING GSEA LISTS FROM PATHWAY ANALYSIS OF SAV DE GENES
+#Comparisons of all 
+  #padj filter < 0.01
+  #abs(log2fold) filter > 1.5
+
+#MG and SA############################################################################
+savageRes_MgSa <- results( savagecounts_dds ,contrast = c("stage",  "MG","SA"))
+resSig <- savageRes_MgSa[ which(savageRes_MgSa$padj < 0.01 ), ]
+resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
+MgSa <- resSig
+head(MgSa) 
+###here we need to preform GO on these genes. Upload to tryp database under New search : metabolic pathways, and enter this txt file. Then, make sure to get is downloaded as a csv.
+  #GO/PATHWAY ANALYSIS
+ file_to_write<-paste(rownames(MgSa), collapse="\t")
+write.table(file_to_write, file="MgSa_gene") #look up in file directory, then delete quotation marks as well as the first rows that are not genes
+
+
+#MG and PV############################################################################
+savageRes_MgPv <- results( savagecounts_dds ,contrast = c("stage",  "MG","PV"))
+resSig <- savageRes_MgPv[ which(savageRes_MgPv$padj < 0.01 ), ]
+resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
+MgPv <- resSig
+
+#creating file for GO/PATHWAY ANALYSIS
+file_to_write<-paste(rownames(MgPv), collapse="\t")
+write.table(file_to_write, file="MgPv_gene")
+
+#PV and SA############################################################################
+savageRes_PvSa <- results( savagecounts_dds ,contrast = c("stage",  "PV","SA"))
+resSig <- savageRes_PvSa[ which(savageRes_PvSa$padj < 0.01 ), ]
+resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
+PvSa <- resSig
+
+#creating file for GO/PATHWAY ANALYSIS
+ file_to_write<-paste(rownames(PvSa), collapse="\t")
+write.table(file_to_write, file="PvSa_gene")
+
+
+#######MAKING RANKED METRIC LIST FOR SAVAGE DATA########
+
+#making big data set 'allcomp' with all comparisons to make code easier. Splitting after by 'comparison' 
+MGSA_df <- data.frame(Gene = rownames(MgSa), pvalue = MgSa$pvalue, padj = MgSa$padj, comparison = "MgSa",log2FoldChange= MgSa$log2FoldChange)
+MGPV_df <- data.frame(Gene = rownames(MgPv), pvalue = MgPv$pvalue, padj = MgPv$padj, comparison = "MgPv", log2FoldChange= MgPv$log2FoldChange)
+PVSA_df <- data.frame(Gene = rownames(PvSa), pvalue = PvSa$pvalue, padj = PvSa$padj, comparison = "PvSa",log2FoldChange= PvSa$log2FoldChange)
+ 
+sav_allcomp <- rbind(MGSA_df,MGPV_df, PVSA_df)
+
+#View(gsea_allcomp)
+
+sav_allcomp$logP <- -log10(sav_allcomp$pvalue) #calculating metric == -log10(pvalue)
+sav_allcomp <-  sav_allcomp[which(abs(sav_allcomp$logP) != 0),] #filtering out p-values 
+sav_allcomp$metric <- sav_allcomp$logP * abs(sav_allcomp$log2FoldChange)
+sav_gsea_allcomp <- sav_allcomp[,c("Gene","metric","comparison")]
+
+##filtering out big dataset -- creating data frames for each comparison 
+gsea_MgSa_df<- sav_gsea_allcomp %>% filter(comparison == "MgSa") %>% dplyr :: select(-comparison) 
+gsea_MgPv_df <- sav_gsea_allcomp %>% filter(comparison == "MgPv") %>% dplyr :: select(-comparison) 
+gsea_PvSa_df <- sav_gsea_allcomp %>% filter(comparison == "PvSa") %>% dplyr :: select(-comparison) 
+ 
+#creating stats and pathways for gsea
+  #MgSa
+gseaDat_MgSa <- filter(gsea_MgSa_df, !is.na(Gene))
+ranks_MgSa <- gsea_MgSa_df$metric
+names(ranks_MgSa) <- gseaDat_MgSa$Gene
+ranks_MgSa <- sort(ranks_MgSa)
+  #MgPv
+gseaDat_MgPv <- filter(gsea_MgPv_df, !is.na(Gene))
+ranks_MgPv <- gsea_MgPv_df$metric
+names(ranks_MgPv) <- gseaDat_MgPv$Gene
+ranks_MgPv <- sort(ranks_MgPv)
+#PvSa
+gseaDat_PvSa <- filter(gsea_PvSa_df, !is.na(Gene))
+ranks_PvSa <- gsea_PvSa_df$metric
+names(ranks_PvSa) <- gseaDat_PvSa$Gene
+ranks_PvSa <- sort(ranks_PvSa)
+
+```
+
+#8. GO analysis 
+In order to assign biological meaning to our results, we must understand the biological background behind the DE genes. GO analysis, or Gene Ontology analysis is a way to charachteize genes through assigning them to cell/organism specific pathways. Thus, by being able to group genes by biologocal funciton, we can better map and answer the hypothesis. 
+
+#9 GSEA analysis
+```{r}
+#GSEA -- MAKING DATA TABLES AND RUNNING FGSEA
+  #Making metric rank for 0-12h comparison
+
+#creating metric used for ranking DE of genes for TB schulz 0-12h timepoint contrast
+#resSig$fcsign <- sign(resSig$log2FoldChange) #fcsign stands for the log2foldchange sign
+#resSig <-  resSig[which(abs(resSig$fcsign) != 0),] #filtering out foldchanges = 0
+resSig$logP = -log10(resSig$pvalue) 
+resSig <-  resSig[which(abs(resSig$logP) != 0),] 
+resSig$metric= resSig$logP * abs(resSig$log2FoldChange)#calculating metric = log10(pvalue)/fcsign
+resSig$Gene <- rownames(resSig) #creating column Gene for dataframe
+gsea_schulz <-resSig[,c("Gene", "metric")]
+
+#Creating data frame from gsea_schulz for gsea
+gsea_schulz_df <- data.frame(gsea_schulz)
+rownames(gsea_schulz_df) <- NULL
+gsea_schulz_df <- gsea_schulz_df[which(gsea_schulz_df$metric != -Inf),] #removing metric where = -Inf
+gsea_schulz_df <- gsea_schulz_df[which(gsea_schulz_df$metric != Inf),]
+ 
+#creating stats and pathways for gsea
+gseaDat_schulz <- filter(gsea_schulz_df, !is.na(Gene))
+ranks <- gsea_schulz_df$metric
+names(ranks) <- gseaDat_schulz$Gene
+ranks <- sort(ranks)
+
+
+#####FOR LOG POS FOLD CHANGE######
+#CREATING RANKS AND DATA FRAME FOR GSEA
+#resSig_log.pos$fcsign <- sign(resSig_log.pos$log2FoldChange) #fcsign stands for the log2foldchange sign
+#resSig_log.pos <-  resSig_log.pos[which(abs(resSig_log.pos$fcsign) != 0),] #filtering out foldchanges = 0
+resSig_log.pos$logP = -log10(resSig_log.pos$pvalue) 
+resSig_log.pos <-  resSig_log.pos[which(abs(resSig_log.pos$logP) != 0),] 
+resSig_log.pos$metric= resSig_log.pos$logP * abs(resSig_log.pos$log2FoldChange) #metric = -log10(pvalue) *abs(log2FoldChange)
+resSig_log.pos$Gene <- rownames(resSig_log.pos) #creating column Gene for dataframe
+gsea_schulz_log.pos <-resSig_log.pos[,c("Gene", "metric")]
+ 
+  #creating data frame
+gsea_schulz_df_log.pos <- data.frame(gsea_schulz_log.pos)
+rownames(gsea_schulz_df_log.pos) <- NULL
+gsea_schulz_df_log.pos <- gsea_schulz_df_log.pos[which(gsea_schulz_df_log.pos$metric != -Inf),] #removing metric where = -Inf
+gsea_schulz_df_log.pos <- gsea_schulz_df_log.pos[which(gsea_schulz_df_log.pos$metric != Inf),]
+
+  #creating ranks for fgsea
+gseaDat_schulz_log.pos <- filter(gsea_schulz_df_log.pos, !is.na(Gene))
+ranks_log.pos <- gsea_schulz_df_log.pos$metric
+names(ranks_log.pos) <- gseaDat_schulz_log.pos$Gene
+ranks_log.pos <- sort(ranks_log.pos)
+
+#####FOR LOG NEG FOLD CHANGE######
+#CREATING RANKS AND DATA FRAME FOR GSEA
+#resSig_log.neg$fcsign <- sign(resSig_log.neg$log2FoldChange) #fcsign stands for the log2foldchange sign
+#resSig_log.neg <-  resSig_log.neg[which(abs(resSig_log.neg$fcsign) != 0),] #filtering out foldchanges = 0
+resSig_log.neg$logP <-  -log10(resSig_log.neg$pvalue)
+resSig_log.neg <-  resSig_log.neg[which(abs(resSig_log.neg$logP) != 0),] 
+resSig_log.neg$metric <-  resSig_log.neg$logP * abs(resSig_log.neg$log2FoldChange) #calculating metric = log10(pvalue) 
+resSig_log.neg$Gene <- rownames(resSig_log.neg) #creating column Gene for dataframe
+gsea_schulz_log.neg <-resSig_log.neg[,c("Gene", "metric")]
+
+  #creating data frame
+gsea_schulz_df_log.neg <- data.frame(gsea_schulz_log.neg)
+rownames(gsea_schulz_df_log.neg) <- NULL
+gsea_schulz_df_log.neg <- gsea_schulz_df_log.neg[which(gsea_schulz_df_log.neg$metric != -Inf),] #removing metric   where = -Inf
+gsea_schulz_df_log.neg <- gsea_schulz_df_log.neg[which(gsea_schulz_df_log.neg$metric != Inf),] 
+  #creating ranks for fgsea
+gseaDat_schulz_log.neg <- filter(gsea_schulz_df_log.neg, !is.na(Gene))
+ranks_log.neg <- gsea_schulz_df_log.neg$metric
+names(ranks_log.neg) <- gseaDat_schulz_log.neg$Gene
+ranks_log.neg <- sort(ranks_log.neg)
+```
+
