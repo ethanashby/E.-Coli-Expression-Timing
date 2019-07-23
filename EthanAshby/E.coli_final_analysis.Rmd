@@ -4,7 +4,7 @@ author: "Ethan Ashby"
 output: pdf_document
 ---
 ##Abstract
-
+  E. coli possesses a general stress response that coordinates a 
 
 ##Introduction
   E. coli possesses a general stress response to a variety of environmental stresses (Battesti *et al* 2011, Hengge 2011) ranging from osmotic shock to nutrient starvation. A key transcription factor coordinating this response is RpoS, which can regulate up to one quarter of the bacteria's genome (preliminary data from Prof Dan Stoebel). However, the RpoS regulon is not a static, 'switch-like' mechanism; rather, the RpoS regulon is a highly complex regulatory network influenced by several factors including the duration/degree of stress (Lange and Hengge-Aronis 1994), processes like transcription, translation, and mRNA degradation (Lange and Hengge-Aronis 1994), other proteins (Pratt and Silhavy 1998), competition between transcription factors for RNA polymerase (Farewell *et al.* 1998), and even strain type (Hryckowian *et al.* 2014, Chiang *et al.* 2011). 
@@ -30,14 +30,14 @@ library(gridExtra)
 library(grid)
 library(gridGraphics)
 library(reshape2)
+library(gdata)
 foo<-function(){}
 sigmoid_function<-function(b, h_0, h_1, t_1, t){
 h_0 + (h_1-h_0)*(1/(1+exp(1)^(-b*(t-t_1))))
 }
 
 #read in data
-setwd('/Users/ethanashby/Desktop/E. Coli')
-allCounts <- read.csv("/Users/ethanashby/Desktop/E. Coli/LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.tsv", header = T, sep = "\t")
+allCounts <- read.csv("LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.tsv", header = T, sep = "\t")
 
 ```
 
@@ -229,33 +229,30 @@ rownames(monoparamsdf)<-monoDE
 
 ###Ex. select one gene (talB), extract impulse fit, and generate 100 simulated trajectories based off that one gene. Then plot all the trajectories and data on same plot. Plot distributions of sigmoid params for simulated data as well. May take a couple mins
 set.seed(10)
-genes<-c("talB", sample(monoDE, 9))
-genes<-c("talB")
-pdf("talB.pdf", onefile = TRUE)
+genes<-c('gadB')
 for (k in 1:length(genes)){
 geneparams<-monoparamsdf[match(genes[k], rownames(monoparamsdf)),]
 
 ###extract means at each TP, scale by size factor
 size_facs<-sizeFactors(ecolidds)[grep("JH01", names(sizeFactors(ecolidds)))]
 means<-sigmoid_function(as.numeric(geneparams[1]), as.numeric(geneparams[2]), as.numeric(geneparams[3]), as.numeric(geneparams[4]), unique(times))
-repmeans<-c(rep(means, each=3))*size_facs
+repmeans<-c(rep(means, 3))
 
 #index to find dispersion for talB
 disp_index=match(genes[k], names(impulse_ecoli@vecDispersions))
 disp<-as.numeric(impulse_ecoli@vecDispersions[disp_index])
 
 #generate simulated read count data for 100 trajectories w/ proper NB noise
-differentially_expressed<-matrix(ncol=18, nrow=0)
-for (i in 1:100){
+differentially_expressed<-matrix(ncol=18, nrow=100)
+for (i in 1:18){
   expressions<-c()
-  for (j in 1:18){
-    expressions<-c(expressions, rnbinom(n=1, mu=repmeans[j], size=disp))
-  }
-  differentially_expressed<-rbind(differentially_expressed, expressions)
+  expressions<-c(expressions, rnbinom(n=100, mu=repmeans[i], size=disp))
+  differentially_expressed[,i]<-round(expressions*as.numeric(size_facs[i]))
 }
+  differentially_expressed<-as.matrix(differentially_expressed)
   colnames(differentially_expressed)<-colnames(ecolidds)[grep("JH01", colnames(ecolidds))]
   rownames(differentially_expressed)<-paste(rep("gene", 100), seq(1,100))
-
+  
   #set manual dispersions
   dispersions<-rep(disp, 100)
   names(dispersions)<-paste(rep("gene", 100), seq(1,100))
@@ -271,14 +268,9 @@ for (i in 1:100){
   sim_params_to_plot<-as.data.frame(sim_params_to_plot)
 
 #plot distributions of params
-b<-ggplot(sim_params_to_plot, aes(x=beta, y=..density..))+geom_density()+geom_vline(xintercept=a$beta, color="red")+ggtitle(paste("Param Dist. of 1000 E coli genes simulated from", genes[k], "w/ disp.=", round(disp, 2), sep=" "))+labs(subtitle=paste("Params: beta", round(as.numeric(a[1]), digits=2), ",", names(a[2]), round(as.numeric(a[2]), digits=2), ",", names(a[3]), round(as.numeric(a[3]), digits=2), ",", names(a[4]), round(as.numeric(a[4]), digits=2)))+theme(plot.title = element_text(size = 7, face = "bold"), plot.subtitle = element_text(size = 5, face = "italic"))
-c<-ggplot(sim_params_to_plot, aes(x=t, y=..density..))+geom_density()+geom_vline(xintercept=a$t, color="blue")+xlim(-50, 150)
-d<-ggplot(sim_params_to_plot, aes(x=h0-h1, y=..density..))+geom_density()+geom_vline(xintercept=a$h0-a$h1, color="green")
-
-#plot the initial trajectory on standard and log scales
-#par(mfrow=c(1,2))
-#plot(times[1:18], ecounts[match(genes[k], rownames(ecounts)), grep("JH01", colnames(ecounts))]*size_facs, main="Sigmoid fit of talB", xlab="time (mins)", ylab="counts")+lines(unique(times), means)
-#plot(times[1:18], log2(ecounts[match(genes[k], rownames(ecounts)), grep("JH01", colnames(ecounts))]*size_facs), main=paste("Sigmoid Fit of talB"), xlab="time (mins)", ylab="log2(counts)")+ lines(unique(times[1:18]), log2(means))
+b<-ggplot(sim_params_to_plot, aes(x=beta, y=..density..))+geom_density()+geom_vline(xintercept=geneparams$beta, color="red")+ggtitle(paste("Param Dist. of 100 E coli genes simulated from", genes[k], "w/ disp.=", round(disp, 2), sep=" "))+labs(subtitle=paste("Params: beta", round(as.numeric(geneparams[1]), digits=2), ",", names(geneparams[2]), round(as.numeric(geneparams[2]), digits=2), ",", names(geneparams[3]), round(as.numeric(geneparams[3]), digits=2), ",", names(geneparams[4]), round(as.numeric(geneparams[4]), digits=2)))+theme(plot.title = element_text(size = 7, face = "bold"), plot.subtitle = element_text(size = 5, face = "italic"))+xlim(round(range(monoparamsdf$beta)))
+c<-ggplot(sim_params_to_plot, aes(x=t, y=..density..))+geom_density()+geom_vline(xintercept=geneparams$t, color="blue")+xlim(round(range(monoparamsdf$t)))
+d<-ggplot(sim_params_to_plot, aes(x=h1-h0, y=..density..))+geom_density()+geom_vline(xintercept=geneparams$h1-geneparams$h0, color="green")+xlim(round(range(monoparamsdf$h1-monoparamsdf$h0)))
 
 #plot all expression trajectories on the same plot
 plot_trajectories<-matrix(nrow=6, ncol=101)
@@ -290,8 +282,10 @@ for (i in 1:100){
   plot_trajectories[,i+1]<-sigmoid_function(tmpsim$beta, tmpsim$h0, tmpsim$h1, tmpsim$t, unique(times))
 }
 
-counts_to_plot<-ecounts[match(genes[1], rownames(ecounts)),grep("JH01", colnames(ecounts))]*size_facs
-counts_to_plot<-rbind(counts_to_plot, differentially_expressed*size_facs)
+scores<-rep(cor(plot_trajectories, method="spearman")[,1], each=6)
+
+counts_to_plot<-ecounts[match(genes[k], rownames(ecounts)),grep("JH01", colnames(ecounts))]*size_facs
+counts_to_plot<-rbind(counts_to_plot, differentially_expressed)
 counts_to_plot<-as.data.frame(t(counts_to_plot))
 counts_to_plot$time<-times[1:18]
 
@@ -300,10 +294,11 @@ df <- melt(counts_to_plot ,  id.vars = 'time', variable.name = 'series')
 plot_trajectories<-as.data.frame(plot_trajectories)
 plot_trajectories$time<-unique(times)
 plot_trajectories <- melt(plot_trajectories ,  id.vars = 'time', variable.name = 'series')
-e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value))) + geom_line(aes(color=series), alpha=0.5, size=0.3)+ geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+theme(legend.position ="none")+ggtitle(paste(genes[k], ": Plots of all expression trajectories (init in black)", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value), alpha=0.3), color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=sens_peak, linetype="dashed", color="cyan", size=0.5) +geom_vline(xintercept=insens_peak, linetype="dashed", color="magenta", size=0.5)+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)
+plot_trajectories$score<-scores
+
+e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient(low = "yellow", high = "red", name="Score", breaks=waiver(), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(genes[k], ": Plots of all expression trajectories (init in black)", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)
 print(grid.arrange(b, c, d, ncol=1))
 print(e)}
-dev.off()
 ```
 
 ```{r Visualizing t params: mono, impulse, sens, insens, cache=TRUE}
@@ -312,8 +307,6 @@ dev.off()
 #########
 
 #Find sensitive and insensitive genes
-setwd("/Users/ethanashby/Desktop/E. Coli")
-library(gdata)
 sensitivity<-read.xls("Sensitivity.xlsx")
 #split the dataframe by sensitivity level
 sensitivity<-split(sensitivity, sensitivity$sensitivity)
@@ -325,20 +318,20 @@ insensitive<-sensitivity$insensitive
 sensvec<-na.omit(sensitive$geneName)
 sensitivedf<-as.data.frame(matrix(ncol=4, nrow=length(sensvec)))
 for (i in 1:length(sensvec)){
-  index=match(sensvec[i], rownames(sigparamsdf))
-  sensitivedf[i,]<-sigparamsdf[index,]}
+  index=match(sensvec[i], rownames(monoparamsdf))
+  sensitivedf[i,]<-monoparamsdf[index,]}
 colnames(sensitivedf)<-c("beta", "h0", "h1", "t")
 
 #insenstive params
 insensvec<-na.omit(insensitive$geneName)
 insensitivedf<-as.data.frame(matrix(ncol=4, nrow=length(insensvec)))
 for (i in 1:length(insensvec)){
-  index=match(insensvec[i], rownames(sigparamsdf))
-  insensitivedf[i,]<-sigparamsdf[index,]} 
+  index=match(insensvec[i], rownames(monoparamsdf))
+  insensitivedf[i,]<-monoparamsdf[index,]} 
 colnames(insensitivedf)<-c("beta", "h0", "h1", "t")
 
 #t params of montonic genes, looks somewhat bi/trimodal
-ggplot(monoparamsdf, aes(x=t))+geom_density(color="blue", fill="cyan", binwidth=0.5)+ xlim(50,75)+ggtitle("Distribution of sigmoid t params of 740 monotonic E. coli DEGs")
+ggplot(monoparamsdf, aes(x=t))+geom_density(color="blue", fill="cyan")+ xlim(50,75)+ggtitle("Distribution of sigmoid t params of 740 monotonic E. coli DEGs")
 
 #t1 params of transient genes... definitely bimodal
 transDE<-na.omit(DEtrans$Gene)
@@ -350,7 +343,7 @@ colnames(transparamsdf)<-c("beta", "h0", "h1", "h2", "t1", "t2")
 rownames(transparamsdf)<-transDE
 ggplot(transparamsdf, aes(x=t1))+geom_density(color="blue", fill="cyan", alpha=0.5)+ xlim(50,100)+ggtitle("Distribution of 40 impulse t1 params of monotonic E. coli DEGs")
 
-#pull out t/t1 params of all sensitive genes
+#pull out t/t1 params of all sensitive genes, plot distribution of onset times for sensitive
 sens_on<-matrix(ncol=1,nrow=0)
 for (i in 1:length(sensitive$geneName)){
   if (sensitive$geneName[i] %in% rownames(monoparamsdf)){
@@ -359,13 +352,14 @@ for (i in 1:length(sensitive$geneName)){
   if (sensitive$geneName[i] %in% rownames(transparamsdf)){
     index=match(sensitive$geneName[i], rownames(transparamsdf))
     sens_on<-rbind(sens_on, transparamsdf$t1[index])}
-  if (sensitive$geneName[i] %in% linear_genes){
+  if (sensitive$geneName[i] %in% linear$geneName){
     foo()
   }}
 sens_on<-as.data.frame(sens_on)
 colnames(sens_on)<-"On_times"
 ggplot(sens_on, aes(x=On_times))+geom_density(color="blue", fill="cyan", alpha=0.5)+ xlim(50,100)+ggtitle("Distribution of onset times for 90 Sensitive E. coli DEGs")
 
+#pull out t/t1 params of all insensitive genes, plot distribution of onset times for insensitive
 insens_on<-matrix(ncol=1,nrow=0)
 for (i in 1:length(insensitive$geneName)){
   if (insensitive$geneName[i] %in% rownames(monoparamsdf)){
@@ -374,18 +368,17 @@ for (i in 1:length(insensitive$geneName)){
   if (insensitive$geneName[i] %in% rownames(transparamsdf)){
     index=match(insensitive$geneName[i], rownames(transparamsdf))
     insens_on<-rbind(insens_on, transparamsdf$t1[index])}
-  if (insensitive$geneName[i] %in% linear_genes){
+  if (insensitive$geneName[i] %in% linear$geneName){
     foo()
   }}
 insens_on<-as.data.frame(insens_on)
 colnames(insens_on)<-"On_times"
 ggplot(insens_on, aes(x=On_times))+geom_density(color="red", fill="magenta", alpha=0.5)+ xlim(50,100)+ggtitle("Distribution of onset times for 18 Insensitive E. coli DEGs")
 
-#rbind all the onset times
+#rbind all the onset times, plot densities of onset times for both sensitive and insensitive
 sens_on$type<-rep("Sensitive", dim(sens_on)[1])
 insens_on$type<-rep("Insensitive", dim(insens_on)[1])
 on_times<-rbind(sens_on, insens_on)
-
 #plot the densities of the onset times
 ggplot(on_times, aes(x=On_times, color=type, fill=type))+geom_density(alpha=0.5)+ xlim(50,100)+ggtitle("Distribution of onset times for 90 Sensitive & 18 Insensitive E. coli DEGs")
 
@@ -399,36 +392,33 @@ insens_peak<-density(insens_on$On_times)$x[which.max(density(insens_on$On_times)
 ```
 
 ```{r Sigmoid Sensitive/Insenstive Sims, cache=TRUE}
-#pull out 3 monotonic sensitive and 3 monotonic insensitive genes
+#pull out 5 monotonic sensitive, 5 monotonic insensitive genes, 1 monotonic linear gene
 set.seed(11)
-genes<-c(as.vector(sensitive_genes[c(1,3,4)]), as.vector(insensitive_genes[c(5, 7, 8)]))
+genes<-c(as.vector(sample(sensitive$geneName[sensitive$geneName %in% monoDE], 5)), as.vector(sample(insensitive$geneName[insensitive$geneName %in% monoDE], 5)), as.vector(sample(linear$geneName[linear$geneName %in% monoDE], 1)))
 pdf("sens_insens_linear.pdf", onefile = TRUE)
 for (k in 1:length(genes)){
-  if (is.na(monoparamsdf[match(genes[k], rownames(monoparamsdf)),])==TRUE){foo()}
-  else{
-  geneparams<-monoparamsdf[match(genes[k], rownames(monoparamsdf)),]
+geneparams<-monoparamsdf[match(genes[k], rownames(monoparamsdf)),]
 
 ###extract means at each TP, scale by size factor
 size_facs<-sizeFactors(ecolidds)[grep("JH01", names(sizeFactors(ecolidds)))]
 means<-sigmoid_function(as.numeric(geneparams[1]), as.numeric(geneparams[2]), as.numeric(geneparams[3]), as.numeric(geneparams[4]), unique(times))
-repmeans<-c(rep(means, each=3))*size_facs
+repmeans<-c(rep(means, 3))
 
 #index to find dispersion for talB
 disp_index=match(genes[k], names(impulse_ecoli@vecDispersions))
 disp<-as.numeric(impulse_ecoli@vecDispersions[disp_index])
 
 #generate simulated read count data for 100 trajectories w/ proper NB noise
-differentially_expressed<-matrix(ncol=18, nrow=0)
-for (i in 1:100){
+differentially_expressed<-matrix(ncol=18, nrow=100)
+for (i in 1:18){
   expressions<-c()
-  for (j in 1:18){
-    expressions<-c(expressions, rnbinom(n=1, mu=repmeans[j], size=disp))
-  }
-  differentially_expressed<-rbind(differentially_expressed, expressions)
+  expressions<-c(expressions, rnbinom(n=100, mu=repmeans[i], size=disp))
+  differentially_expressed[,i]<-round(expressions*as.numeric(size_facs[i]))
 }
+  differentially_expressed<-as.matrix(differentially_expressed)
   colnames(differentially_expressed)<-colnames(ecolidds)[grep("JH01", colnames(ecolidds))]
   rownames(differentially_expressed)<-paste(rep("gene", 100), seq(1,100))
-
+  
   #set manual dispersions
   dispersions<-rep(disp, 100)
   names(dispersions)<-paste(rep("gene", 100), seq(1,100))
@@ -444,14 +434,9 @@ for (i in 1:100){
   sim_params_to_plot<-as.data.frame(sim_params_to_plot)
 
 #plot distributions of params
-b<-ggplot(sim_params_to_plot, aes(x=beta, y=..density..))+geom_density()+geom_vline(xintercept=a$beta, color="red")+ggtitle(paste("Param Dist. of 1000 E coli genes simulated from", genes[k], "w/ disp.=", round(disp, 2), sep=" "))+labs(subtitle=paste("Params: beta", round(as.numeric(a[1]), digits=2), ",", names(a[2]), round(as.numeric(a[2]), digits=2), ",", names(a[3]), round(as.numeric(a[3]), digits=2), ",", names(a[4]), round(as.numeric(a[4]), digits=2)))+theme(plot.title = element_text(size = 7, face = "bold"), plot.subtitle = element_text(size = 5, face = "italic"))
-c<-ggplot(sim_params_to_plot, aes(x=t, y=..density..))+geom_density()+geom_vline(xintercept=a$t, color="blue")+xlim(-50, 150)
-d<-ggplot(sim_params_to_plot, aes(x=h0-h1, y=..density..))+geom_density()+geom_vline(xintercept=a$h0-a$h1, color="green")
-
-#plot the initial trajectory on standard and log scales
-#par(mfrow=c(1,2))
-#plot(times[1:18], ecounts[match(genes[k], rownames(ecounts)), grep("JH01", colnames(ecounts))]*size_facs, main="Sigmoid fit of talB", xlab="time (mins)", ylab="counts")+lines(unique(times), means)
-#plot(times[1:18], log2(ecounts[match(genes[k], rownames(ecounts)), grep("JH01", colnames(ecounts))]*size_facs), main=paste("Sigmoid Fit of talB"), xlab="time (mins)", ylab="log2(counts)")+ lines(unique(times[1:18]), log2(means))
+b<-ggplot(sim_params_to_plot, aes(x=beta, y=..density..))+geom_density()+geom_vline(xintercept=geneparams$beta, color="red")+ggtitle(paste("Param Dist. of 100 E coli genes simulated from", genes[k], "w/ disp.=", round(disp, 2), sep=" "))+labs(subtitle=paste("Params: beta", round(as.numeric(geneparams[1]), digits=2), ",", names(geneparams[2]), round(as.numeric(geneparams[2]), digits=2), ",", names(geneparams[3]), round(as.numeric(geneparams[3]), digits=2), ",", names(geneparams[4]), round(as.numeric(geneparams[4]), digits=2)))+theme(plot.title = element_text(size = 14, face = "bold"), plot.subtitle = element_text(size = 12, face = "italic"))+xlim(round(range(monoparamsdf$beta)))
+c<-ggplot(sim_params_to_plot, aes(x=t, y=..density..))+geom_density()+geom_vline(xintercept=geneparams$t, color="blue")+xlim(50,100)
+d<-ggplot(sim_params_to_plot, aes(x=h1-h0, y=..density..))+geom_density()+geom_vline(xintercept=geneparams$h1-geneparams$h0, color="green")+xlim(round(range(monoparamsdf$h1-monoparamsdf$h0)))
 
 #plot all expression trajectories on the same plot
 plot_trajectories<-matrix(nrow=6, ncol=101)
@@ -463,8 +448,10 @@ for (i in 1:100){
   plot_trajectories[,i+1]<-sigmoid_function(tmpsim$beta, tmpsim$h0, tmpsim$h1, tmpsim$t, unique(times))
 }
 
-counts_to_plot<-ecounts[match(genes[1], rownames(ecounts)),grep("JH01", colnames(ecounts))]*size_facs
-counts_to_plot<-rbind(counts_to_plot, differentially_expressed*size_facs)
+scores<-rep(cor(plot_trajectories, method="spearman")[,1], each=6)
+
+counts_to_plot<-ecounts[match(genes[k], rownames(ecounts)),grep("JH01", colnames(ecounts))]*size_facs
+counts_to_plot<-rbind(counts_to_plot, differentially_expressed)
 counts_to_plot<-as.data.frame(t(counts_to_plot))
 counts_to_plot$time<-times[1:18]
 
@@ -473,10 +460,87 @@ df <- melt(counts_to_plot ,  id.vars = 'time', variable.name = 'series')
 plot_trajectories<-as.data.frame(plot_trajectories)
 plot_trajectories$time<-unique(times)
 plot_trajectories <- melt(plot_trajectories ,  id.vars = 'time', variable.name = 'series')
-e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value))) + geom_line(aes(color=series), alpha=0.5, size=0.3)+ geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+theme(legend.position ="none")+ggtitle(paste(genes[k], ": Plots of all expression trajectories (init in black)", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value), alpha=0.3), color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=sens_peak, linetype="dashed", color="cyan", size=0.5) +geom_vline(xintercept=insens_peak, linetype="dashed", color="magenta", size=0.5)+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)
+plot_trajectories$score<-scores
+
+e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient(low = "yellow", high = "red", name="Score", breaks=waiver(), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(genes[k], ": Plots of all expression trajectories (init in black)", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)+geom_vline(xintercept=sens_peak, linetype="dashed", color="blue")+geom_vline(xintercept=insens_peak, linetype="dashed", color="red")
 print(grid.arrange(b, c, d, ncol=1))
-print(e)}}
-dev.off()
+print(e)}
 ```
 
+```{r}
+#Visualize some of prof Stoebel's "genes of interest"
+set.seed(11)
+genesofinterest<-read.table("genesOfInterest.txt", sep="\t", header=TRUE)$geneName
+genes<-as.vector(sample(genesofinterest, 5))
+pdf("GOI_Sim.pdf", onefile = TRUE)
+for (k in 1:length(genes)){
+geneparams<-monoparamsdf[match(genes[k], rownames(monoparamsdf)),]
+
+###extract means at each TP, scale by size factor
+size_facs<-sizeFactors(ecolidds)[grep("JH01", names(sizeFactors(ecolidds)))]
+means<-sigmoid_function(as.numeric(geneparams[1]), as.numeric(geneparams[2]), as.numeric(geneparams[3]), as.numeric(geneparams[4]), unique(times))
+repmeans<-c(rep(means, 3))
+
+#index to find dispersion for talB
+disp_index=match(genes[k], names(impulse_ecoli@vecDispersions))
+disp<-as.numeric(impulse_ecoli@vecDispersions[disp_index])
+
+#generate simulated read count data for 100 trajectories w/ proper NB noise
+differentially_expressed<-matrix(ncol=18, nrow=100)
+for (i in 1:18){
+  expressions<-c()
+  expressions<-c(expressions, rnbinom(n=100, mu=repmeans[i], size=disp))
+  differentially_expressed[,i]<-round(expressions*as.numeric(size_facs[i]))
+}
+  differentially_expressed<-as.matrix(differentially_expressed)
+  colnames(differentially_expressed)<-colnames(ecolidds)[grep("JH01", colnames(ecolidds))]
+  rownames(differentially_expressed)<-paste(rep("gene", 100), seq(1,100))
+  
+  #set manual dispersions
+  dispersions<-rep(disp, 100)
+  names(dispersions)<-paste(rep("gene", 100), seq(1,100))
+  
+  #fit impulse models
+  sim_sigmoid<-ImpulseDE2::runImpulseDE2(differentially_expressed, sigmoid_design, boolCaseCtrl=FALSE, vecConfounders=NULL, boolIdentifyTransients=TRUE, scaNProc=12, scaQThres = 0.01, vecDispersionsExternal = dispersions, vecSizeFactorsExternal = size_facs)
+
+  #extract simulated params
+  sim_params_to_plot<-matrix(ncol=4, nrow=100)
+  for (i in 1:100){
+    sim_params_to_plot[i,]<-sim_sigmoid@lsModelFits[["case"]][[rownames(sim_sigmoid$dfImpulseDE2Results, 100)[i]]][["lsSigmoidFit"]][["vecSigmoidParam"]]}
+  colnames(sim_params_to_plot)<-c("beta", "h0", "h1", "t")
+  sim_params_to_plot<-as.data.frame(sim_params_to_plot)
+
+#plot distributions of params
+b<-ggplot(sim_params_to_plot, aes(x=beta, y=..density..))+geom_density()+geom_vline(xintercept=geneparams$beta, color="red")+ggtitle(paste("Param Dist. of 100 E coli genes simulated from", genes[k], "w/ disp.=", round(disp, 2), sep=" "))+labs(subtitle=paste("Params: beta", round(as.numeric(geneparams[1]), digits=2), ",", names(geneparams[2]), round(as.numeric(geneparams[2]), digits=2), ",", names(geneparams[3]), round(as.numeric(geneparams[3]), digits=2), ",", names(geneparams[4]), round(as.numeric(geneparams[4]), digits=2)))+theme(plot.title = element_text(size = 14, face = "bold"), plot.subtitle = element_text(size = 12, face = "italic"))+xlim(round(range(monoparamsdf$beta)))
+c<-ggplot(sim_params_to_plot, aes(x=t, y=..density..))+geom_density()+geom_vline(xintercept=geneparams$t, color="blue")+xlim(50,100)
+d<-ggplot(sim_params_to_plot, aes(x=h1-h0, y=..density..))+geom_density()+geom_vline(xintercept=geneparams$h1-geneparams$h0, color="green")+xlim(round(range(monoparamsdf$h1-monoparamsdf$h0)))
+
+#plot all expression trajectories on the same plot
+plot_trajectories<-matrix(nrow=6, ncol=101)
+rownames(plot_trajectories)<-unique(times)
+colnames(plot_trajectories)<-c("init", paste(rep("gene", 100), seq(1,100)))
+plot_trajectories[,1]<-means
+for (i in 1:100){
+  tmpsim<-sim_params_to_plot[i,]
+  plot_trajectories[,i+1]<-sigmoid_function(tmpsim$beta, tmpsim$h0, tmpsim$h1, tmpsim$t, unique(times))
+}
+
+scores<-rep(cor(plot_trajectories, method="spearman")[,1], each=6)
+
+counts_to_plot<-ecounts[match(genes[k], rownames(ecounts)),grep("JH01", colnames(ecounts))]*size_facs
+counts_to_plot<-rbind(counts_to_plot, differentially_expressed)
+counts_to_plot<-as.data.frame(t(counts_to_plot))
+counts_to_plot$time<-times[1:18]
+
+df <- melt(counts_to_plot ,  id.vars = 'time', variable.name = 'series')
+
+plot_trajectories<-as.data.frame(plot_trajectories)
+plot_trajectories$time<-unique(times)
+plot_trajectories <- melt(plot_trajectories ,  id.vars = 'time', variable.name = 'series')
+plot_trajectories$score<-scores
+
+e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient(low = "yellow", high = "red", name="Score", breaks=waiver(), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(genes[k], ": Plots of all expression trajectories (init in black)", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)+geom_vline(xintercept=sens_peak, linetype="dashed", color="blue")+geom_vline(xintercept=insens_peak, linetype="dashed", color="red")
+print(grid.arrange(b, c, d, ncol=1))
+print(e)}
+```
 
