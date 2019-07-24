@@ -55,7 +55,7 @@ resSig$gene <- norm_counts$gene
 
 resSig <- resSig[ which(resSig$padj <.01 ), ]
 
-resSig <- resSig[ which(abs(resSig$log2FoldChange) > 1), ]
+#resSig <- resSig[ which(abs(resSig$log2FoldChange) > 1), ]
 
 ind <- match(norm_counts$gene,resSig$gene)
 
@@ -232,10 +232,10 @@ impulse_counts_ave %>%
 ```{r}
 
 DEG_list <- norm_counts %>%
-  select(noo_ib_1,noo_ib_2,noo_ib_3,ib_3h_2, ib_3h_3,ib_6h_1,ib_6h_2,ib_6h_3,ib_12h_1,ib_12h_2,ib_12h_3, padj, pval, log2FoldChange, gene)
+  select(noo_ib_1,noo_ib_2,noo_ib_3,ib_3h_2, ib_3h_3,ib_6h_1,ib_6h_2,ib_6h_3,ib_12h_1,ib_12h_2,ib_12h_3)
 
 DEG_counts <- DEG_list %>%
-  select(noo_ib_1,noo_ib_2,noo_ib_3,ib_3h_2, ib_3h_3, ib_6h_1,ib_6h_2,ib_6h_3,ib_12h_1,ib_12h_2,ib_12h_3,gene)
+  select(noo_ib_1,noo_ib_2,noo_ib_3,ib_3h_2, ib_3h_3, ib_6h_1,ib_6h_2,ib_6h_3,ib_12h_1,ib_12h_2,ib_12h_3)
 
 rownames(DEG_counts) <- DEG_counts$gene
 
@@ -362,6 +362,7 @@ cluster_1_mf <- read_delim("cluster_1_mf.csv",
   mutate("Type" = "Molecular Function")
 cluster_1 <- bind_rows(cluster_1_bp, cluster_1_cc, cluster_1_mf)
 cluster_1 <- cluster_1 %>% filter(cluster_1$Benjamini < .05)
+cluster_1 <- cluster_1 %>% filter(cluster_1$`Fold enrichment` > 1.5)
 cluster_1$`Result gene list` <- strsplit(cluster_1$`Result gene list`, ",")
 cluster_1_list_bp <- cluster_1 %>%
   filter(Type == "Biological Processes") %>%
@@ -380,6 +381,7 @@ cluster_2_mf <- read_delim("cluster_2_mf.csv",
   mutate("Type" = "Molecular Function")
 cluster_2 <- bind_rows(cluster_2_bp, cluster_2_cc, cluster_2_mf)
 cluster_2 <- cluster_2 %>% filter(cluster_2$Benjamini < .05)
+cluster_2 <- cluster_2 %>% filter(cluster_2$`Fold enrichment` > 1.5)
 cluster_2$`Result gene list` <- strsplit(cluster_2$`Result gene list`, ",")
 cluster_2_list_bp <- cluster_2 %>%
   filter(Type == "Biological Processes") %>%
@@ -398,6 +400,7 @@ cluster_3_mf <- read_delim("cluster_3_mf.csv",
   mutate("Type" = "Molecular Function")
 cluster_3 <- bind_rows(cluster_3_bp, cluster_3_cc, cluster_3_mf)
 cluster_3 <- cluster_3 %>% filter(cluster_3$Benjamini < .05)
+cluster_3 <- cluster_3 %>% filter(cluster_3$`Fold enrichment` > 1.5)
 cluster_3$`Result gene list` <- strsplit(cluster_3$`Result gene list`, ",")
 cluster_3_list_bp <- cluster_3 %>%
   filter(Type == "Biological Processes") %>%
@@ -414,6 +417,15 @@ cluster_4_cc <- read_delim("cluster_4_cc.csv",
 cluster_4_mf <- read_delim("cluster_4_mf.csv", 
     "\t", escape_double = FALSE, trim_ws = TRUE) %>%
   mutate("Type" = "Molecular Function")
+cluster_4 <- bind_rows(cluster_4_bp, cluster_4_cc, cluster_4_mf)
+cluster_4 <- cluster_4 %>% filter(cluster_4$Benjamini < .05)
+cluster_4 <- cluster_4 %>% filter(cluster_4$`Fold enrichment` > 1.5)
+cluster_4$`Result gene list` <- strsplit(cluster_4$`Result gene list`, ",")
+cluster_4_list_bp <- cluster_4 %>%
+  filter(Type == "Biological Processes") %>%
+  as.list()
+names(cluster_4_list_bp$`Result gene list`) <- cluster_4_list_bp$Name
+cluster_4_list_bp <- cluster_4_list_bp$`Result gene list`
 
 cluster_5_bp <- read_delim("cluster_5.csv", 
     "\t", escape_double = FALSE, trim_ws = TRUE) %>%
@@ -424,6 +436,15 @@ cluster_5_cc <- read_delim("cluster_5_cc.csv",
 cluster_5_mf <- read_delim("cluster_5_mf.csv", 
     "\t", escape_double = FALSE, trim_ws = TRUE) %>%
   mutate("Type" = "Molecular Function")
+cluster_5 <- bind_rows(cluster_5_bp, cluster_5_cc, cluster_5_mf)
+cluster_5 <- cluster_5 %>% filter(cluster_5$Benjamini < .05)
+cluster_5 <- cluster_5 %>% filter(cluster_5$`Fold enrichment` > 1.5)
+cluster_5$`Result gene list` <- strsplit(cluster_5$`Result gene list`, ",")
+cluster_5_list_bp <- cluster_5 %>%
+  filter(Type == "Biological Processes") %>%
+  as.list()
+names(cluster_5_list_bp$`Result gene list`) <- cluster_5_list_bp$Name
+cluster_5_list_bp <- cluster_5_list_bp$`Result gene list`
 
 cluster_6_bp <- read_delim("cluster_6.csv", 
     "\t", escape_double = FALSE, trim_ws = TRUE) %>%
@@ -434,18 +455,30 @@ cluster_6_cc <- read_delim("cluster_6_cc.csv",
 cluster_6_mf <- read_delim("cluster_6_mf.csv", 
     "\t", escape_double = FALSE, trim_ws = TRUE) %>%
   mutate("Type" = "Molecular Function")
-
-
-  
-###########CC
+cluster_6 <- bind_rows(cluster_6_bp, cluster_6_cc, cluster_6_mf)
+cluster_6 <- cluster_6 %>% filter(cluster_6$Benjamini < .05)
+cluster_6 <- cluster_6 %>% filter(cluster_6$`Fold enrichment` > 1.5)
+cluster_6$`Result gene list` <- strsplit(cluster_6$`Result gene list`, ",")
+cluster_6_list_bp <- cluster_6 %>%
+  filter(Type == "Biological Processes") %>%
+  as.list()
+names(cluster_6_list_bp$`Result gene list`) <- cluster_6_list_bp$Name
+cluster_6_list_bp <- cluster_6_list_bp$`Result gene list`
 
 GO_clusters <- list(data.frame(cluster_1), data.frame(cluster_2), data.frame(cluster_3), data.frame(cluster_4), data.frame(cluster_5), data.frame(cluster_6))
 
+file_names <- c("GO_cluster1", "GO_cluster2", "GO_cluster3", "GO_cluster4", "GO_cluster5", "GO_cluster6")
+
+### START HERE
+for (i in 1:6) {
+  mydata <- 
+  write.table(mydata, paste(file_names[i], ".csv"), sep="\t")
+}
 
 counts_sum_norm_head %>%
-  ggplot(aes(x=time, y=avecount, group=gene, color = as.factor(cluster))) +
+  ggplot(aes(x=time, y=(avecount), group=gene, color = as.factor(cluster))) +
   geom_line() +
-  ylim(0,10000) +
+  ylim(0,5000) +
   facet_wrap(~cluster) +
   theme(legend.position = "none")
 ```
