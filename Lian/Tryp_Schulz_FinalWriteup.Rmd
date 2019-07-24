@@ -2,18 +2,14 @@
 title: "Tryp_schulz_FinalWriteup"
 author: "Lian Morales"
 date: "7/22/2019"
-output:
-  pdf_document: default
-  html_document: default
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,cache = TRUE)
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
-
-
+#tinytex::install_tinytex()
 library("dplyr")
 library("tidyr")
 library("DESeq2")
@@ -62,9 +58,7 @@ This summer, we have looked at the result of research studying the effects of br
 
 
 #2. RNA-Seq Overview
-RNA Sequencing (RNA-seq) is a way to measure gene expression in an organism. The RNA is extracted and RNA reads (sequences of A, G, C, and U) are aligned to the organism's genome. The higher the number of reads mapped to a certain gene, the more we can say that gene is expressed. The gene annotations come in different features, CDS (coding sequence), ncRNA, rRNA and tRNA. IGR is another feature which represents intergenic regions, spaces between two genes.
-
-The features rRNA and tRNA are removed as much as possible from the RNA that gets sequenced, but you will likely still find reads of those two features (though hopefully in small proportions). If you're working in a data set where the feature type is not specified, and each gene appears only once, each gene's read count is likely the sum of sens and antisens CDS reads. To keep it simple, in this demonstration we'll work with that type of situation. 
+RNA Sequencing (RNA-seq) is a way to measure gene expression in an organism. The RNA is extracted and RNA reads (sequences of A, G, C, and U) are aligned to the organism's genome. The higher the number of reads mapped to a certain gene, the more we can say that gene is expressed.  
 
 #3. Starting with the raw read counts
 
@@ -88,7 +82,7 @@ tb_new <- tb_new %>% dplyr ::select(-rownames)
 In order to gather accurate results, the data must be filtered. Here, we filtered genes that had expression levels > 0. 
 #5. Normalize Raw Counts
 
-```{r,eval = FALSE}
+```{r, include = FALSE}
 ##dds stands for the DESeq Data Set
 TBcounts <- TBcounts[rowSums(TBcounts) > 0 ,]
 ddsFullCountTable <- DESeqDataSetFromMatrix(countData = TBcounts,
@@ -107,39 +101,55 @@ We must normalize the counts because each sample is sequenced at a different dep
 
 We use DESeq's normalization technique which is a standard method for this type of analysis. DESeq normalizes by taking the raw count of that gene at that sample over the geometric mean of the raw read count for that gene across all samples. The algoritm then does this for all genes, and you get a sample-specific vector of numbers. Take the median of that vector, and you have the "size factor" for your sample. Size factors essentially tell us how deeply the sample is sequenced, and the ratio of the size factors of two different samples is an approximation of the ratio of their sequencing depths. ALthough there are numerous normalization techinques, such as edgeR, TKPM, ImpulseDE2, maSigPro, DESeq2 was preferable to the fast run time, as well as the simple and easy input. 
 
+Our analysis compares the 0 time point to the 12 hour time point, because we are more interested in earlier time points due to the increased gene expression shown from 0-12 hours. 
+
+For DESeq2, the results for a comparison of any two levels of a variable can be calculated using the contrast argument to the results function. The function requires three values: the name of the variable, the name of the level in the numerator, and the name of the level in the denominator. We will complete the same analysis (not shown) on comparisons MG/PV and PV/SA 
+Here we extract results for the log2 of the fold change of treated 12h and untreated 0h, ib_12h / noo_ib. 
+
+
+
 ```{r}
 #COMPARING - DE ANALYSIS - FOR GSEA
 
 #comparing stages noo_ib and ib_12h --- the stage of non inhibited bromodomain at time 0 to inhibited bromodomain at time point 12 hours
 TBcountsRes <- results( TBcounts_dds ,contrast = c("stage","ib_12h", "noo_ib"))
-
-
-#resSig stands for the results of the signigicant genes expressed in comparison of noo_ib and ib_6h
-resSig <- TBcountsRes[ which(TBcountsRes$padj < 0.01 ), ]
-resSig <- resSig[complete.cases(resSig),]
-resSig$gene <- rownames(resSig)
-resSig$fcsign <- sign(resSig$log2FoldChange) #fcsign stands for the log2foldchange sign
-
-#creating negative and positive logfold change data sets
-resSig_log.pos <- resSig[which(resSig$fcsign != -1),]
-resSig_log.neg <- resSig[which(resSig$fcsign == -1),]
+TBcountsRes
 ```
 
-For our analysis, we are comparing the 0 time point to the 12 hour time point to make our analysis. We chose this time point because gene expression and impulse for trypanosome delta-bromodomain will occur earlier in the experiment. 
-For further analysis, we group the positive, and negative logfold2 changes. This is becuase if a gene has a negative logfold2change, it will be a down regulated gene, and if it has a positive logfold2change, it will be an up regulated gene.Therefore, by splitting up the data into up and down regulated genes, we can succesfully, and clearly interpert and understand our results.
+In order to correct for multiple testing, DESeq2 uses Benjamini-Hochberg (BH) adjustment, which is a method that decreases the false discovery rate(FDR). Due to the fact that small p-values often happen by chance, the tool helps remove the possibility of falsely rejecting the try null hypothesis. For example, if one had a very low p-value(<.05), it would mean that there is only a 5% chance that you would get your observed result granted the null was true. Thus, with a pvalue of 0.05, it is highly unlikely that your null is incorrect. So, in order to eliminate the possibility of FDR, the BH adjustment adjusts for the probability of a FDR. For example, if one called all genes that are signigicant are those with a p value less than or equal to a gene’s p value threshold, the BH method calculates the fraction of false positives among those genes. These values, called the BH-adjusted p values, are given in the column padj of the results object.
 
-#7. Grouping Methods
+For our data, we considered a fraction of 1% false positives acceptable, due to the accuracy we need in the DE genes for Schulz dataset. We consider all genes with an adjusted p value below 1%=0.01 as significant.  
+ 
+For further analysis, we group the positive, and negative logfold2 changes. This is because down regulated genes have negative logfold2change and upregulated genes have a positive logfold2change. Therefore, by splitting up the data into up and down regulated genes, we can succesfully, and more clearly identify biological pathways for future analysis, such as Gene Ontology and Gene Set Enrichment Analysis.
+```{r}
+#resSig_012 stands for the results of the signigicant genes expressed in comparison of noo_ib and ib_12h
+resSig_012 <- TBcountsRes[ which(TBcountsRes$padj < 0.01 ), ]
+resSig_012 <- resSig_012[complete.cases(resSig_012),]
+resSig_012$gene <- rownames(resSig_012)
+resSig_012$fcsign <- sign(resSig_012$log2FoldChange) #fcsign stands for the log2foldchange sign
+resSig_012
 
-In order to answer the biological questions of our data, we need to take statisitcal steps to gather information in order to prove, or answer the hypothesis at hand. Clustering our data is an example of this method. Here we are taking the fuzzy cluster GO analysis results, and preparing them for GSEA pipeline. 
-(cluster code here)
+#creating negative and positive logfold change data sets
+resSig_log.pos <- resSig_012[which(resSig_012$fcsign != -1),]
+resSig_log.neg <- resSig_012[which(resSig_012$fcsign == -1),]
+```
+
+#8. Savage Data - DESeq2 pipeline
+
+In order to answer Schulz's question of bromodomain inhibition impact on trypanosome PF, we must compare our results to Savage 2015 data, which includes trypanosoma DE genes gathered from enviromental based experiments in the Tsetse fly. The results of Savage 2015 data details the biological change in trypanosoma based on enviromental conditions. By comparing our DE genes to Savage enviromnet based DE genes, we can come to conclusions about what form the bromodomain inhibited PF will revert to, if at all. 
+By comparing MG to SA, the resulting DE genes are those that exemplify the difference between BF and PF. These genes are very important in our understanding of the changes that Schulz samples undergo. For example, if there is a high amount of correlation between DE genes in MG to SA and 0h - 12h, we can hypothesize that bromodomain inhibition in PF causes a revert to the BF. 
+
+Thus, by completing DESeq and future biological analysis on Savage data, we can come to a more concrete conclusion of bromodomain function in trypanosoma. 
+ 
 
 Similar to analyzing our data, we must analyze 2015 Savage data, using the same pipeline: 
   1. Run raw read counts
   2. Filter/Quality Control
-  3. Run Differental Gene Expression Analysis
+  3. Run Differental Gene Expression Analysis using DESEq2.
   
-
-```{r setup, eval = FALSE}
+First, we must read in our data table. Variable 'savagecounts' represents this data table of Savage raw read counts. 
+Similar to our data, we must manipulate our savagecounts data table for DESeq2. 
+```{r, include  = FALSE}
 #DESEQ ON SAVAGE DATA - THREE COMPARISON MGSA MGPV PVSA
 
 savagecounts <- read.table("18-5-24_dedup_Savage_deseq_counts.txt", header = TRUE)
@@ -159,37 +169,52 @@ ddsFullCountTable <- DESeqDataSetFromMatrix(
    design = ~ reps + stage)
 #DESeq2 getting DE genes
 savagecounts_dds <- DESeq(ddsFullCountTable )
+
 ```  
  
- As you can see in the above chunk, savage data was run through the same pipeline, creating a new data frame for DESeq2 with variables reps, which are the repetition of the samples, and stage, which now represents the location of where the trypanosome was sampled: Migut, Proventiculus, Salivary gland. 
- 
+ As you can see in the above chunk, savage data was run through the same pipeline, creating a new data frame for DESeq2 with variables reps, which are the repetition of the samples, and stage, which now represents the location of where the trypanosome was sampled: Migut, Proventiculus, Salivary gland.
+
+
+#8. Savage Data  
+Here we are completing DESEq results on Savage data. We have a adjusted pvalue (padj) filter of < 0.01, a log2foldchange > 1.5. 
+The comparisons we completed are:
+1. MgSa (Midgut and Salivary Gland)
+$~$
+2. MgPv (Migut and Proventiculus)
+$~$
+3. PvSa (Proventiculus and Salivary Gland)
+$~$
+ We will complete the same analysis on Schulz data on the comparisons MG/SA, MG/PV and PV/SA. 
+Here we extract results for the log2 of the fold change of MG and SA. 
 ```{r}
-########CREATING GSEA LISTS FROM PATHWAY ANALYSIS OF SAV DE GENES
 #Comparisons of all 
   #padj filter < 0.01
   #abs(log2fold) filter > 1.5
-
 #MG and SA############################################################################
 savageRes_MgSa <- results( savagecounts_dds ,contrast = c("stage",  "MG","SA"))
+savageRes_MgSa
+```
+ 
+For Schulz data, we also considered a fraction of 1% false positives acceptable, due to the accuracy we need in the DE genes for Savage to compare to our dataset. We consider all genes with an adjusted p value below 1%=0.01 as significant.  
+
+Similar to filtering the padj, we want to filter the logfold2change. If a gene has a high absolute value log2foldchange, it means the gene is highly expressed. In order to cut down the amount of DE genes, filtering of this parameter will select only the higly expressed genes for our analysis of Savage data against our own. The cutoff logfold2 value 1.5 was arbitrarly chosen based on needing ~200-500 DE genes for further analysis. 
+
+```{r}
 resSig <- savageRes_MgSa[ which(savageRes_MgSa$padj < 0.01 ), ]
 resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
 MgSa <- resSig
 head(MgSa) 
-###here we need to preform GO on these genes. Upload to tryp database under New search : metabolic pathways, and enter this txt file. Then, make sure to get is downloaded as a csv.
-  #GO/PATHWAY ANALYSIS
- file_to_write<-paste(rownames(MgSa), collapse="\t")
-write.table(file_to_write, file="MgSa_gene") #look up in file directory, then delete quotation marks as well as the first rows that are not genes
+```
+Here is the padj and logfold2 filtered results of the log2 of the fold change of MG and SA.
+The rownames of this table are the DE genes calculated from the results function. 
 
-
+We completed the same analysis on comparisons MG/PV and PV/SA (not shown) with same parameters and filtering. 
+```{r, echo = FALSE}
 #MG and PV############################################################################
 savageRes_MgPv <- results( savagecounts_dds ,contrast = c("stage",  "MG","PV"))
 resSig <- savageRes_MgPv[ which(savageRes_MgPv$padj < 0.01 ), ]
 resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
 MgPv <- resSig
-
-#creating file for GO/PATHWAY ANALYSIS
-file_to_write<-paste(rownames(MgPv), collapse="\t")
-write.table(file_to_write, file="MgPv_gene")
 
 #PV and SA############################################################################
 savageRes_PvSa <- results( savagecounts_dds ,contrast = c("stage",  "PV","SA"))
@@ -197,11 +222,160 @@ resSig <- savageRes_PvSa[ which(savageRes_PvSa$padj < 0.01 ), ]
 resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
 PvSa <- resSig
 
+
+```
+
+#7. Grouping Methods
+
+In order to answer the biological questions of our data, we need to take statisitcal steps to gather information in order to prove or answer the hypothesis at hand. Clustering our data is an example of this method. Here we are taking the fuzzy cluster GO analysis results, and preparing them for GSEA pipeline. 
+(cluster code here)
+
+
+
+#8. GO analysis 
+In order to assign biological meaning to our results, we must understand the biological background behind our DE genes. GO analysis, or Gene Ontology term enrichment is a way to charachterize genes through assigning them to cell/organism specific pathways. The Gene Ontology system of classification assigns genes to a set of predefined pathways depending on their functional characteristics. For example, if a gene FasR is categorized as being a receptor, bing involved in apoptosis and located on the plasma membrane. Thus, by being able to group our DE genes by biologocal funciton, we can come to a fuller conclusion of our data using biological results.
+
+For GO on Schulz and savage data, we used a database https://tritrypdb.org/tritrypdb/, and completed GeneId search for our DE genes, which give additional information on the specific information on each gene. Then, after completing Geneid search, click on the tab "Analyze Results" and then GO. For our data, we completed Cellular Component, Molecular Function, and Biological Process GO enrichment. The downloaded tabs are in the folder labled "GO_Terms"
+ 
+https://en.wikipedia.org/wiki/Gene_Ontology_Term_Enrichment
+
+Here, we must upload the files into the trypanosome database, by taking all the rownames of the DESeq2 results analysis. Then, after writing the file, the quotations and 'x' must be deleted in order to run Geneid analysis in the data base. 
+This is comparison MG/SA, other comparisons MG/PV and PV/SA are not shown but completed. 
+
+```{r}
+###here we need to preform GO on these genes. Upload to tryp database under New search : metabolic pathways, and enter this txt file. Then, make sure to get is downloaded as a csv.
+  #GO/PATHWAY ANALYSIS
+ file_to_write<-paste(rownames(MgSa), collapse="\t")
+write.table(file_to_write, file="MgSa_gene") #look up in file directory, then delete quotation marks as well as the first rows that are not genes
+```
+
+```{r, include = FALSE}
+#creating file for GO/PATHWAY ANALYSIS
+file_to_write<-paste(rownames(MgPv), collapse="\t")
+write.table(file_to_write, file="MgPv_gene")
+
 #creating file for GO/PATHWAY ANALYSIS
  file_to_write<-paste(rownames(PvSa), collapse="\t")
 write.table(file_to_write, file="PvSa_gene")
 
+```
 
+#9 GSEA analysis
+Gene Set Enrichment Analysis interpers gene expression data by focusing on gene sets, or sets of genes that share common traits and or biological function. This alrogith uses categorical or continuous phenotype data, such as an experiment testing ‘treatment’ vs ‘untreated’. The goal of GSEA is to determine if a gene set S is randomly distributed or found at the top or bottom of a ranked gene list L. 
+
+For our analysis, we want to 
+Take Savage DE genes comparisons and enrich them in Schulz data
+Take DE genes from Schulz clusters/data and enrich them in Savage data
+Take GO terms from Savage data and enrich them in Schulz data
+Take GO terms from Schulz clusters and enrich them in Savage data
+
+We used fgsea(), or fast gene set enrichment analysis. 
+
+In order to prepare our results for GSEA pipline, we must manipulate GO data tables into pathways (list), and ranks (vector). 
+
+```{r}
+
+###############MAKING PATHWAY LIST FROM GO ANALYSIS - BIO, CELL,MOLECULAR###########################
+
+####################BIO PROS GO###########################
+MgSa_GObiopros <- read.table("MgSa_GObiopros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
+  MgSa_GObiopros <- data.frame(MgSa_GObiopros, comparison = "MgSa_bio")
+MgPv_GObiopros <- read.table("MgPv_GObiopros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
+  MgPv_GObiopros <- data.frame(MgPv_GObiopros, comparison = "MgPv_bio")
+PvSa_GObiopros <- read.table("PvSa_GObiopros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
+  PvSa_GObiopros <- data.frame(PvSa_GObiopros, comparison = "PvSa_bio")
+  
+```
+
+```{r, include = FALSE}
+  
+all_bio <- rbind(MgSa_GObiopros,MgPv_GObiopros,PvSa_GObiopros)
+all_bio$Result.gene.list <- gsub(',',',',all_bio$Result.gene.list,fixed=TRUE)
+all_bio$Result.gene.list <- strsplit(all_bio$Result.gene.list, ",")
+ 
+#MgSa Bio
+MgSa_GObiopros <- data.frame(all_bio %>% dplyr :: filter(comparison == "MgSa_bio"))
+MgSa_GObiopros_list <- as.list(MgSa_GObiopros)
+names(MgSa_GObiopros_list$Result.gene.list) <- MgSa_GObiopros_list$Name
+MgSaGOlist_bio <- MgSa_GObiopros_list$Result.gene.list
+#MgPv Bio
+MgPv_GObiopros <- data.frame(all_bio %>% filter(comparison == "MgPv_bio"))
+MgPv_GObiopros_list <- as.list(MgPv_GObiopros)
+names(MgPv_GObiopros_list$Result.gene.list) <- MgPv_GObiopros_list$Name
+MgPvGOlist_bio <- MgPv_GObiopros_list$Result.gene.list
+#PvSa Bio
+PvSa_GObiopros <- data.frame(all_bio %>% filter(comparison == "PvSa_bio"))
+PvSa_GObiopros_list <- as.list(PvSa_GObiopros)
+names(PvSa_GObiopros_list$Result.gene.list) <- PvSa_GObiopros_list$Name
+PvSaGOlist_bio <- PvSa_GObiopros_list$Result.gene.list
+
+```
+
+```{r,include = FALSE}
+#####################CELL PROS#######################
+  #MGSA
+MgSa_GOcellpros <- read.table("MgSa_GOcellpros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
+  MgSa_GOcellpros <- data.frame(MgSa_GOcellpros, comparison = "MgSa_cell")
+MgPv_GOcellpros <- read.table("MgPv_GOcellularpros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
+  MgPv_GOcellpros <- data.frame(MgPv_GOcellpros, comparison = "MgPv_cell")
+PvSa_GOcellpros <- read.table("PvSa_GOcellularpros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
+  PvSa_GOcellpros <- data.frame(PvSa_GOcellpros, comparison = "PvSa_cell")
+  
+all_cell <- rbind(MgSa_GOcellpros, MgPv_GOcellpros,PvSa_GOcellpros)
+all_cell$Result.gene.list <- gsub(',',',',all_cell$Result.gene.list,fixed=TRUE)
+all_cell$Result.gene.list <- strsplit(all_cell$Result.gene.list, ",")
+
+  #MGSA CELL
+MgSa_GOcellpros <- data.frame(all_cell %>% filter(comparison == "MgSa_cell"))
+MgSa_GOcellpros_list <- as.list(MgSa_GOcellpros)
+names(MgSa_GOcellpros_list$Result.gene.list) <- MgSa_GOcellpros_list$Name
+MgSaGOlist_cell <- MgSa_GOcellpros_list$Result.gene.list
+  #MGPV CELL
+MgPv_GOcellpros <- data.frame(all_cell %>% filter(comparison == "MgPv_cell"))
+MgPv_GOcellpros_list <- as.list(MgPv_GOcellpros)
+names(MgPv_GOcellpros_list$Result.gene.list) <- MgPv_GOcellpros_list$Name
+MgPvGOlist_cell <- MgPv_GOcellpros_list$Result.gene.list
+  #PVSA CELL
+PvSa_GOcellpros <- data.frame(all_cell %>% filter(comparison == "PvSa_cell"))
+PvSa_GOcellpros_list <- as.list(PvSa_GOcellpros)
+names(PvSa_GOcellpros_list$Result.gene.list) <- PvSa_GOcellpros_list$Name
+PvSaGOlist_cell <- PvSa_GOcellpros_list$Result.gene.list
+#View(PvSaGOlist_cell)
+
+
+##################### MOLE PROS #####################
+MgSa_GOmolepros <- read.table("MgSa_GOmolecpros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
+  MgSa_GOmolepros <- data.frame(MgSa_GOmolepros, comparison = "MgSa_mol")
+MgPv_GOmolepros <- read.table("MgPv_GOmolepros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
+  MgPv_GOmolepros <- data.frame(MgPv_GOmolepros, comparison = "MgPv_mol")
+PvSa_GOmolepros <- read.table("PvSa_GOmolepros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
+  PvSa_GOmolepros <- data.frame(PvSa_GOmolepros, comparison = "PvSa_mol")
+  
+all_mol <- rbind(MgSa_GOmolepros,MgPv_GOmolepros, PvSa_GOmolepros)
+all_mol$Result.gene.list <- gsub(',',',',all_mol$Result.gene.list,fixed=TRUE)
+all_mol$Result.gene.list <- strsplit(all_mol$Result.gene.list, ",")
+
+  #MGSA MOL
+MgSa_GOmolepros <- data.frame(all_mol %>% filter(comparison == "MgSa_mol")) 
+MgSa_GOmolepros_list <- as.list(MgSa_GOmolepros)
+names(MgSa_GOmolepros_list$Result.gene.list) <- MgSa_GOmolepros$Name
+MgSaGOlist_mole <- MgSa_GOmolepros_list$Result.gene.list
+  #MGPV MOL
+MgPv_GOmolepros <- data.frame(all_mol %>% filter(comparison == "MgPv_mol")) 
+MgPv_GOmolepros_list <- as.list(MgPv_GOmolepros)
+names(MgPv_GOmolepros_list$Result.gene.list) <- MgPv_GOmolepros$Name
+MgPvGOlist_mole <- MgPv_GOmolepros_list$Result.gene.list
+  #PVSA MOL
+PvSa_GOmolepros <- data.frame(all_mol %>% filter(comparison == "PvSa_mol")) 
+PvSa_GOmolepros_list <- as.list(PvSa_GOmolepros)
+names(PvSa_GOmolepros_list$Result.gene.list) <- PvSa_GOmolepros$Name
+PvSaGOlist_mole <- PvSa_GOmolepros_list$Result.gene.list
+
+
+
+```
+
+```{r,echo = FALSE}
 #######MAKING RANKED METRIC LIST FOR SAVAGE DATA########
 
 #making big data set 'allcomp' with all comparisons to make code easier. Splitting after by 'comparison' 
@@ -211,7 +385,7 @@ PVSA_df <- data.frame(Gene = rownames(PvSa), pvalue = PvSa$pvalue, padj = PvSa$p
  
 sav_allcomp <- rbind(MGSA_df,MGPV_df, PVSA_df)
 
-#View(gsea_allcomp)
+
 
 sav_allcomp$logP <- -log10(sav_allcomp$pvalue) #calculating metric == -log10(pvalue)
 sav_allcomp <-  sav_allcomp[which(abs(sav_allcomp$logP) != 0),] #filtering out p-values 
@@ -222,13 +396,14 @@ sav_gsea_allcomp <- sav_allcomp[,c("Gene","metric","comparison")]
 gsea_MgSa_df<- sav_gsea_allcomp %>% filter(comparison == "MgSa") %>% dplyr :: select(-comparison) 
 gsea_MgPv_df <- sav_gsea_allcomp %>% filter(comparison == "MgPv") %>% dplyr :: select(-comparison) 
 gsea_PvSa_df <- sav_gsea_allcomp %>% filter(comparison == "PvSa") %>% dplyr :: select(-comparison) 
- 
+head(gsea_MgSa_df)
 #creating stats and pathways for gsea
   #MgSa
 gseaDat_MgSa <- filter(gsea_MgSa_df, !is.na(Gene))
 ranks_MgSa <- gsea_MgSa_df$metric
 names(ranks_MgSa) <- gseaDat_MgSa$Gene
 ranks_MgSa <- sort(ranks_MgSa)
+head(ranks_MgSa)
   #MgPv
 gseaDat_MgPv <- filter(gsea_MgPv_df, !is.na(Gene))
 ranks_MgPv <- gsea_MgPv_df$metric
@@ -241,12 +416,11 @@ names(ranks_PvSa) <- gseaDat_PvSa$Gene
 ranks_PvSa <- sort(ranks_PvSa)
 
 ```
+Here, we can see the output of a result table, with values indicating DE of genes based on pvalues, logfold2, padj, etc. 
+In order to start the GSEA pipeline, we must create ranks of the DE genes based on a metric of DE. Here, we chose the metric -log10(pvalue) * abs(logfold2)
+This gives us the data table with the gene and metric, and then ranks, which is a vector of the gene name and corresponding metric. 
 
-#8. GO analysis 
-In order to assign biological meaning to our results, we must understand the biological background behind the DE genes. GO analysis, or Gene Ontology analysis is a way to charachteize genes through assigning them to cell/organism specific pathways. Thus, by being able to group genes by biologocal funciton, we can better map and answer the hypothesis. 
-
-#9 GSEA analysis
-```{r}
+```{r, include = FALSE}
 #GSEA -- MAKING DATA TABLES AND RUNNING FGSEA
   #Making metric rank for 0-12h comparison
 
@@ -264,13 +438,13 @@ gsea_schulz_df <- data.frame(gsea_schulz)
 rownames(gsea_schulz_df) <- NULL
 gsea_schulz_df <- gsea_schulz_df[which(gsea_schulz_df$metric != -Inf),] #removing metric where = -Inf
 gsea_schulz_df <- gsea_schulz_df[which(gsea_schulz_df$metric != Inf),]
- 
+gsea_schulz_df[1:10,] 
 #creating stats and pathways for gsea
 gseaDat_schulz <- filter(gsea_schulz_df, !is.na(Gene))
 ranks <- gsea_schulz_df$metric
 names(ranks) <- gseaDat_schulz$Gene
 ranks <- sort(ranks)
-
+head(ranks)
 
 #####FOR LOG POS FOLD CHANGE######
 #CREATING RANKS AND DATA FRAME FOR GSEA
@@ -287,13 +461,14 @@ gsea_schulz_df_log.pos <- data.frame(gsea_schulz_log.pos)
 rownames(gsea_schulz_df_log.pos) <- NULL
 gsea_schulz_df_log.pos <- gsea_schulz_df_log.pos[which(gsea_schulz_df_log.pos$metric != -Inf),] #removing metric where = -Inf
 gsea_schulz_df_log.pos <- gsea_schulz_df_log.pos[which(gsea_schulz_df_log.pos$metric != Inf),]
+gsea_schulz_df_log.pos[1:10,]
 
   #creating ranks for fgsea
 gseaDat_schulz_log.pos <- filter(gsea_schulz_df_log.pos, !is.na(Gene))
 ranks_log.pos <- gsea_schulz_df_log.pos$metric
 names(ranks_log.pos) <- gseaDat_schulz_log.pos$Gene
 ranks_log.pos <- sort(ranks_log.pos)
-
+head(ranks_log.pos)
 #####FOR LOG NEG FOLD CHANGE######
 #CREATING RANKS AND DATA FRAME FOR GSEA
 #resSig_log.neg$fcsign <- sign(resSig_log.neg$log2FoldChange) #fcsign stands for the log2foldchange sign
@@ -308,11 +483,16 @@ gsea_schulz_log.neg <-resSig_log.neg[,c("Gene", "metric")]
 gsea_schulz_df_log.neg <- data.frame(gsea_schulz_log.neg)
 rownames(gsea_schulz_df_log.neg) <- NULL
 gsea_schulz_df_log.neg <- gsea_schulz_df_log.neg[which(gsea_schulz_df_log.neg$metric != -Inf),] #removing metric   where = -Inf
-gsea_schulz_df_log.neg <- gsea_schulz_df_log.neg[which(gsea_schulz_df_log.neg$metric != Inf),] 
+gsea_schulz_df_log.neg <- gsea_schulz_df_log.neg[which(gsea_schulz_df_log.neg$metric != Inf),]
+gsea_schulz_df_log.neg[1:10,]
   #creating ranks for fgsea
 gseaDat_schulz_log.neg <- filter(gsea_schulz_df_log.neg, !is.na(Gene))
 ranks_log.neg <- gsea_schulz_df_log.neg$metric
 names(ranks_log.neg) <- gseaDat_schulz_log.neg$Gene
 ranks_log.neg <- sort(ranks_log.neg)
+head(ranks_log.neg)
+
 ```
+
+
 
