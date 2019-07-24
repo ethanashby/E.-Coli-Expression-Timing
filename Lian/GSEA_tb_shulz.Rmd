@@ -7,7 +7,7 @@ output: html_document
 
 ```{r}
 #LOADING DESEQ2 AND RNASEQ FILE
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
@@ -37,8 +37,6 @@ library(fgsea)
 ```{r}
 #DESEQ ON SCHULZ
 library(readr)
-#dataset <- read_csv(NULL)
-View(TBcounts)
 TBcounts <- read.table("18-5-23_Proc_ibet_TC_for_deseq.txt",header = TRUE) %>% dplyr ::select(-ib_3h_1) 
 TBcounts <- TBcounts %>% dplyr :: distinct(gene, .keep_all = TRUE) 
 #NORMALIZATION BY DESEQ2
@@ -47,15 +45,16 @@ TBcounts <- TBcounts %>% dplyr :: select(-"gene") #this gets rid of the name gen
 #creating new data frame for DESeq to analyze
 tb_new <- data.frame(rownames = colnames(TBcounts),
                      reps = as.factor(c(1,2,3,1,2,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3)),
-                     stage = as.factor(c("noo_ib","noo_ib","noo_ib","ib_3h","ib_3h","ib_6h","ib_6h","ib_6h", "ib_12h","ib_12h","ib_12h","ib_24h","ib_24h","ib_24h","ib_48h","ib_48h","ib_48h","ib_3d","ib_3d","ib_3d","ib_7d","ib_7d","ib_7d","ib_10d","ib_10d","ib_10d","ib_14d","ib_14d","ib_14d"))) 
+                    stage = as.factor(c(rep("noo_ib",3), rep("ib_3h", 2), rep("ib_6h",3), rep("ib_12h",3),rep("ib_24h",3),rep("ib_48h",3),rep("ib_3d",3),rep("ib_7d",3),rep("ib_10d",3),rep("ib_14d",3))))
 rownames(tb_new) <- tb_new$rownames
 tb_new <- tb_new %>% dplyr ::select(-rownames)
+
 ##dds stands for the DESeq Data Set
 TBcounts <- TBcounts[rowSums(TBcounts) > 0 ,]
 ddsFullCountTable <- DESeqDataSetFromMatrix(countData = TBcounts,
                                             colData = tb_new, 
                                             design = ~ reps + stage)
-View(TBcounts) 
+
 TBcounts_dds <- DESeq(ddsFullCountTable)
 
 #calculating norm counts
@@ -70,8 +69,8 @@ normDE_counts_df <- data.frame(normDE_counts)
 #BiocManager::install("ImpulseDE2")
 #library(ImpulseDE2)
 
-#times <- c(rep(0,3), rep(3,2), rep(6,3,), rep(12,3), rep(24,3), rep(48,3), rep(72,3), rep(168,3), rep(240,3), rep(336,3))
-#impulse_design <- data.frame(Sample = colnames(TBcounts), Condition = rep("case", 29), Time = times)
+#time <- c(rep(0,3), rep(3,2), rep(6,3,), rep(12,3), rep(24,3), rep(48,3), rep(72,3), rep(168,3), rep(240,3), rep(336,3))
+#impulse_design <- data.frame(Sample = colnames(TBcounts), Condition = rep("case", 29), Time = time)
 #TBcounts <- as.matrix(TBcounts)
 #tryp_impulse <- ImpulseDE2 :: runImpulseDE2(TBcounts, impulse_design,boolCaseCtrl = FALSE, vecConfounders = NULL, scaNProc = 8, scaQThres = 0.01)
 
@@ -79,7 +78,7 @@ normDE_counts_df <- data.frame(normDE_counts)
 
 
 ```{r}
-#COMPARING - DE ANALYSIS 
+#COMPARING - DE ANALYSIS - FOR GSEA
 
 #comparing stages noo_ib and ib_12h --- the stage of non inhibited bromodomain at time 0 to inhibited bromodomain at time point 12 hours
 TBcountsRes <- results( TBcounts_dds ,contrast = c("stage","ib_12h", "noo_ib"))
@@ -90,55 +89,10 @@ resSig <- resSig[complete.cases(resSig),]
 resSig <- TBcountsRes[ which(TBcountsRes$padj < 0.01 ), ]
 resSig$gene <- rownames(resSig)
 resSig$fcsign <- sign(resSig$log2FoldChange) #fcsign stands for the log2foldchange sign
-#resSig$fcsign <- sign(resSig$log2FoldChange)
-#resSig <-  resSig[which(abs(resSig$fcsign) != 0),]
 
 #creating negative and positive logfold change data sets
 resSig_log.pos <- resSig[which(resSig$fcsign != -1),]
 resSig_log.neg <- resSig[which(resSig$fcsign == -1),]
-
-##### for pos log fold change
-#resSig_log.pos$fcsign <- sign(resSig_log.pos$log2FoldChange) #fcsign stands for the log2foldchange sign
-#resSig_log.pos <-  resSig_log.pos[which(abs(resSig_log.pos$fcsign) != 0),] #filtering out foldchanges = 0
-resSig_log.pos$logP = -log10(resSig_log.pos$pvalue) 
-resSig_log.pos <-  resSig_log.pos[which(abs(resSig_log.pos$logP) != 0),] 
-resSig_log.pos$metric= resSig_log.pos$logP * abs(resSig_log.pos$log2FoldChange)  #metric = -log10(pvalue) *abs(log2FoldChange)
-resSig_log.pos$Gene <- rownames(resSig_log.pos) #creating column Gene for dataframe
-gsea_schulz_log.pos <-resSig_log.pos[,c("Gene", "metric")]
- 
-  #creating data frame
-gsea_schulz_df_log.pos <- data.frame(gsea_schulz_log.pos)
-rownames(gsea_schulz_df_log.pos) <- NULL
-gsea_schulz_df_log.pos <- gsea_schulz_df_log.pos[which(gsea_schulz_df_log.pos$metric != -Inf),] #removing metric where = -Inf
-gsea_schulz_df_log.pos <- gsea_schulz_df_log.pos[which(gsea_schulz_df_log.pos$metric != Inf),]
-  #creating ranks for fgsea
-gseaDat_schulz_log.pos <- filter(gsea_schulz_df_log.pos, !is.na(Gene))
-ranks_log.pos <- gsea_schulz_df_log.pos$metric
-names(ranks_log.pos) <- gseaDat_schulz_log.pos$Gene
-
-
-##### For neg log fold change
-#resSig_log.neg$fcsign <- sign(resSig_log.neg$log2FoldChange) #fcsign stands for the log2foldchange sign
-#resSig_log.neg <-  resSig_log.neg[which(abs(resSig_log.neg$fcsign) != 0),] #filtering out foldchanges = 0
-resSig_log.neg$logP <-  -log10(resSig_log.neg$pvalue)
-resSig_log.neg <-  resSig_log.neg[which(abs(resSig_log.neg$logP) != 0),] 
-resSig_log.neg$metric <-  resSig_log.neg$logP * abs(resSig_log.neg$log2FoldChange) #calculating metric = log10(pvalue) 
-resSig_log.neg$Gene <- rownames(resSig_log.neg) #creating column Gene for dataframe
-gsea_schulz_log.neg <-resSig_log.neg[,c("Gene", "metric")]
- 
-
-  #creating data frame
-gsea_schulz_df_log.neg <- data.frame(gsea_schulz_log.neg)
-rownames(gsea_schulz_df_log.neg) <- NULL
-gsea_schulz_df_log.neg <- gsea_schulz_df_log.neg[which(gsea_schulz_df_log.neg$metric != -Inf),] #removing metric   where = -Inf
-gsea_schulz_df_log.neg <- gsea_schulz_df_log.neg[which(gsea_schulz_df_log.neg$metric != Inf),] 
-  #creating ranks for fgsea
-gseaDat_schulz_log.neg <- filter(gsea_schulz_df_log.neg, !is.na(Gene))
-ranks_log.neg <- gsea_schulz_df_log.neg$metric
-names(ranks_log.neg) <- gseaDat_schulz_log.neg$Gene
-
-#add 0.1 to all normalized counts
-# log2fold(avg treated/acg untreated)
 
 #GSEA -- MAKING DATA TABLES AND RUNNING FGSEA
   #Making metric rank for 0-12h comparison
@@ -162,16 +116,57 @@ gsea_schulz_df <- gsea_schulz_df[which(gsea_schulz_df$metric != Inf),]
 gseaDat_schulz <- filter(gsea_schulz_df, !is.na(Gene))
 ranks <- gsea_schulz_df$metric
 names(ranks) <- gseaDat_schulz$Gene
+ranks <- sort(ranks)
 
 
-#ethansGenes <- read.csv("ethans_DESEQ2_DEGs.csv")
-#length(intersect(ethansGenes$gene,resSig$gene))
+#####FOR LOG POS FOLD CHANGE######
+#CREATING RANKS AND DATA FRAME FOR GSEA
+#resSig_log.pos$fcsign <- sign(resSig_log.pos$log2FoldChange) #fcsign stands for the log2foldchange sign
+#resSig_log.pos <-  resSig_log.pos[which(abs(resSig_log.pos$fcsign) != 0),] #filtering out foldchanges = 0
+resSig_log.pos$logP = -log10(resSig_log.pos$pvalue) 
+resSig_log.pos <-  resSig_log.pos[which(abs(resSig_log.pos$logP) != 0),] 
+resSig_log.pos$metric= resSig_log.pos$logP * abs(resSig_log.pos$log2FoldChange) #metric = -log10(pvalue) *abs(log2FoldChange)
+resSig_log.pos$Gene <- rownames(resSig_log.pos) #creating column Gene for dataframe
+gsea_schulz_log.pos <-resSig_log.pos[,c("Gene", "metric")]
+ 
+  #creating data frame
+gsea_schulz_df_log.pos <- data.frame(gsea_schulz_log.pos)
+rownames(gsea_schulz_df_log.pos) <- NULL
+gsea_schulz_df_log.pos <- gsea_schulz_df_log.pos[which(gsea_schulz_df_log.pos$metric != -Inf),] #removing metric where = -Inf
+gsea_schulz_df_log.pos <- gsea_schulz_df_log.pos[which(gsea_schulz_df_log.pos$metric != Inf),]
+
+  #creating ranks for fgsea
+gseaDat_schulz_log.pos <- filter(gsea_schulz_df_log.pos, !is.na(Gene))
+ranks_log.pos <- gsea_schulz_df_log.pos$metric
+names(ranks_log.pos) <- gseaDat_schulz_log.pos$Gene
+ranks_log.pos <- sort(ranks_log.pos)
+
+#####FOR LOG NEG FOLD CHANGE######
+#CREATING RANKS AND DATA FRAME FOR GSEA
+#resSig_log.neg$fcsign <- sign(resSig_log.neg$log2FoldChange) #fcsign stands for the log2foldchange sign
+#resSig_log.neg <-  resSig_log.neg[which(abs(resSig_log.neg$fcsign) != 0),] #filtering out foldchanges = 0
+resSig_log.neg$logP <-  -log10(resSig_log.neg$pvalue)
+resSig_log.neg <-  resSig_log.neg[which(abs(resSig_log.neg$logP) != 0),] 
+resSig_log.neg$metric <-  resSig_log.neg$logP * abs(resSig_log.neg$log2FoldChange) #calculating metric = log10(pvalue) 
+resSig_log.neg$Gene <- rownames(resSig_log.neg) #creating column Gene for dataframe
+gsea_schulz_log.neg <-resSig_log.neg[,c("Gene", "metric")]
+
+  #creating data frame
+gsea_schulz_df_log.neg <- data.frame(gsea_schulz_log.neg)
+rownames(gsea_schulz_df_log.neg) <- NULL
+gsea_schulz_df_log.neg <- gsea_schulz_df_log.neg[which(gsea_schulz_df_log.neg$metric != -Inf),] #removing metric   where = -Inf
+gsea_schulz_df_log.neg <- gsea_schulz_df_log.neg[which(gsea_schulz_df_log.neg$metric != Inf),] 
+  #creating ranks for fgsea
+gseaDat_schulz_log.neg <- filter(gsea_schulz_df_log.neg, !is.na(Gene))
+ranks_log.neg <- gsea_schulz_df_log.neg$metric
+names(ranks_log.neg) <- gseaDat_schulz_log.neg$Gene
+ranks_log.neg <- sort(ranks_log.neg)
 
 
 ```
 
 
-```{r setup, include=FALSE}
+```{r, include=FALSE}
 #DESEQ ON SAVAGE DATA - THREE COMPARISON MGSA MGPV PVSA
 
 savagecounts <- read.table("18-5-24_dedup_Savage_deseq_counts.txt", header = TRUE)
@@ -183,7 +178,7 @@ savagecounts <- savagecounts %>% dplyr :: select(-"gene") #this gets rid of the 
 coldata <- data.frame(rownames = colnames(savagecounts),
                     reps = as.factor(c(1, 2, 3, 1, 2, 3 ,4,
                                      1, 2 ,3)), 
-                    stage = as.factor(c("MG","MG","MG","PV","PV","PV","PV","SA","SA","SA")))
+                    stage = as.factor(c(rep("MG",3),rep("PV",4), rep("SA",3))))
 
 ddsFullCountTable <- DESeqDataSetFromMatrix(
    countData = savagecounts,
@@ -194,7 +189,7 @@ savagecounts_dds <- DESeq(ddsFullCountTable )
 ```
 
 ```{r}
-########CREATING GSEA LISTS FROM GO ANALYSIS OF SAV DE GENES
+########CREATING GSEA LISTS FROM PATHWAY ANALYSIS OF SAV DE GENES
 #Comparisons of all 
   #padj filter < 0.01
   #abs(log2fold) filter > 1.5
@@ -206,59 +201,82 @@ resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
 MgSa <- resSig
 length(rownames(MgSa))
 ###here we need to preform GO on these genes. Upload to tryp database under New search : metabolic pathways, and enter this txt file. Then, make sure to get is downloaded as a csv.
+  #GO/PATHWAY ANALYSIS
  file_to_write<-paste(rownames(MgSa), collapse="\t")
 write.table(file_to_write, file="MgSa_gene") #look up in file directory, then delete quotation marks as well as the first rows that are not genes
 
-####Making GSEA pathway list from GO 
-  #MgSa
-MgSaGOpathways <- read.csv("MgSaGO_Pathways.csv") #reading in table from GO tryp database
-MgSaGOpathways <- data.frame(MgSaGOpathways) #creating data frame
-MgSaGOpathways$Genes <- gsub('|',',',MgSaGOpathways$Genes,fixed=TRUE)#removing the '|' and replacing with ','
-MgSaGOpathways$Genes <- strsplit(MgSaGOpathways$Genes, ",")#removing the '|' and replacing with ',' (for some reason it doesnt like the '|')
-MgSaGOpathways_list <- as.list(MgSaGOpathways)
-names(MgSaGOpathways_list$Genes) <- MgSaGOpathways_list$Pathway
-MgSaGO_list <- MgSaGOpathways_list$Genes
-#View(MgSaGO_list)
+
 #MG and PV############################################################################
 savageRes_MgPv <- results( savagecounts_dds ,contrast = c("stage",  "MG","PV"))
 resSig <- savageRes_MgPv[ which(savageRes_MgPv$padj < 0.01 ), ]
 resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
 MgPv <- resSig
 
-#creating file for GO
+#creating file for GO/PATHWAY ANALYSIS
 file_to_write<-paste(rownames(MgPv), collapse="\t")
 write.table(file_to_write, file="MgPv_gene")
 
-####Making GSEA pathway list from GO 
-  #MgPv
-MgPvGOpathways <- read.csv("MgPvGO_Pathways.csv")
-MgPvGOpathways <- data.frame(MgPvGOpathways)
-MgPvGOpathways$Genes <- gsub('|',',',MgPvGOpathways$Genes,fixed=TRUE)
-MgPvGOpathways$Genes <- strsplit(MgPvGOpathways$Genes, ",")
-MgPvGOpathways_list <- as.list(MgPvGOpathways)
-names(MgPvGOpathways_list$Genes) <- MgPvGOpathways_list$Pathway
-MgPvGO_list <- MgPvGOpathways_list$Genes
-#View(MgPvGO_list)
 #PV and SA############################################################################
 savageRes_PvSa <- results( savagecounts_dds ,contrast = c("stage",  "PV","SA"))
 resSig <- savageRes_PvSa[ which(savageRes_PvSa$padj < 0.01 ), ]
 resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
 PvSa <- resSig
 
-#creating file for GO
+#creating file for GO/PATHWAY ANALYSIS
  file_to_write<-paste(rownames(PvSa), collapse="\t")
 write.table(file_to_write, file="PvSa_gene")
 
-####Making GSEA pathway list from GO 
-  #PvSa
-PvSaGOpathways <- read.csv("PvSaGO_Pathways.csv") #reading in table
-PvSaGOpathways <- data.frame(PvSaGOpathways)
-PvSaGOpathways$Genes <- gsub('|',',',PvSaGOpathways$Genes,fixed=TRUE) #removing the '|' and replacing with ','
-PvSaGOpathways$Genes <- strsplit(PvSaGOpathways$Genes, ',') #removing the '|' and replacing with ','
-PvSaGOpathways_list <- as.list(PvSaGOpathways)  
-names(PvSaGOpathways_list$Genes) <- PvSaGOpathways_list$Pathway 
-PvSaGO_list <- PvSaGOpathways_list$Genes 
 
+#######MAKING RANKED METRIC LIST FOR SAVAGE DATA########
+
+#making big data set 'allcomp' with all comparisons to make code easier. Splitting after by 'comparison' 
+MGSA_df <- data.frame(Gene = rownames(MgSa), pvalue = MgSa$pvalue, padj = MgSa$padj, comparison = "MgSa",log2FoldChange= MgSa$log2FoldChange)
+MGPV_df <- data.frame(Gene = rownames(MgPv), pvalue = MgPv$pvalue, padj = MgPv$padj, comparison = "MgPv", log2FoldChange= MgPv$log2FoldChange)
+PVSA_df <- data.frame(Gene = rownames(PvSa), pvalue = PvSa$pvalue, padj = PvSa$padj, comparison = "PvSa",log2FoldChange= PvSa$log2FoldChange)
+ 
+sav_allcomp <- rbind(MGSA_df,MGPV_df, PVSA_df)
+
+#View(gsea_allcomp)
+
+sav_allcomp$logP <- -log10(sav_allcomp$pvalue) #calculating metric == -log10(pvalue)
+sav_allcomp <-  sav_allcomp[which(abs(sav_allcomp$logP) != 0),] #filtering out p-values 
+sav_allcomp$metric <- sav_allcomp$logP * abs(sav_allcomp$log2FoldChange)
+sav_gsea_allcomp <- sav_allcomp[,c("Gene","metric","comparison")]
+
+##filtering out big dataset -- creating data frames for each comparison 
+gsea_MgSa_df<- sav_gsea_allcomp %>% filter(comparison == "MgSa") %>% dplyr :: select(-comparison) 
+gsea_MgPv_df <- sav_gsea_allcomp %>% filter(comparison == "MgPv") %>% dplyr :: select(-comparison) 
+gsea_PvSa_df <- sav_gsea_allcomp %>% filter(comparison == "PvSa") %>% dplyr :: select(-comparison) 
+gsea_MgSa_df <- gsea_MgSa_df[which(gsea_MgSa_df$metric != -Inf),] #removing metric   where = -Inf
+gsea_MgSa_df <- gsea_MgSa_df[which(gsea_MgSa_df$metric != Inf),]
+
+gsea_MgPv_df <- gsea_MgPv_df[which(gsea_MgPv_df$metric != -Inf),] 
+gsea_MgPv_df <- gsea_MgPv_df[which(gsea_MgPv_df$metric != Inf),] 
+
+gsea_PvSa_df <- gsea_PvSa_df[which(gsea_PvSa_df$metric != Inf),]
+gsea_PvSa_df <- gsea_PvSa_df[which(gsea_PvSa_df$metric != -Inf),] 
+#creating stats and pathways for gsea
+  #MgSa
+gseaDat_MgSa <- filter(gsea_MgSa_df, !is.na(Gene))
+ranks_MgSa <- gsea_MgSa_df$metric
+names(ranks_MgSa) <- gseaDat_MgSa$Gene
+ranks_MgSa <- sort(ranks_MgSa)
+  #MgPv
+gseaDat_MgPv <- filter(gsea_MgPv_df, !is.na(Gene))
+ranks_MgPv <- gsea_MgPv_df$metric
+names(ranks_MgPv) <- gseaDat_MgPv$Gene
+ranks_MgPv <- sort(ranks_MgPv)
+#PvSa
+gseaDat_PvSa <- filter(gsea_PvSa_df, !is.na(Gene))
+ranks_PvSa <- gsea_PvSa_df$metric
+names(ranks_PvSa) <- gseaDat_PvSa$Gene
+ranks_PvSa <- sort(ranks_PvSa)
+
+```
+
+```{r}
+
+###############MAKING PATHWAY LIST FROM GO ANALYSIS - BIO, CELL,MOLECULAR###########################
 
 ####################BIO PROS GO###########################
 MgSa_GObiopros <- read.table("MgSa_GObiopros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
@@ -269,30 +287,27 @@ PvSa_GObiopros <- read.table("PvSa_GObiopros.tab", sep = "\t",header = TRUE) %>%
   PvSa_GObiopros <- data.frame(PvSa_GObiopros, comparison = "PvSa_bio")
   
 all_bio <- rbind(MgSa_GObiopros,MgPv_GObiopros,PvSa_GObiopros)
+all_bio$Result.gene.list <- gsub(',',',',all_bio$Result.gene.list,fixed=TRUE)
+all_bio$Result.gene.list <- strsplit(all_bio$Result.gene.list, ",")
  
-
 #MgSa Bio
 MgSa_GObiopros <- data.frame(all_bio %>% dplyr :: filter(comparison == "MgSa_bio"))
 MgSa_GObiopros_list <- as.list(MgSa_GObiopros)
 names(MgSa_GObiopros_list$Result.gene.list) <- MgSa_GObiopros_list$Name
 MgSaGOlist_bio <- MgSa_GObiopros_list$Result.gene.list
-
-View(MgSa_GObiopros)
 #MgPv Bio
 MgPv_GObiopros <- data.frame(all_bio %>% filter(comparison == "MgPv_bio"))
 MgPv_GObiopros_list <- as.list(MgPv_GObiopros)
 names(MgPv_GObiopros_list$Result.gene.list) <- MgPv_GObiopros_list$Name
 MgPvGOlist_bio <- MgPv_GObiopros_list$Result.gene.list
-#View(MgPvGOlist_bio)
 #PvSa Bio
 PvSa_GObiopros <- data.frame(all_bio %>% filter(comparison == "PvSa_bio"))
 PvSa_GObiopros_list <- as.list(PvSa_GObiopros)
 names(PvSa_GObiopros_list$Result.gene.list) <- PvSa_GObiopros_list$Name
 PvSaGOlist_bio <- PvSa_GObiopros_list$Result.gene.list
-View(PvSaGOlist_bio)
- 
- 
-#########CELL PROS##########
+
+
+#####################CELL PROS#######################
   #MGSA
 MgSa_GOcellpros <- read.table("MgSa_GOcellpros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
   MgSa_GOcellpros <- data.frame(MgSa_GOcellpros, comparison = "MgSa_cell")
@@ -305,21 +320,17 @@ all_cell <- rbind(MgSa_GOcellpros, MgPv_GOcellpros,PvSa_GOcellpros)
 all_cell$Result.gene.list <- gsub(',',',',all_cell$Result.gene.list,fixed=TRUE)
 all_cell$Result.gene.list <- strsplit(all_cell$Result.gene.list, ",")
 
-  #MGSA
+  #MGSA CELL
 MgSa_GOcellpros <- data.frame(all_cell %>% filter(comparison == "MgSa_cell"))
 MgSa_GOcellpros_list <- as.list(MgSa_GOcellpros)
 names(MgSa_GOcellpros_list$Result.gene.list) <- MgSa_GOcellpros_list$Name
 MgSaGOlist_cell <- MgSa_GOcellpros_list$Result.gene.list
-View(MgSa_GOcellpros)
-
-  #MGPV
+  #MGPV CELL
 MgPv_GOcellpros <- data.frame(all_cell %>% filter(comparison == "MgPv_cell"))
 MgPv_GOcellpros_list <- as.list(MgPv_GOcellpros)
 names(MgPv_GOcellpros_list$Result.gene.list) <- MgPv_GOcellpros_list$Name
 MgPvGOlist_cell <- MgPv_GOcellpros_list$Result.gene.list
-#View(MgPvGOlist_cell)
-
-  #PVSA
+  #PVSA CELL
 PvSa_GOcellpros <- data.frame(all_cell %>% filter(comparison == "PvSa_cell"))
 PvSa_GOcellpros_list <- as.list(PvSa_GOcellpros)
 names(PvSa_GOcellpros_list$Result.gene.list) <- PvSa_GOcellpros_list$Name
@@ -327,7 +338,7 @@ PvSaGOlist_cell <- PvSa_GOcellpros_list$Result.gene.list
 #View(PvSaGOlist_cell)
 
 
-######## MOLE PROS #########
+##################### MOLE PROS #####################
 MgSa_GOmolepros <- read.table("MgSa_GOmolecpros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
   MgSa_GOmolepros <- data.frame(MgSa_GOmolepros, comparison = "MgSa_mol")
 MgPv_GOmolepros <- read.table("MgPv_GOmolepros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
@@ -339,32 +350,64 @@ all_mol <- rbind(MgSa_GOmolepros,MgPv_GOmolepros, PvSa_GOmolepros)
 all_mol$Result.gene.list <- gsub(',',',',all_mol$Result.gene.list,fixed=TRUE)
 all_mol$Result.gene.list <- strsplit(all_mol$Result.gene.list, ",")
 
-  #MGSA
+  #MGSA MOL
 MgSa_GOmolepros <- data.frame(all_mol %>% filter(comparison == "MgSa_mol")) 
 MgSa_GOmolepros_list <- as.list(MgSa_GOmolepros)
 names(MgSa_GOmolepros_list$Result.gene.list) <- MgSa_GOmolepros$Name
 MgSaGOlist_mole <- MgSa_GOmolepros_list$Result.gene.list
-View(MgSaGOlist_mole )
-
-  #MGPV
+  #MGPV MOL
 MgPv_GOmolepros <- data.frame(all_mol %>% filter(comparison == "MgPv_mol")) 
 MgPv_GOmolepros_list <- as.list(MgPv_GOmolepros)
 names(MgPv_GOmolepros_list$Result.gene.list) <- MgPv_GOmolepros$Name
 MgPvGOlist_mole <- MgPv_GOmolepros_list$Result.gene.list
-#View(MgPvGOlist_mole )
-
-  #PVSA
+  #PVSA MOL
 PvSa_GOmolepros <- data.frame(all_mol %>% filter(comparison == "PvSa_mol")) 
 PvSa_GOmolepros_list <- as.list(PvSa_GOmolepros)
 names(PvSa_GOmolepros_list$Result.gene.list) <- PvSa_GOmolepros$Name
 PvSaGOlist_mole <- PvSa_GOmolepros_list$Result.gene.list
-#View(PvSaGOlist_mole )
 
 ```
 
 
 ```{r}
-########GSEA on all SAV DE genes 
+####Making SAVAGE-GSEA pathway list from PATHWAY analysis
+  #MgSa
+MgSaGOpathways <- read.csv("MgSaGO_Pathways.csv") #reading in table from GO tryp database
+MgSaGOpathways <- data.frame(MgSaGOpathways) #creating data frame
+MgSaGOpathways$Genes <- gsub('|',',',MgSaGOpathways$Genes,fixed=TRUE)#removing the '|' and replacing with ','
+MgSaGOpathways$Genes <- strsplit(MgSaGOpathways$Genes, ",")#removing the '|' and replacing with ',' (for some reason it doesnt like the '|')
+MgSaGOpathways_list <- as.list(MgSaGOpathways)
+names(MgSaGOpathways_list$Genes) <- MgSaGOpathways_list$Pathway
+MgSaGO_list <- MgSaGOpathways_list$Genes
+
+####Making GSEA pathway list from PATHWAY analysis 
+  #MgPv
+MgPvGOpathways <- read.csv("MgPvGO_Pathways.csv")
+MgPvGOpathways <- data.frame(MgPvGOpathways)
+MgPvGOpathways$Genes <- gsub('|',',',MgPvGOpathways$Genes,fixed=TRUE)
+MgPvGOpathways$Genes <- strsplit(MgPvGOpathways$Genes, ",")
+MgPvGOpathways_list <- as.list(MgPvGOpathways)
+names(MgPvGOpathways_list$Genes) <- MgPvGOpathways_list$Pathway
+MgPvGO_list <- MgPvGOpathways_list$Genes
+#View(MgPvGO_list)
+
+####Making GSEA pathway list from PATHWAY analysis 
+  #PvSa
+PvSaGOpathways <- read.csv("PvSaGO_Pathways.csv") #reading in table
+PvSaGOpathways <- data.frame(PvSaGOpathways)
+PvSaGOpathways$Genes <- gsub('|',',',PvSaGOpathways$Genes,fixed=TRUE) #removing the '|' and replacing with ','
+PvSaGOpathways$Genes <- strsplit(PvSaGOpathways$Genes, ',') #removing the '|' and replacing with ','
+PvSaGOpathways_list <- as.list(PvSaGOpathways)  
+names(PvSaGOpathways_list$Genes) <- PvSaGOpathways_list$Pathway 
+PvSaGO_list <- PvSaGOpathways_list$Genes 
+
+
+```
+
+
+```{r}
+
+################################GSEA on all SAV DE genes########################################
 ####need to make list of all 'pathways'
 sav_all_list <- c()
   #for MgSa
@@ -385,25 +428,26 @@ fgseaRes_all <- fgsea(pathways = as.list(sav_all_list), stats = ranks, minSize =
 fgseaRes_all_pos <- fgsea(pathways = as.list(sav_all_list), stats = ranks_log.pos, minSize = 1,  nperm = 1000)
 fgseaRes_all_neg <- fgsea(pathways = as.list(sav_all_list), stats = ranks_log.neg, minSize = 1,  nperm = 1000)
  
+##########NEG FOLD CHANGE ENRICHMENT#########
 plotEnrichment(pathway = sav_all_list$MgSa,
                stats  = ranks_log.neg) + labs(title = "MgSa neg log fold")
-plotEnrichment(pathway = sav_all_list$MgSa,
-               stats  = ranks) + labs(title ="MgSa")
 plotEnrichment(pathway = sav_all_list$MgPv,
                stats  = ranks_log.neg) + labs(title ="MgPv neg log fold")
-
 plotEnrichment(pathway = sav_all_list$PvSa,
+               stats  = ranks_log.neg) + labs(title ="PvSa neg log fold")
+##########POS FOLD CHANGE ENRICHMENT#########
+plotEnrichment(pathway = sav_all_list$MgSa,
                stats  = ranks_log.pos) + labs(title ="MgSa pos log fold")
-plotEnrichment(pathway = sav_all_list$MgSa,
+plotEnrichment(pathway = sav_all_list$MgPv,
                stats  = ranks_log.pos) + labs(title ="MgPv pos log fold")
-plotEnrichment(pathway = sav_all_list$MgPv,
-               stats  = ranks_log.pos) + labs(title ="PvSa pos log fold")
-
 plotEnrichment(pathway = sav_all_list$PvSa,
-               stats  = ranks ) + labs(title ="MgSa")
+               stats  = ranks_log.pos) + labs(title ="PvSa pos log fold")
+##########TOTAL ENRICHMENT##################
 plotEnrichment(pathway = sav_all_list$MgSa,
-               stats  = ranks ) + labs(title ="MgPv")
+               stats  = ranks ) + labs(title ="MgSa")
 plotEnrichment(pathway = sav_all_list$MgPv,
+               stats  = ranks ) + labs(title ="MgPv")
+plotEnrichment(pathway = sav_all_list$PvSa,
                stats  = ranks ) + labs(title ="PvSa")
 
 
@@ -413,8 +457,8 @@ plotEnrichment(pathway = sav_all_list$MgPv,
 ```{r}
  ########################FGSEA -- SAV GO DATA ENRICHED IN OUR DATA################################
  
-fgsea_all_pos <- c()
-fgsea_all_neg <- c()
+#In order to complete GSEA, we must create pathways, or gene lists that help us determine if that particular gene set is enriched in a gene expression data set. Here, we have GO analysis results from three comparisons of savage data, MgSa, MgPv, and PvSa. We will test these pathways on our data, separated in negative and positive log fold change, and ranked by the metric -log(pvalue)*abs(logfold2change). We will preform fgsea on each pathway, for positive, and negative ranked DE genes from our time point 0 to 12hours. 
+
 all_list <- c()
 all_list$MgSa_bio <- MgSaGOlist_bio
 all_list$MgPv_bio <- MgPvGOlist_bio
@@ -425,16 +469,17 @@ all_list$PvSa_cell <- PvSaGOlist_cell
 all_list$MgSa_mole <- MgSaGOlist_mole
 all_list$MgPv_mole <- MgPvGOlist_mole
 all_list$PvSa_mole <- PvSaGOlist_mole
-View(all_list)
 
+fgsea_all_pos <- c()
+fgsea_all_neg <- c()
 for (i in 1:9){
 fgsea_all_pos[[i]] = fgsea(pathways = as.list(all_list[[i]]), stats = ranks_log.pos, minSize = 15,  nperm = 1000)
 fgsea_all_neg[[i]] = fgsea(pathways = as.list(all_list[[i]]), stats = ranks_log.neg, minSize = 15,  nperm = 1000)
 }
 names(fgsea_all_neg) <- names(all_list)
 names(fgsea_all_pos) <- names(all_list)
-fgsea_all_pos$MgSa_mole
 
+fgsea(as.list(all_list$MgSa_bio), ranks_log.pos, minSize = 1, nperm = 1000)
 #####################MGSA ENRICHMENT########################
 
 ########POSLOG###########
@@ -500,93 +545,49 @@ plotEnrichment(all_list$PvSa_mole[[head(fgsea_all_neg$PvSa_mole[order(pval), ], 
                ranks_log.neg) + labs(title=head(fgsea_all_neg$PvSa_mole[order(pval), ], 1)$pathway)
 ```
 
-
 ```{r}
+############################FGSEA ON 2019 CLUSTERS#############################
+#In order to answer the biological questions of our data, we need to take statisitcal steps to gather information in order to prove, or answer the hypothesis at hand. Clustering our data is an example of this method. Here we are taking the fuzzy cluster GO analysis results, and preparing them for GSEA pipeline. 
 
-fgseaRes_all <- fgsea(pathways = as.list(MgSaGOlist_bio), stats = ranks, minSize = 1,  nperm = 1000)
-fgseaRes_all_pos <- fgsea(pathways = as.list(MgPvGOlist_bio), stats = ranks_log.pos, minSize = 1,  nperm = 1000)
-fgseaRes_all_neg <- fgsea(pathways = as.list(PvSaGOlist_bio), stats = ranks_log.neg, minSize = 1,  nperm = 1000)
-
-plotEnrichment(MgSaGOlist_bio[[head(fgseaRes_all_pos[order(pval), ], 1)$pathway]],
-               ranks_log.pos) + labs(title=head(fgseaRes_all_pos[order(pval), ], 1)$pathway)
-
-plotEnrichment(MgSaGOlist_bio[[head(fgseaRes_all_pos[order(pval), ], 1)$pathway]],
-               ranks_log.pos) + labs(title=head(fgseaRes_all_pos[order(pval), ], 1)$pathway)
-
-plotEnrichment(MgSaGOlist_bio[[head(fgseaRes_all_pos[order(pval), ], 1)$pathway]],
-               ranks_log.neg) + labs(title=head(fgseaRes_all_pos[order(pval), ], 1)$pathway)
-View(MgSaGOlist_bio)
-
-plotEnrichment(pathway = MgSaGOlist_bio$"transmembrane transport",
-               stats  = ranks_log.neg) + labs(title = "MgSa neg log fold")
-
-
-######################BIO FGSEA###########################
-View(MgSaGOlist_bio)
-fgseaRes_bio_pos_mgsa <- fgsea(pathways = as.list(MgSaGOlist_bio), stats = ranks_log.pos, minSize = 15,  nperm = 1000)
-fgseaRes_bio_neg_mgsa <- fgsea(pathways = as.list(MgSaGOlist_bio), stats = ranks_log.neg, minSize = 15,  nperm = 1000)
-
-fgseaRes_bio_pos_mgpv <- fgsea(pathways = as.list(MgPvGOlist_bio), stats = ranks_log.pos, minSize = 15,  nperm = 1000)
-fgseaRes_bio_neg_mgpv <- fgsea(pathways = as.list(MgPvGOlist_bio), stats = ranks_log.neg, minSize = 15,  nperm = 1000)
-
-fgseaRes_bio_pos_pvsa <- fgsea(pathways = as.list(PvSaGOlist_bio), stats = ranks_log.pos, minSize = 15,  nperm = 1000)
-fgseaRes_bio_neg_pvsa <- fgsea(pathways = as.list(PvSaGOlist_bio), stats = ranks_log.neg, minSize = 15,  nperm = 1000)
-#########################cell FGSEA#########################
-fgseaRes_cell_pos_mgsa <- fgsea(pathways = as.list(MgSaGOlist_cell), stats = ranks_log.pos, minSize = 15,  nperm = 1000)
-fgseaRes_cell_neg_mgsa <- fgsea(pathways = as.list(MgSaGOlist_cell), stats = ranks_log.neg, minSize = 15,  nperm = 1000)
-
-fgseaRes_cell_pos_mgpv <- fgsea(pathways = as.list(MgPvGOlist_cell), stats = ranks_log.pos, minSize = 15,  nperm = 1000)
-fgseaRes_cell_neg_mgpv <- fgsea(pathways = as.list(MgPvGOlist_cell), stats = ranks_log.neg, minSize = 15,  nperm = 1000)
-
-fgseaRes_cell_pos_pvsa <- fgsea(pathways = as.list(PvSaGOlist_cell), stats = ranks_log.pos, minSize = 15,  nperm = 1000)
-fgseaRes_cell_neg_pvsa <- fgsea(pathways = as.list(PvSaGOlist_cell), stats = ranks_log.neg, minSize = 15,  nperm = 1000)
-######################USING A FOR LOOP INSTEAD######################
-```
-  
-```{r}
-fuzzyClust <- read.table("fuzzyclusters_GO.tab") %>% dplyr :: select(Name, Result.gene.list, Type)
+#Reading in huge file with all GO terms of cluster.s 
+fuzzyClust <- read.table("fuzzyclusters_GO.tab") %>% dplyr :: select(Name, Result.gene.list, Cluster,Type)
 fuzzyClust$Result.gene.list <- gsub(',',',',fuzzyClust$Result.gene.list,fixed=TRUE)
 fuzzyClust$Result.gene.list <- strsplit(fuzzyClust$Result.gene.list, ",")
- 
-View(fuzzyClust)
-View(GO)
- 
-cluster1 <- data.frame(GO[1]) %>%dplyr::select(Cluster1.Name,Cluster1.Result.gene.list,Cluster1.Type) 
-cluster1$Cluster1.Result.gene.list <- gsub(',',',',cluster1$Cluster1.Result.gene.list,fixed=TRUE)
-cluster1$Cluster1.Result.gene.list <- strsplit(cluster1$Cluster1.Result.gene.list, ",")
 
-clust1_bio <- cluster1 %>% filter(Cluster1.Type == "Biological Process")
+
+#cluster1 <- data.frame(GO[1]) %>%dplyr::select(Cluster1.Name,Cluster1.Result.gene.list,Cluster1.Type) 
+#cluster1$Cluster1.Result.gene.list <- gsub(',',',',cluster1$Cluster1.Result.gene.list,fixed=TRUE)
+#cluster1$Cluster1.Result.gene.list <- strsplit(cluster1$Cluster1.Result.gene.list, ",")
+
+clust1_bio <- fuzzyClust %>% filter(Type == "Biological Process", Cluster == 1)
 clust1_bio_list <- as.list(clust1_bio)
-names(clust1_bio_list$Cluster1.Result.gene.list) <- clust1_bio_list$Cluster1.Name
-fuzzylist_1_bio <- clust1_bio_list$Cluster1.Result.gene.list
-#View(fuzzylist_1_bio)
+names(clust1_bio_list$Result.gene.list) <- clust1_bio_list$Name
+clust1_bio <- clust1_bio_list$Result.gene.list
+#View(clust1_bio)
 
-clust1_cell <- cluster1 %>% filter(Cluster1.Type == "Cellular Component")
+clust1_cell <- fuzzyClust %>% filter(Type == "Cellular Component", Cluster == 1)
 clust1_cell_list <- as.list(clust1_cell)
-names(clust1_cell_list$Cluster1.Result.gene.list) <- clust1_cell_list$Cluster1.Name
-fuzzylist_1_cell <- clust1_cell_list$Cluster1.Result.gene.list
+names(clust1_cell_list$Result.gene.list) <- clust1_cell_list$Name
+clust1_cell <- clust1_cell_list$Result.gene.list
 #View(fuzzylist_1_cell)
 
-clust1_mol <- cluster1 %>% filter(Cluster1.Type == "Molecular Function")
+clust1_mol <- fuzzyClust %>% filter(Type == "Molecular Function",Cluster == 1)
 clust1_mol_list <- as.list(clust1_mol)
-names(clust1_mol_list$Cluster1.Result.gene.list) <- clust1_mol_list$Cluster1.Name
-fuzzylist_1_mol <- clust1_mol_list$Cluster1.Result.gene.list
+names(clust1_mol_list$Result.gene.list) <- clust1_mol_list$Name
+clust1_mol <- clust1_mol_list$Result.gene.list
 
+#########CLUSTER 2######### 
  
-cluster2 <- data.frame(GO[2])%>%dplyr::select(Cluster2.Name,Cluster2.Result.gene.list,Cluster2.Type) 
-cluster2$Cluster2.Result.gene.list <- gsub(',',',',cluster2$Cluster2.Result.gene.list,fixed=TRUE)
-cluster2$Cluster2.Result.gene.list <- strsplit(cluster2$Cluster2.Result.gene.list, ",")
-
-clust2_bio <- cluster2 %>% filter(Cluster2.Type == "Biological Process")
+clust2_bio <- fuzzyClust %>% filter(Type == "Biological Process", Cluster == 2)
 clust2_bio_list <- as.list(clust2_bio)
-names(clust2_bio_list$Cluster2.Result.gene.list) <- clust2_bio_list$Cluster2.Name
-fuzzylist_2_bio <- clust2_bio_list$Cluster2.Result.gene.list
-#View(fuzzylist_2_bio)
+names(clust2_bio_list$Result.gene.list) <- clust2_bio_list$Name
+clust2_bio <- clust2_bio_list$Result.gene.list
+#View(clust2_bio)
 
-clust2_cell <- cluster2 %>% filter(Cluster2.Type == "Cellular Component")
+clust2_cell <- fuzzyClust %>% filter(Type == "Cellular Component", Cluster == 2)
 clust2_cell_list <- as.list(clust2_cell)
-names(clust2_cell_list$Cluster2.Result.gene.list) <- clust2_cell_list$Cluster2.Name
-fuzzylist_2_cell <- clust2_cell_list$Cluster2.Result.gene.list
+names(clust2_cell_list$Result.gene.list) <- clust2_cell_list$Name
+clust2_cell <- clust2_cell_list$Result.gene.list
 View(fuzzylist_2_cell)
 
 #clust2_mol <- cluster2 %>% filter(Cluster2.Type == "Molecular Function")
@@ -600,58 +601,37 @@ View(fuzzylist_2_cell)
 #clust3_cell <- cluster3 %>% filter(Cluster3.Type == "Cellular Component")
 #clust3_mol <- cluster3 %>% filter(Cluster3.Type == "Molecular Function")
 
-cluster4 <- data.frame(GO[4])%>%dplyr::select(Cluster4.Name,Cluster4.Result.gene.list,Cluster4.Type) 
-cluster4$Cluster4.Result.gene.list <- gsub(',',',',Cluster4.Result.gene.list$Cluster2.Result.gene.list,fixed=TRUE)
-cluster4$Cluster4.Result.gene.list <- strsplit(cluster2$Cluster2.Result.gene.list, ",")
+clust4_bio <- fuzzyClust %>% filter(Type == "Biological Process", Cluster == 4)
+clust4_bio_list <- as.list(clust4_bio)
+names(clust4_bio_list$Result.gene.list) <- clust4_bio_list$Name
+clust4_bio <- clust4_bio_list$Result.gene.list
+#View(fuzzylist_4_bio)
 
-clust4_bio <- cluster4 %>% filter(Cluster4.Type == "Biological Process")
-clust4_cell <- cluster4 %>% filter(Cluster4.Type == "Cellular Component")
-clust4_mol <- cluster4 %>% filter(Cluster4.Type == "Molecular Function")
+clust4_cell <- fuzzyClust %>% filter(Type == "Cellular Component", Cluster == 4)
+clust4_cell_list <- as.list(clust4_cell)
+names(clust4_cell_list$Result.gene.list) <- clust4_cell_list$Name
+clust4_cell <- clust4_cell_list$Result.gene.list
+#View(fuzzylist_4_cell)
+
+clust4_mol <- fuzzyClust %>% filter(Type == "Molecular Function", Cluster == 4)
+clust4_mol_list <- as.list(clust4_mol)
+names(clust4_mol_list$Result.gene.list) <- clust4_mol_list$Name
+clust4_mol <- clust4_mol_list$Result.gene.list
 
 #cluster5 <- data.frame(GO[5])%>%dplyr::select(Cluster5.Name,Cluster5.Result.gene.list,Cluster5.Type) 
 #clust5_bio <- cluster5 %>% filter(Cluster5.Type == "Biological Process")
 #clust5_cell <- cluster5 %>% filter(Cluster5.Type == "Cellular Component")
 #clust5_mol <- cluster5 %>% filter(Cluster5.Type == "Molecular Function")
 
-cluster6 <- data.frame(GO[6])%>%dplyr::select(Cluster6.Name,Cluster6.Result.gene.list,Cluster6.Type) 
+
 #clust6_bio <- cluster6 %>% filter(Cluster6.Type == "Biological Process")
-clust6_cell <- data.frame(cluster6 %>% filter(Cluster6.Type == "Cellular Component"))
-clust6_cell$Cluster6.Result.gene.list <- gsub(',',',',clust6_cell$Cluster6.Result.gene.list,fixed=TRUE)
-clust6_cell$Cluster6.Result.gene.list <- strsplit(clust6_cell$Cluster6.Result.gene.list, ",")
+clust6_cell <- fuzzyClust %>% filter(Type == "Cellular Component", Cluster == 6) 
 clust6_cell_list <- as.list(clust6_cell)
-names(clust6_cell_list$Cluster6.Result.gene.list) <- clust6_cell_list$Cluster6.Name
-fuzzylist_6_bio <- clust6_cell_list$Cluster6.Result.gene.list
-
-#clust6_mol <- cluster6 %>% filter(Cluster6.Type == "Molecular Function")
-
-View(fuzzylist_6_bio)
-clust6_cell$Cluster6.Result.gene.list
-fuzzy_biopros$Result.gene.list
-
+names(clust6_cell_list$Result.gene.list) <- clust6_cell_list$Name
+clust6_cell <- clust6_cell_list$Result.gene.list
+ 
 #making Result.gene.list entry into list 
-clust6_cell$Cluster6.Result.gene.list <- gsub(',',',',clust6_cell$Cluster6.Result.gene.list,fixed=TRUE)
-clust6_cell$Cluster6.Result.gene.list <- strsplit(clust6_cell$Cluster6.Result.gene.list, ",")
-
-
-
-fuzzy_biopros <- data.frame(fuzzyClust %>% filter(Type == "Biological Process"))
-fuzzy_biopros_list <- as.list(fuzzy_biopros)
-names(fuzzy_biopros_list$Result.gene.list) <- fuzzy_biopros_list$Name
-fuzzylist_bio <- fuzzy_biopros_list$Result.gene.list
-View(fuzzy_biopros_list)
-
-fuzzy_cellpros <- data.frame(fuzzyClust %>% filter(Type == "Cellular Component"))
-fuzzy_cellpros_list <- as.list(fuzzy_cellpros)
-names(fuzzy_cellpros_list$Result.gene.list) <- fuzzy_cellpros_list$Name
-fuzzylist_cell <- fuzzy_cellpros_list$Result.gene.list
-#View(fuzzylist_cell)
-
-fuzzy_molpros <- data.frame(fuzzyClust %>% filter(Type == "Molecular Function"))
-fuzzy_molpros_list <- as.list(fuzzy_molpros)
-names(fuzzy_molpros_list$Result.gene.list) <- fuzzy_molpros_list$Name
-fuzzylist_mol <- fuzzy_molpros_list$Result.gene.list
-#iew(fuzzylist_mol)
-
+ 
 all_fuzzy <- c()
 all_fuzzy$bio1 <- clust1_bio
 all_fuzzy$bio2 <- clust2_bio
@@ -669,47 +649,67 @@ all_fuzzy$mol4 <- clust4_mol
 #all_fuzzy$mol6 <- clust6_mol
 
 View(all_fuzzy)
-library(fgsea)
+#library(fgsea)
  
-fgsea_all_pos_fuzzy <- c()
-fgsea_all_neg_fuzzy <- c()
-fgsea_all_fuzzy <- c()
+fgsea_mgsa_fuzzy <- c()
+fgsea_mgpv_fuzzy <- c()
+fgsea_pvsa_fuzzy <- c()
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
 
-#c <- intersect(ranks, ranks_log.neg)
-#length(ranks_log.neg)
-#ranks
-#f
+BiocManager::install("BiocParallel")
+
+library(BiocParallel)
+bplapply(1:10, sqrt, BPPARAM = SnowParam(fgsea(as.list(clust1_bio), ranks_MgPv, minSize = 1,  nperm = 100)))
+?bplapply
 for (i in 1:9){
-fgsea_all_pos_fuzzy[[i]] = fgsea(pathways = as.list(all_fuzzy[[i]]), stats = ranks_log.pos, minSize = 15,  nperm = 1000)
-fgsea_all_neg_fuzzy[[i]] = fgsea(pathways = as.list(all_fuzzy[[i]]), stats = ranks_log.neg, minSize = 15,  nperm = 1000)
-fgsea_all_fuzzy[[i]] = fgsea(pathways = as.list(all_fuzzy[[i]]), stats = ranks, minSize = 15,  nperm = 1000)
+fgsea_mgsa_fuzzy[[i]] = fgsea(pathways = as.list(all_fuzzy[[i]]), stats = ranks_MgSa, minSize = 1,  nperm = 100)
+fgsea_mgpv_fuzzy[[i]] = fgsea(pathways = as.list(all_fuzzy[[i]]), stats = ranks_MgPv, minSize = 1,  nperm = 100)
+fgsea_pvsa_fuzzy[[i]] = fgsea(pathways = as.list(all_fuzzy[[i]]), stats = ranks_PvSa, minSize = 1,  nperm = 100)
 }
 
-names(fgsea_all_pos_fuzzy) <- names(all_fuzzy)
-names(fgsea_all_neg_fuzzy) <- names(all_fuzzy)
-names(fgsea_all_fuzzy) <- names(all_fuzzy)
-View(fgsea_all_fuzzy)
+names(fgsea_mgsa_fuzzy) <- names(all_fuzzy)
+names(fgsea_mgpv_fuzzy) <- names(all_fuzzy)
+names(fgsea_pvsa_fuzzy) <- names(all_fuzzy)
+View(fgsea_mgsa_fuzzy)
+View(fgsea_mgpv_fuzzy)
+View(fgsea_pvsa_fuzzy)
 
-fgsea(pathways = all_fuzzy$bio, stats = ranks_log.pos, minSize = 15,  nperm = 1000)
-fgsea(pathways = all_fuzzy$bio, stats = ranks_log.neg, minSize = 15,  nperm = 1000)
-fgsea(pathways = all_fuzzy$cell, stats = ranks_log.pos, minSize = 15,  nperm = 1000)
-fgsea(pathways = all_fuzzy$cell, stats = ranks_log.neg, minSize = 15,  nperm = 1000)
-fgsea(pathways = all_fuzzy$mol, stats = ranks_log.pos, minSize = 15,  nperm = 1000)
-fgsea(pathways = all_fuzzy$mol, stats = ranks_log.pos, minSize = 15,  nperm = 1000)
+fgsea(as.list(all_fuzzy$cell1), ranks_MgPv, minSize = 1,  nperm = 100)
 
-plotEnrichment(all_fuzzy$mol[[head(fgsea_all_pos_fuzzy$mol[order(pval), ], 1)$pathway]],
-               ranks_log.pos) + labs(title=head(fgsea_all_pos_fuzzy$mol[order(pval), ], 1)$pathway)
+head(ranks_PvSa)
+head(exampleRanks)
 
-plotEnrichment(all_fuzzy$cell[[head(fgsea_all_neg_fuzzy$cell[order(pval), ], 1)$pathway]],
-               ranks_log.neg) + labs(title=head(fgsea_all_neg_fuzzy$cell[order(pval), ], 1)$pathway)
+length(ranks_PvSa)
 
-plotEnrichment(all_fuzzy$mol[[head(fgsea_all_fuzzy$mol[order(pval), ], 1)$pathway]],
-               ranks) + labs(title=head(fgsea_all_fuzzy$mol[order(pval), ], 1)$pathway)
 
-plotEnrichment(all_fuzzy$bio[[head(fgsea_all_fuzzy$bio[order(pval), ], 1)$pathway]],
-               ranks) + labs(title=head(fgsea_all_fuzzy$bio[order(pval), ], 1)$pathway)
 
-plotEnrichment(all_fuzzy$cell[[head(fgsea_all_fuzzy$cell[order(pval), ], 1)$pathway]],
-               ranks) + labs(title=head(fgsea_all_fuzzy$cell[order(pval), ], 1)$pathway)
+############clust 1###############
+plotEnrichment(all_fuzzy$cell1[[head(fgsea_all_fuzzy$cell1[order(pval), ], 1)$pathway]],
+               ranks) + labs(title=head(fgsea_all_fuzzy$cell1[order(pval), ], 1)$pathway)
+
+plotEnrichment(all_fuzzy$mol1[[head(fgsea_all_pos_fuzzy$mol1[order(pval), ], 1)$pathway]],
+               ranks_log.pos) + labs(title=head(fgsea_all_pos_fuzzy$mol1[order(pval), ], 1)$pathway)
+
+############clust 2###############
+plotEnrichment(all_fuzzy$bio2[[head(fgsea_all_fuzzy$bio2[order(pval), ], 1)$pathway]],
+               ranks) + labs(title=head(fgsea_all_fuzzy$bio2[order(pval), ], 1)$pathway)
+plotEnrichment(all_fuzzy$cell2[[head(fgsea_all_pos_fuzzy$cell2[order(pval), ], 1)$pathway]],
+               ranks_log.pos) + labs(title=head(fgsea_all_pos_fuzzy$cell2[order(pval), ], 1)$pathway)
+
+############clust 4###############
+plotEnrichment(all_fuzzy$cell4[[head(fgsea_all_pos_fuzzy$cell4[order(pval), ], 1)$pathway]],
+               ranks_log.pos) + labs(title=head(fgsea_all_pos_fuzzy$cell4[order(pval), ], 1)$pathway)
+
+plotEnrichment(all_fuzzy$mol4[[head(fgsea_all_pos_fuzzy$mol4[order(pval), ], 1)$pathway]],
+               ranks_log.pos) + labs(title=head(fgsea_all_pos_fuzzy$mol4[order(pval), ], 1)$pathway)
+
+plotEnrichment(all_fuzzy$bio4[[head(fgsea_all_fuzzy$bio4[order(pval), ], 1)$pathway]],
+               ranks) + labs(title=head(fgsea_all_fuzzy$bio4[order(pval), ], 1)$pathway)
+
+
+#View(fgsea_all_pos_fuzzy$cell4)
+
+
 
 ```
