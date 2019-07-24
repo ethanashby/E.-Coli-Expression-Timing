@@ -5,6 +5,11 @@ output:
   html_notebook: default
 ---
 
+
+Hello
+
+
+
 ## Abstract
   *E. coli* possesses a general stress response that coordinates physiological responses to a variety of stressful stimuli including cell starvation during exponential growth. A key transcription factor in the general stress response, RpoS, is involved in the transcription of approximately one quarter of *E. coli's* genome. Groups of genes were previously classified by their kinetics with respect to RpoS concentration: genes with expressions that increase linearly with RpoS concentration ('linear' genes), genes that are transcribed *more* than anticipated under the linear hypothesis at low RpoS concentrations ('sensitive' genes), genes that are transcribed *less* than anticipated under the linear hypothesis at low RpoS concentrations ('insensitive' genes). Fong *et al.* proposed that the graded RpoS sensitivity of these genes could function as a mechanism to control the *timing* of genes invovled in *E. coli's* response to stress (Fong *et al* 2017). To address this question, DEGs were determined using a thoughtfully-constructed pipeline, and gene-wise sigmoidal models were fit to significant *E. coli* expression trajectories using ImpulseDE2. The variability and noise robustness of the models' parameters were assessed by simulations. Analysis of the biologically meaningful "onset time" parameter did not demonstrate a statistically nor biologically significant difference between the onset times for sensitive and insensitive genes. Implications and future research directions are discussed.
 
