@@ -286,18 +286,29 @@ PvSa_GObiopros <- read.table("PvSa_GObiopros.tab", sep = "\t",header = TRUE) %>%
   PvSa_GObiopros <- data.frame(PvSa_GObiopros, comparison = "PvSa_bio")
   
 ```
-
-```{r, include = FALSE}
+Here, to speed up the process, we bind all GO biological process for three comparisons MgSa, MgPv, and PvSa. We will separate the data frame using fiulter function using column 'comparison'.
+Because the genes that are given by default in this data table are not in a list format, but rather a block of string. We need to split the genes in order to evaluate GSEA using string split them using functions gsub() and strsplit(). 
+```{r}
   
 all_bio <- rbind(MgSa_GObiopros,MgPv_GObiopros,PvSa_GObiopros)
+all_bio$Result.gene.list[1]
 all_bio$Result.gene.list <- gsub(',',',',all_bio$Result.gene.list,fixed=TRUE)
 all_bio$Result.gene.list <- strsplit(all_bio$Result.gene.list, ",")
+all_bio$Result.gene.list[1]
+```
  
+ Here, using the filter funciton we filter data frame MgSa GO biological process, and then turn the resulting GO term data table into a list of GO terms and resulting gene names. Complete data filter and GO pathway creation for remaining GO Cellular, and Molecular pathways for MgSa, MgPv, and PvSa. 
+```{r}
 #MgSa Bio
 MgSa_GObiopros <- data.frame(all_bio %>% dplyr :: filter(comparison == "MgSa_bio"))
 MgSa_GObiopros_list <- as.list(MgSa_GObiopros)
-names(MgSa_GObiopros_list$Result.gene.list) <- MgSa_GObiopros_list$Name
+names(MgSa_GObiopros_list$Result.gene.list) <- MgSa_GObiopros_list$Name 
 MgSaGOlist_bio <- MgSa_GObiopros_list$Result.gene.list
+MgSaGOlist_bio$`transmembrane transport`
+
+```
+
+```{r, include = FALSE}
 #MgPv Bio
 MgPv_GObiopros <- data.frame(all_bio %>% filter(comparison == "MgPv_bio"))
 MgPv_GObiopros_list <- as.list(MgPv_GObiopros)
@@ -309,9 +320,6 @@ PvSa_GObiopros_list <- as.list(PvSa_GObiopros)
 names(PvSa_GObiopros_list$Result.gene.list) <- PvSa_GObiopros_list$Name
 PvSaGOlist_bio <- PvSa_GObiopros_list$Result.gene.list
 
-```
-
-```{r,include = FALSE}
 #####################CELL PROS#######################
   #MGSA
 MgSa_GOcellpros <- read.table("MgSa_GOcellpros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
@@ -375,17 +383,23 @@ PvSaGOlist_mole <- PvSa_GOmolepros_list$Result.gene.list
 
 ```
 
-```{r,echo = FALSE}
+Creating ranks
+
+To measure the enrichment of Savage DE genes in Schulz clusters, we need to create a ranked list based on a metric of differental expression. For this analysis, the metric used was -log10(pvlaue) * abs(logfold2change). If the pvalue of a resulting DE gene is very low, the -log10(pvalue) will be extremely large. Contrastly, a high logfold2change represents high expression, and a positive logfold2change shows genes are up regulated, and a negative logfold2change show genes are down regulated. Thus, the ranked vector of Savage DE genes will factor the up/down gene regulation and DE gene significance and magnitude.  
+
+To begin creating the ranked list, the results data table for all Savage comparisons will be row binded and differitated by colum 'comparison' to speed up coding and process. 
+```{r}
 #######MAKING RANKED METRIC LIST FOR SAVAGE DATA########
 
 #making big data set 'allcomp' with all comparisons to make code easier. Splitting after by 'comparison' 
 MGSA_df <- data.frame(Gene = rownames(MgSa), pvalue = MgSa$pvalue, padj = MgSa$padj, comparison = "MgSa",log2FoldChange= MgSa$log2FoldChange)
 MGPV_df <- data.frame(Gene = rownames(MgPv), pvalue = MgPv$pvalue, padj = MgPv$padj, comparison = "MgPv", log2FoldChange= MgPv$log2FoldChange)
 PVSA_df <- data.frame(Gene = rownames(PvSa), pvalue = PvSa$pvalue, padj = PvSa$padj, comparison = "PvSa",log2FoldChange= PvSa$log2FoldChange)
- 
 sav_allcomp <- rbind(MGSA_df,MGPV_df, PVSA_df)
+```
 
 
+```{r}
 
 sav_allcomp$logP <- -log10(sav_allcomp$pvalue) #calculating metric == -log10(pvalue)
 sav_allcomp <-  sav_allcomp[which(abs(sav_allcomp$logP) != 0),] #filtering out p-values 
