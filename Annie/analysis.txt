@@ -1,0 +1,11 @@
+Analysis Type:	PANTHER Overrepresentation Test (Released 20190711)
+Annotation Version and Release Date:	GO Ontology database  Released 2019-07-03
+Analyzed List:	upload_1 (Escherichia coli)
+Reference List:	Escherichia coli (all genes in database)
+Test Type:	FISHER
+Correction:	FDR
+GO biological process complete	Escherichia coli - REFLIST (4313)	upload_1 (541)	upload_1 (expected)	upload_1 (over/under)	upload_1 (fold Enrichment)	upload_1 (raw P-value)	upload_1 (FDR)
+cellular nitrogen compound metabolic process (GO:0034641)	739	56	92.70	-	.60	3.39E-05	2.51E-02
+organic cyclic compound metabolic process (GO:1901360)	703	51	88.18	-	.58	1.69E-05	5.01E-02
+heterocycle metabolic process (GO:0046483)	666	48	83.54	-	.57	2.61E-05	2.57E-02
+cellular aromatic compound metabolic process (GO:0006725)	670	48	84.04	-	.57	2.04E-05	3.02E-02
