@@ -352,7 +352,7 @@ To better understand the effects of dispersion, sample size, and outliers on the
 ### Effect of Dispersion on Sigmoid Parameters
 The simulation pipeline was conducted under three conditions: with the *a priori* DESeq2-shrunken dispersion parameter estimates, a 100-fold *increase* in the dispersion parameter estimate (i.e. a 100-fold reduction in the noise caused by dispersion), and 100-fold *decrease* in the dispersion parameter estimate (i.e. a 100-fold increase in the noise caused by dispersion). 
 
-In the first condition beta, t, h0, and h1 all appeared highly reproducible, as the initial parameter values were relatively central to the distributions of simulated values.
+With unchanged dispersion, beta, t, h0, and h1 all appeared highly reproducible, as the initial parameter values were relatively central to the distributions of simulated values. All expression trajectories were highly correlated (>0.94) to the initial trajectory
 
 ```{r Normal Dispersion Sim, cache=T, eval=TRUE, echo=FALSE, message=FALSE}
 ##############################################################################################################
@@ -445,7 +445,9 @@ plot_trajectories$score<-scores
 
 e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient(low = "yellow", high = "red", name="Score", breaks=waiver(), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(genes[k], ": Plots of all expression trajectories (init in black)", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)+geom_vline(xintercept=median(sim_params_to_plot$t), linetype="dashed", color="magenta")
 print(grid.arrange(b, c, d, ncol=1))
-print(e)}
+print(e)
+summary(sim_params_to_plot)
+}
 ```
 
 Increasing the dispersion-based noise lead to profound variability in the resulting simulated trajectories. The slope parameter (beta) was most affected by the additional noise, the initial value occupied the 9th quantile of the distribution of simulated parameters; this distribution had a profound right skew suggestive of high variabilities in the slopes of expression. Amplitude parameters h0 and h1 were also affected by the dispersion-based noise, as the distribution of their difference (h1-h0) profoundly shifted left from the initial value (over 30,000 units). However, the effect of dispersion-based noise was minimal in the onset time (t) parameter; the distribution of simulated onset times did not profoundly shift or widen, and the median simulated parameter and the initial parameter were separated by less than one minute. Thus, t appears to be the parameter most robust to dispersion-based noise in the sigmoidal model, an encouraging finding for RNA-seq experiments with few replicates hoping to address timing-related questions.
@@ -531,7 +533,9 @@ plot_trajectories$score<-scores
 
 e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient(low = "yellow", high = "red", name="Score", breaks=waiver(), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(genes[k], ": Plots of all expression trajectories (init in black), dispersion decreased 100-fold", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)+geom_vline(xintercept=median(sim_params_to_plot$t), linetype="dashed", color="magenta")
 print(grid.arrange(b, c, d, ncol=1))
-print(e)}
+print(e)
+summary(sim_params_to_plot)
+}
 ```
 
 ```{r less noise, cache=T, eval=FALSE, echo=FALSE, message=FALSE}
@@ -715,6 +719,7 @@ plot_trajectories$score<-scores
 e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient(low = "yellow", high = "red", name="Score", breaks=waiver(), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(genes[k], ": Plots of all expression trajectories (init in black), dispersion decreased 100-fold", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,15,30,45,60,75,90,105,120,135,150), labels=c(0,15,30,45,60,75,90,105,120,135,150))+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)+geom_vline(xintercept=median(sim_params_to_plot$t), linetype="dashed", color="magenta")
 print(grid.arrange(b, c, d, ncol=1))
 print(e)
+summary(sim_params_to_plot)
 }
 
 #plot distributions of monotonic t params
@@ -724,6 +729,8 @@ In addition, according to the distribution of monotonic onset time parameters, a
 
 ### Effect of outliers on Sigmoid Parameters
 
+
+### Sigmoid parameters of Sensitive and Insensitive Genes
 ```{r Sigmoid Sensitive/Insenstive Sims, cache=TRUE, eval=FALSE}
 #pull out 5 monotonic sensitive, 5 monotonic insensitive genes, 1 monotonic linear gene
 set.seed(11)
@@ -800,9 +807,93 @@ print(grid.arrange(b, c, d, ncol=1))
 print(e)}
 ```
 
-```{r}
-ggplot(monoparamsdf, aes(x=t, y=log(h1-h0)))+geom_jitter()
+```{r Exploratory Analysis}
+
+#Go thru monoparamsdf and ascribe sensitive, insensitive, linear to genes
+monoparamsdf$sens<-rep(NA, dim(monoparamsdf)[1])
+monoparamsdf$sens[match(rownames(monoparamsdf)[rownames(monoparamsdf) %in% sensitive$geneName], rownames(monoparamsdf))]<-"Sensitive"
+monoparamsdf$sens[match(rownames(monoparamsdf)[rownames(monoparamsdf) %in% insensitive$geneName], rownames(monoparamsdf))]<-"Insensitive"
+monoparamsdf$sens[match(rownames(monoparamsdf)[rownames(monoparamsdf) %in% linear$geneName], rownames(monoparamsdf))]<-"linear"
+ggplot(monoparamsdf, aes(x=t, y=log(h1/h0), color=sens))+geom_jitter(size=1)
+ggplot(monoparamsdf, aes(x=t, y=log(h1/h0), color=sens))+geom_jitter(size=1)+xlim(50,150)+ylim(-10,10)
+
+###fuzzy clustering based on scaled mean expression profiles
+
+library(Mfuzz)
+library(cluster)
+size_facs<-sizeFactors(ecolidds)[grep("JH01", names(sizeFactors(ecolidds)))]
+cluster_data<-matrix(ncol=6,nrow=dim(monoparamsdf)[1])
+for (i in 1:dim(monoparamsdf)[1]){
+  index<-match(rownames(monoparamsdf)[i], rownames(ecounts[,grep("JH01",colnames(ecounts))]))
+  cluster_data[i,]<-c(mean(ecounts[,grep("JH01",colnames(ecounts))][index,1]*size_facs[1], ecounts[,grep("JH01",colnames(ecounts))][index,7]*size_facs[7], ecounts[,grep("JH01",colnames(ecounts))][index,13]*size_facs[13]), mean(ecounts[,grep("JH01",colnames(ecounts))][index,2]*size_facs[2], ecounts[,grep("JH01",colnames(ecounts))][index,8]*size_facs[8], ecounts[,grep("JH01",colnames(ecounts))][index,14]*size_facs[14]), mean(ecounts[,grep("JH01",colnames(ecounts))][index,3]*size_facs[3], ecounts[,grep("JH01",colnames(ecounts))][index,9]*size_facs[9], ecounts[,grep("JH01",colnames(ecounts))][index,15]*size_facs[15]), mean(ecounts[,grep("JH01",colnames(ecounts))][index,4]*size_facs[4], ecounts[,grep("JH01",colnames(ecounts))][index,10]*size_facs[10], ecounts[,grep("JH01",colnames(ecounts))][index,16]*size_facs[16]), mean(ecounts[,grep("JH01",colnames(ecounts))][index,5]*size_facs[5], ecounts[,grep("JH01",colnames(ecounts))][index,11]*size_facs[11], ecounts[,grep("JH01",colnames(ecounts))][index,17]*size_facs[17]), mean(ecounts[,grep("JH01",colnames(ecounts))][index,6]*size_facs[6], ecounts[,grep("JH01",colnames(ecounts))][index,12]*size_facs[12], ecounts[,grep("JH01",colnames(ecounts))][index,18]*size_facs[18]))
+  }
+rownames(cluster_data)<-rownames(monoparamsdf)
+colnames(cluster_data)<-c(0,30,60,90,120,150)
+Set<-ExpressionSet(cluster_data)
+Set.s<-standardise(Set)
+scaleddata<-t(scale(t(cluster_data)))
+
+#run clustering
+cl<-mfuzz(Set.s, c=4, m=mestimate(Set.s))
+
+#plot clusters
+mfuzz.plot(Set.s, cl, mfrow=c(2,2), time.labels = c(0,30,60,90,120,150), min.mem=0, new.window=FALSE)
+
+#visualize cluster overlap
+overlap.plot(cl, overlap(cl), thres=0.01)
+
+#select cores
+cores<-acore(Set.s, cl, min.acore=0.1)
+
+monoparamsdf$cluster<-rep(NA, dim(monoparamsdf)[1])
+for (i in 1:dim(monoparamsdf)[1]){
+  if (rownames(monoparamsdf)[i] %in% cores[[1]]$NAME) {monoparamsdf$cluster[i]<-"1"}
+  else if (rownames(monoparamsdf)[i] %in% cores[[2]]$NAME) {monoparamsdf$cluster[i]<-"2"}
+  else if (rownames(monoparamsdf)[i] %in% cores[[3]]$NAME) {monoparamsdf$cluster[i]<-"3"}
+  else if (rownames(monoparamsdf)[i] %in% cores[[4]]$NAME) {monoparamsdf$cluster[i]<-"4"}
+  #else if (rownames(monoparamsdf)[i] %in% cores[[5]]$NAME) {monoparamsdf$cluster[i]<-"5"}
+  #else if (rownames(monoparamsdf)[i] %in% cores[[6]]$NAME) {monoparamsdf$cluster[i]<-"6"}
+  #else if (rownames(monoparamsdf)[i] %in% cores[[7]]$NAME) {monoparamsdf$cluster[i]<-"7"}
+  #else if (rownames(monoparamsdf)[i] %in% cores[[8]]$NAME) {monoparamsdf$cluster[i]<-"8"}
+  #else if (rownames(monoparamsdf)[i] %in% cores[[9]]$NAME) {monoparamsdf$cluster[i]<-"9"}
+  #else if (rownames(monoparamsdf)[i] %in% cores[[10]]$NAME) {monoparamsdf$cluster[i]<-"10"}
+  #else if (rownames(monoparamsdf)[i] %in% cores[[11]]$NAME) {monoparamsdf$cluster[i]<-"11"}
+  else foo()
+}
+ggplot(monoparamsdf, aes(x=t, y=log(h1/h0), color=cluster, shape=sens))+geom_jitter(size=1)+xlim(25,160)
+ggplot(monoparamsdf, aes(x=t, y=log(h1/h0), color=cluster, shape=sens))+geom_jitter(size=1)+xlim(25,160)+facet_wrap(vars(cluster), nrow=6, ncol=2)
+
+#GO each core
+library(topGO)
+library(org.EcK12.eg.db)
+enrich<-function(core){
+selection <- function(x) TRUE
+GeneList <- c(1:length(core))
+names(GeneList) <- core
+annot <- annFUN.org(whichOnto = "BP", feasibleGenes = NULL, mapping = "org.EcK12.eg", ID = "symbol")
+GOdata <- new("topGOdata", ontology="BP", allGenes=GeneList, annot=annFUN.GO2genes, GO2genes = annot, geneSel = selection, nodeSize = 5)
+GO_results <- runTest(GOdata, algorithm = "classic", statistic = "ks")
+goEnrich <- GenTable(GOdata, KS = GO_results, orderBy = "KS", topNodes = 10)
+GO_terms<-goEnrich[,c("GO.ID", "Term", "KS")] %>% filter(KS<0.05)
+GO_terms}
+
+enrich(cores[[1]]$NAME)
+enrich(cores[[2]]$NAME)
+enrich(cores[[3]]$NAME)
+enrich(cores[[4]]$NAME)
+enrich(cores[[5]]$NAME)
+enrich(cores[[6]]$NAME)
+enrich(cores[[7]]$NAME)
+enrich(cores[[8]]$NAME)
+enrich(cores[[9]]$NAME)
+enrich(cores[[10]]$NAME)
+enrich(cores[[11]]$NAME)
+
+### What if I cluster based on the read counts obtained from sigmoid profiles
+
 ```
+
+
 
 
 ```{r, eval=FALSE}
