@@ -224,7 +224,7 @@ resSig <- savageRes_PvSa[ which(savageRes_PvSa$padj < 0.01 ), ]
 resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
 PvSa <- resSig
 
-h
+h h 
 ```
 
 #7. Grouping Methods
