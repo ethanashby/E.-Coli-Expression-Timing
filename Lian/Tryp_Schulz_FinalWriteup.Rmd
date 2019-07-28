@@ -9,25 +9,27 @@ knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
-#tinytex::install_tinytex()
+#Data Manipulation
 library("dplyr")
 library("tidyr")
-library("DESeq2")
 library(readr)
 library(devtools)
-library("DESeq2")
-library(readr)
-library(tidyr)
-library(ggplot2)
 library("vsn")
 library("hexbin")
-library("corrplot")
 library("tidyverse")
 library(stringr)
 library("Hmisc")
+#DEG tools 
+library("DESeq2")
 library(cluster)
 library("mclust")
- 
+library(ImpulseDE2)
+library(maSigPro)
+library(edgeR)
+#for visualzation
+library(VennDiagram)
+library(ggplot2)
+library("corrplot")
 #for GSEA
 library(doParallel)
 library(Biobase)
@@ -38,33 +40,48 @@ library(BiocParallel)
 
 #Table of Contents
 1. Background
-2. RNA-Seq Overview
-3. Start With the Raw Read Counts
-4. Quality Control
-5. Normalize All Counts
-6. Differential Expression Analysis
-7. Grouping Methods - clustering
-8. GO Analysis
-9. GSEA 
+1.1 Abstract
+1.2 Goals
+2. Methods
+2.1 Normalization
+2.2 Differential Expression Analysis
+2.3 Clustering
+3. Comparing Data 
+3.1 Savage Data
+3.2 Savage Methods
+4. Gene Ontology Analysis
+4.1 Schulz GO
+4.2 Savage GO
+5.Gene Set Enrichment Analysis
+5.1 Clusters
+5.2 Savage 
+6. Conclusion
+7. Acknowledgements
 
 #1. Background 
-Trypanosoma brucei (T. brucei) is a protozoan parasite that causes African Trypanosomiasis, commonly known as sleeping sickness, in humans and other mammals. This parasite is transmitted into mammals through an insect vector, the Tsetse fly. During its infectious cycle, the parasite maintains several life stages throughout changing environments of insect and mammal. Of those most studied are trypanosoma in the Bloodstream form and the procyclic form. 
- These life cycle stages differ in their cell-surface landscapes, cytochrome-associated metabolism in the mitochondrion, endocytic activity, cell-cycle checkpoints, and morphology. These profound biological changes are associated with cognizable changes in the parasite’s transcriptome (Savage et al, 2016), however, very little is known about how gene expression is regulated in T. brucei (Siegel et al, 2010).
 
-Upon entering a mammal, T.brucei undergoes biological and cell surface landscape changes, marking the distinction between bloodstream forms and procyclic form. Cell surface variant surface glycoproteins (VSG) are the differences between these two forms. T.brucei BF VSGs provides security to human body immune response. By varying ~2,500 distinct surface glycoprotein genes, the parasite can evade human/mammal antibody response and continue to infect host. 
+#1.1 Abstract
+West African Sleeping Sickness is a deadly disease contracted by the bite of an infected Tsetse fly carriying the protozoan parasite Trypanosoma Brucei. This sickness is fatal and often terminal in mammals and humans, as parasites proliferate in lymphatic, blood, nervous systems, and eventually the brain. Syptoms include disrupted sleep, behavioral changes,neurological damage, and death if left untreated. Due to the limited studies of this illness and harmful drug treatments, motivation to understand the complexity and nature of Trypanosoma Brucei become pertinent to world wide health and safety. 
 
-A known protein bromodomain,which are important transcriptional regulators in T. brucei. Has veen suggested to control cell fate through recognition of epigenetic modifications of histones (Di Micco et al 2014). Inhibition of bromodomain has been found to prohibit certain bloodstream form function, such as mobility, reproduction, and transcriptional factors. Cell-surface landscapes, and decrease in virulence in the BF have lead to hypothesis of turning into the PF. Therefore, the conclusion arises that bromodomain maintains main BF function and thus have implications that by inhibiting this protein, the trypanosome undergoes the transition of BF to PF, which is less virulent in human/mammal host. 
+Trypanosome surface proteins can directly interact with the host environment, allowing parasites to effectively establish and maintain infections(Savage). During its infectious cycle, the parasite maintains several life stages throughout changing environments of insect and mammal. When living in the fly, the parasite's surface is covered with an invariant procylin, or proteins developed in the surface coating of Trypanosoma brucei in the Procyclic form(PF). However, upon living in the mammal, the parasite resides extracellularly in the bloodstream and becomes densly covered with highly immunogenic Variant Surface Glycoprotein (VSG). In this bloodstream form (BF), the parasite can vary its outer surface using approximatley 2,500 distinct VSG genes. As a result, Trypanosoma Brucei can evade human/mammal antibody immune response and remain virulent by constantly interchanging VSG genes.
 
-This summer, we have looked at the result of research studying the effects of bromodomain inhibition in the trypanosome PF. Building off of past research, and understanding   Bromodomain inhibition in BF leads to transcriptomic and epitope change towards PF, we  measured gene expression in WT PF and bromodomain-inhibited PF over 2 week time course, Determined differentially expressed genes (DEGs) between these two conditions, and finally help predict the effect of bromodomain inhibition on gene expression in insect form through data analysis.  
+For BF in mammals, the role of histone acetyl-lysine recognizing bromodomain proteins, have shown control of stem cell fate, this leading to the hypothesis that bromodomain proteins may maintain the BF cell fate in trypanosomes. Histone lysine acetylation is central to epigenetic control of gene transcription. Thus, boromodomain inhibition dirupts two major BF specific immune evasion mechanisms that trypanosomes harness to evade mamilian antibody immune response. Of these functions, monoalleic expression of varied VSG disrupted, and rapid internalization of antibodies bound to VSG on the surface of the trypanosome is blocked. Through these results, bromodomain inhibition in BF trypanosomes reveals changes in the transciptome similar to PF trypanosomes. Importantly, bromodomain inhibition leads to a decrease in virulence in a mouse model of infection, establishing these proteins as potential therapeutic drug targets for trypanosomiasis.
 
+This summer 2019, we looked at the result of research studying the effects of bromodomain inhibition in PF trypanosomes. Building off of past research, and understanding bromodomain inhibition in BF leads to transcriptomic and epitope change towards PF, we measured gene expression in WT PF and bromodomain-inhibited PF over 2 week time course, Determined differentially expressed genes (DEGs) between these two conditions, and finally help predict the effect of bromodomain inhibition on gene expression in insect form through data analysis.  
+#1.2 Goals 
 
+Building off of past research, and understanding bromodomain inhibition in BF leads to transcriptomic and epitope change towards PF, what is the result of inhibiting bromodomain in PF trypanosome? 
+
+#2. Methods
+To begin the analysis of Schulz data, we must understand the experiment's variables, conditions, and hypothesis. Schulz's data is a time course model with 10 samples with three repetitions. 
 #2. RNA-Seq Overview
 RNA Sequencing (RNA-seq) is a way to measure gene expression in an organism. The RNA is extracted and RNA reads (sequences of A, G, C, and U) are aligned to the organism's genome. The higher the number of reads mapped to a certain gene, the more we can say that gene is expressed.  
 
-#3. Starting with the raw read counts
+#3. Normalize Raw Counts
+We must normalize the counts because each sample is sequenced at a different depth in RNA Seq. The sequencing depth of each sample refers to the total raw read count (column sum) of that sample. If we simply used the raw read counts from the data table given us by RNASeq, we wouldn't be comparing apples to apples because of that difference in sequencing depth.
+#3.1 Starting with the raw read counts
 
 ```{r}
- 
 TBcounts <- read.table("18-5-23_Proc_ibet_TC_for_deseq.txt",header = TRUE) %>% dplyr ::select(-ib_3h_1) 
 TBcounts <- TBcounts %>% dplyr :: distinct(gene, .keep_all = TRUE) 
 #NORMALIZATION BY DESEQ2
@@ -76,38 +93,119 @@ tb_new <- data.frame(rownames = colnames(TBcounts),
                     stage = as.factor(c(rep("noo_ib",3), rep("ib_3h", 2), rep("ib_6h",3), rep("ib_12h",3),rep("ib_24h",3),rep("ib_48h",3),rep("ib_3d",3),rep("ib_7d",3),rep("ib_10d",3),rep("ib_14d",3))))
 rownames(tb_new) <- tb_new$rownames
 tb_new <- tb_new %>% dplyr ::select(-rownames)
+
 ```
  As you can see in the code above, the breakdown of our data invlolves separating the repetitions of the samples and times, or stages of the experiment. In the first line, we see that the treated sample 1 at 3 hours(ib_3h_1) is not included in our data analysis. This is becuase it is an outlier determined by Professor Schulz. 
- For DESeq, the alrogithm requires the input of a new data table that includes the conditions of the samples. Here, tb_new includes reps, which are the number of repetitions per sample, and stage, which states wheter a sample is treated, ib, or utreated, noo_ib, as well as the time at which this sample was taken. 
-#4. Quality Control 
-In order to gather accurate results, the data must be filtered. Here, we filtered genes that had expression levels > 0. 
-#5. Normalize Raw Counts
 
-```{r, include = FALSE}
+#3.2 Computational methods 
+
+Based on the large amount of genes in Schulz’s data, using more than one method to identify DEGs must be used to provide accurate results for our analysis. Due to the large amount of differential expression algorithms, the choice were limited down to 3 - DESeq2, ImpulseDE2, and maSigPro. 
+
+#DESeq2:
+DESeq normalizes raw count data using the algorithm Relative Log Expression(RLE). It first takes the geometric mean of all sample values, or the raw counts for each gene in a particular sample. This creates the reference sample of the data set. Then, DESeq2 takes the median of the number of observed reads in condition k and replicate r  and divides this value by the reference sample. As the algorithm completes this for all genes, the resulting vector is the ‘size factor’ of the particular sample. Size factors represent how deeply the sample is sequenced, and the ratio of the size factors of two different samples is an approximation of the ratio of their sequencing depths. 
+
+#edgeR:
+edgeR normalizes raw counts using Trimmed Mean Method(TMM). TMM first prenomalizes by library size, by dividing the observed number of reads for gene g in condition k and replicate r by the total number of reads for condition k and replicate r. For TMM, the arbitraty reference sample is condition and replicate 1, however one can specify what reference sample to use.  
+For TMM, it takes the set of not trimmed genes with valid fold change and the absolute expression levels (cf. Robinson and Oshlack, 2010) and uses this value to calculate the relative scaling factor. Additionally, TMM scales this factor by multiplying it to one, thus giving a vector of normalization factor. These normalization factors are used as offset parameters in the statistical model for differential gene expression analysis. 
+
+In order to ascertain the best normalization method for out data, our first step was comparing methods edgeR and DESeq2. The result of this comparison was that DESeq2 and edgeR gave very similar results, with a small amount of different DEGS. As a result, our choice between DESeq2 and edgeR was more arbitrary, as DESeq2’s algorithm was preferable to fast run time and simple easy input. However, to understand the main differences and similarities between these two specific methods, comparing DESeq2 size factors and edgeR normalization factors and creating a VennDiagram of DEG’s identified by each method allowed for a clearer understanding of each algorithm, as well as our data. 
+
+#3.3 DESeq2 Normalization
+```{r}
 ##dds stands for the DESeq Data Set
-TBcounts <- TBcounts[rowSums(TBcounts) > 0 ,]
 ddsFullCountTable <- DESeqDataSetFromMatrix(countData = TBcounts,
                                             colData = tb_new, 
                                             design = ~ reps + stage)
 
 TBcounts_dds <- DESeq(ddsFullCountTable)
+
 #calculating norm counts
 ##DESeq2 :: allows to specify where this fcn comes from
-norm_counts <- DESeq2::counts(TBcounts_dds, normalized = TRUE) 
-norm_counts <- data.frame(normDE_counts)
+norm_counts <- as.data.frame(counts(TBcounts_dds, normalized = TRUE)) %>%
+  mutate(gene = rownames(TBcounts))
+ 
 
+```
+#3.4 edgeR Normalization
+
+Similar to DESeq, we will need to create a new data frame detailing the samples, time, and repetitions. For this data set, stage = treatment and time, and rep = sample repetition. 
+
+For edgeR, the function calcNormFactors() calculates normalized counts, and return library size of each sample, normalization factor, and group of each sample. In this example, variable 'tb_normfact' represents the normalization factors that calcNormFactors() of Schulz raw counts outputs. In order to compare DESeq2's size factor and edgeR's normalization factor, we must multiply the normalization factor by  the library size for each sample.  In edgeR, the equivalent to the size factor is actually the effective library size. That is, the normalization factor captures sample-specific bias beyond differences in library size. 
+  
+
+```{r, include = FALSE}
+#DE WITH EDGER
+TBcounts_ER <- read.table("18-5-23_Proc_ibet_TC_for_deseq.txt",header = TRUE) %>% dplyr ::select(-ib_3h_1) 
+TBcounts_ER <- TBcounts_ER %>% dplyr :: distinct(gene, .keep_all = TRUE) 
+#NORMALIZATION BY DESEQ2
+rownames(TBcounts_ER) <- TBcounts_ER$gene #renames the gene row
+TBcounts_ER <- TBcounts_ER %>% dplyr :: select(-"gene") #this gets rid of the name gene in table
+ 
+#for easy data manipulation, creating DGE list from TBcounts and stages
+#norm.factors is a numeric vector containing normalization factors (optional, defaults to all 1)
+stage = as.factor(c(rep("noo_ib",3), rep("ib_3h", 2), rep("ib_6h",3), rep("ib_12h",3),rep("ib_24h",3),rep("ib_48h",3),rep("ib_3d",3),rep("ib_7d",3),rep("ib_10d",3),rep("ib_14d",3)))
+
+#making variable 'rep' for the number of repetitions for each sample
+rep <- as.factor(c(1,2,3,1,2,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3))
+time <- c(rep(0,3), rep(3,2), rep(6,3,), rep(12,3), rep(24,3), rep(48,3), rep(72,3), rep(168,3), rep(240,3), rep(336,3))
+tbcounts_dge <- DGEList(counts = TBcounts_ER, norm.factors = rep(1,ncol(TBcounts_ER)), group = stage, remove.zeros = TRUE)
+
+#creating design matrix of reps and stage
+design <- model.matrix(~ rep + stage)
+rownames(design) <- colnames(TBcounts_ER)
+
+#FILTER data -- getting rid of non expressed genes
+keep <- filterByExpr(tbcounts_dge)
+table(keep)
+tbcounts_dge <- tbcounts_dge[keep, ,keep.lib.sizes = FALSE]
+ 
+#NORMALIZE DATA - USING CALCNORMFACTORS()
+
+tb_norm <- calcNormFactors(tbcounts_dge, method = "TMM", refColumn = NULL)
+#separating the counts and samples
+tbcounts <- tb_norm$counts
+tb_normfact <- tb_norm$samples$norm.factors
+ 
+#getting the norm counts
+tb_normCounts <- cpm(tbcounts_dge)
+```
+
+
+```{r}
+tb_norm_sf <- data.frame(tb_normfact* colSums(TBcounts_ER))
+colnames(tb_norm_sf) <- "TMM.size.fact"
+size.DESeq2 <- TBcounts_dds$sizeFactor 
+size.edgeR <- tb_norm_sf$TMM.size.fact
+plot(size.DESeq2, size.edgeR, main = "Size Factor DESeq & edgeR")
  
 ```
 
-We must normalize the counts because each sample is sequenced at a different depth in RNA Seq. The sequencing depth of each sample refers to the total raw read count (column sum) of that sample. If we simply used the raw read counts from the data table given us by RNASeq, we wouldn't be comparing apples to apples because of that difference in sequencing depth.
+ 
+```{r}
+#DE ANALYSIS - EDGER - getting the DE genes
 
-We use DESeq's normalization technique which is a standard method for this type of analysis. DESeq normalizes by taking the raw count of that gene at that sample over the geometric mean of the raw read count for that gene across all samples. The algoritm then does this for all genes, and you get a sample-specific vector of numbers. Take the median of that vector, and you have the "size factor" for your sample. Size factors essentially tell us how deeply the sample is sequenced, and the ratio of the size factors of two different samples is an approximation of the ratio of their sequencing depths. ALthough there are numerous normalization techinques, such as edgeR, TKPM, ImpulseDE2, maSigPro, DESeq2 was preferable to the fast run time, as well as the simple and easy input. 
+#comparing 6h to noo, under hypothesis that 6h-noo = 0 
+design <- model.matrix(~0 + stage)
+rownames(design) <- colnames(tb_norm)
+con <- makeContrasts(stageib_6h-stagenoo_ib , levels= design)
+est_disp <- estimateDisp(tb_norm, design, robust=TRUE)
+fit <- glmQLFit(est_disp, design, robust=TRUE)
+qlf <- glmQLFTest(fit, contrast = con) 
+summary(decideTests(qlf)) #looks at the number of up and down regulated genes
+topTags(qlf) #looking at the top de genes
+
+#now want to look at all de genes from toptags
+out <- topTags(qlf, n=Inf, adjust.method="BH")  
+keep <- out$table$FDR <= 0.01 #filtering genes with FDR 0.01
+de_table <- out[keep,] #de_table for the table of DE genes
+
+```
+
 
 Our analysis compares the 0 time point to the 12 hour time point, because we are more interested in earlier time points due to the increased gene expression shown from 0-12 hours. 
 
 For DESeq2, the results for a comparison of any two levels of a variable can be calculated using the contrast argument to the results function. The function requires three values: the name of the variable, the name of the level in the numerator, and the name of the level in the denominator. We will complete the same analysis (not shown) on comparisons MG/PV and PV/SA 
 Here we extract results for the log2 of the fold change of treated 12h and untreated 0h, ib_12h / noo_ib. 
-
 
 
 ```{r}
@@ -136,95 +234,126 @@ resSig_log.pos <- resSig_012[which(resSig_012$fcsign != -1),]
 resSig_log.neg <- resSig_012[which(resSig_012$fcsign == -1),]
 ```
 
-#8. Savage Data - DESeq2 pipeline
-
-In order to answer Schulz's question of bromodomain inhibition impact on trypanosome PF, we must compare our results to Savage 2015 data, which includes trypanosoma DE genes gathered from enviromental based experiments in the Tsetse fly. The results of Savage 2015 data details the biological change in trypanosoma based on enviromental conditions. By comparing our DE genes to Savage enviromnet based DE genes, we can come to conclusions about what form the bromodomain inhibited PF will revert to, if at all. 
-By comparing MG to SA, the resulting DE genes are those that exemplify the difference between BF and PF. These genes are very important in our understanding of the changes that Schulz samples undergo. For example, if there is a high amount of correlation between DE genes in MG to SA and 0h - 12h, we can hypothesize that bromodomain inhibition in PF causes a revert to the BF. 
-
-Thus, by completing DESeq and future biological analysis on Savage data, we can come to a more concrete conclusion of bromodomain function in trypanosoma. 
- 
-
-Similar to analyzing our data, we must analyze 2015 Savage data, using the same pipeline: 
-  1. Run raw read counts
-  2. Filter/Quality Control
-  3. Run Differental Gene Expression Analysis using DESEq2.
-  
-First, we must read in our data table. Variable 'savagecounts' represents this data table of Savage raw read counts. 
-Similar to our data, we must manipulate our savagecounts data table for DESeq2. 
-```{r, include  = FALSE}
-#DESEQ ON SAVAGE DATA - THREE COMPARISON MGSA MGPV PVSA
-
-savagecounts <- read.table("18-5-24_dedup_Savage_deseq_counts.txt", header = TRUE)
-
- 
-#Creating Data matrix 
-rownames(savagecounts) <- savagecounts$gene #renames the gene row
-savagecounts <- savagecounts %>% dplyr :: select(-"gene") #this gets rid of the name gene in table
-coldata <- data.frame(rownames = colnames(savagecounts),
-                    reps = as.factor(c(1, 2, 3, 1, 2, 3 ,4,
-                                     1, 2 ,3)), 
-                    stage = as.factor(c(rep("MG",3),rep("PV",4), rep("SA",3))))
-
-ddsFullCountTable <- DESeqDataSetFromMatrix(
-   countData = savagecounts,
-   colData = coldata,
-   design = ~ reps + stage)
-#DESeq2 getting DE genes
-savagecounts_dds <- DESeq(ddsFullCountTable )
-
-```  
- 
- As you can see in the above chunk, savage data was run through the same pipeline, creating a new data frame for DESeq2 with variables reps, which are the repetition of the samples, and stage, which now represents the location of where the trypanosome was sampled: Migut, Proventiculus, Salivary gland.
-
-
-#8. Savage Data  
-Here we are completing DESEq results on Savage data. We have a adjusted pvalue (padj) filter of < 0.01, a log2foldchange > 1.5. 
-The comparisons we completed are:
-1. MgSa (Midgut and Salivary Gland)
-$~$
-2. MgPv (Migut and Proventiculus)
-$~$
-3. PvSa (Proventiculus and Salivary Gland)
-$~$
- We will complete the same analysis on Schulz data on the comparisons MG/SA, MG/PV and PV/SA. 
-Here we extract results for the log2 of the fold change of MG and SA. 
 ```{r}
-#Comparisons of all 
-  #padj filter < 0.01
-  #abs(log2fold) filter > 1.5
-#MG and SA############################################################################
-savageRes_MgSa <- results( savagecounts_dds ,contrast = c("stage",  "MG","SA"))
-savageRes_MgSa
-```
+ind <- match(norm_counts$gene,resSig_012$gene)
  
-For Schulz data, we also considered a fraction of 1% false positives acceptable, due to the accuracy we need in the DE genes for Savage to compare to our dataset. We consider all genes with an adjusted p value below 1%=0.01 as significant.  
+norm_counts$sig <- resSig_012$gene[ind]
 
-Similar to filtering the padj, we want to filter the logfold2change. If a gene has a high absolute value log2foldchange, it means the gene is highly expressed. In order to cut down the amount of DE genes, filtering of this parameter will select only the higly expressed genes for our analysis of Savage data against our own. The cutoff logfold2 value 1.5 was arbitrarly chosen based on needing ~200-500 DE genes for further analysis. 
+norm_counts$padj <- resSig_012$padj[ind]
+
+norm_counts$pval <- resSig_012$pvalue[ind]
+
+norm_counts$log2FoldChange <- resSig$log2FoldChange[ind]
+
+norm_counts <- norm_counts %>%
+  filter(!is.na(sig))
+
+pos_DEGs_metrics <- norm_counts %>%
+  filter(log2FoldChange > 0)
+rownames(pos_DEGs_metrics) <- pos_DEGs_metrics$gene
+pos_DEGs <- pos_DEGs_metrics %>%
+  dplyr :: select(-c(gene, sig, padj,pval,log2FoldChange))
+
+neg_DEGs_metrics <- norm_counts %>%
+  filter(log2FoldChange < 0)
+rownames(neg_DEGs_metrics) <- neg_DEGs_metrics$gene
+neg_DEGs <- neg_DEGs_metrics %>%
+  dplyr :: select(-c(gene, sig, padj,pval,log2FoldChange))
+
+rownames(norm_counts) <- norm_counts$gene
+norm_counts <- norm_counts %>%
+  dplyr :: select(-c(gene, sig, padj, pval, log2FoldChange))
+
+norm_counts
+
+```
+
+
 
 ```{r}
-resSig <- savageRes_MgSa[ which(savageRes_MgSa$padj < 0.01 ), ]
-resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
-MgSa <- resSig
-head(MgSa) 
+#making venn diagram
+area1 <- length(rownames(resSig_012))    
+area2 <- length(rownames(de_table))  
+cross <- length(intersect(rownames(resSig_012), rownames(de_table)))
+ 
+grid.newpage()
+draw.pairwise.venn(area1= area1, area2 = area2, cross.area = cross, category = c("DESeq","edgeR"))
 ```
-Here is the padj and logfold2 filtered results of the log2 of the fold change of MG and SA.
-The rownames of this table are the DE genes calculated from the results function. 
 
-We completed the same analysis on comparisons MG/PV and PV/SA (not shown) with same parameters and filtering. 
+#5 Impulse 
+
+```{r}
+time <- c(rep(0,3), rep(3,2), rep(6,3,), rep(12,3), rep(24,3), rep(48,3), rep(72,3), rep(168,3), rep(240,3), rep(336,3))
+
+impulse_design <- data.frame(Sample = colnames(TBcounts), Condition = rep("case", 29), Time = time)
+#edit count matrix and filter s.t. average count is double digits
+TBcounts <- as.matrix(TBcounts)
+
+#may take awhile to run ImpulseDE2 (~20 mins), using q-value threshold of 0.01
+tryp_impulse <- ImpulseDE2 :: runImpulseDE2(TBcounts, impulse_design,boolCaseCtrl = FALSE, vecConfounders = NULL, scaNProc = 8, scaQThres = 0.01)
+
+```
+
+#6. maSigPro
+```{r}
+#################################################################################################################################
+#Serial expression tool: NEXT maSigPro
+#################################################################################################################################
+
+#set up design
+times<-c(rep(0,3),rep(3,2),rep(6,3),rep(12,3),rep(24,3),rep(48,3),rep(72,3),rep(168,3),rep(240,3),rep(336,3))
+replicates<-c(1:3, 1:2, rep(1:3, 8))
+group<-rep(1,29)
+ss.edesign<-cbind(times, replicates, group)
+rownames(ss.edesign)<-colnames(TBcounts)
+
+#Run maSigPro on DESeq2 normalized counts, theta=1000...
+tccount1<-as.data.frame(counts(TBcounts_dds, normalized=TRUE))
+ss.edesign<-as.data.frame(ss.edesign)
+newdesign<-make.design.matrix(ss.edesign, degree=9, time.col=1, repl.col=2, group.cols=3)
+
+#run maSigPro w/ Q=0.01
+results<-maSigPro(tccount1, ss.edesign, vars="all", Q=0.01)
+maSigProGenes<-results$p.vector[results$p.vector<0.01,]
+maSigProGenes<-names(maSigProGenes)
+
+```
+
+#6 Creating Venn Diagram
 ```{r, echo = FALSE}
-#MG and PV############################################################################
-savageRes_MgPv <- results( savagecounts_dds ,contrast = c("stage",  "MG","PV"))
-resSig <- savageRes_MgPv[ which(savageRes_MgPv$padj < 0.01 ), ]
-resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
-MgPv <- resSig
+#Creating VennDiagram 
 
-#PV and SA############################################################################
-savageRes_PvSa <- results( savagecounts_dds ,contrast = c("stage",  "PV","SA"))
-resSig <- savageRes_PvSa[ which(savageRes_PvSa$padj < 0.01 ), ]
-resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
-PvSa <- resSig
+#Impluse and DESeq2
+area <- length(intersect(tryp_impulse$vecDEGenes,rownames(resSig_012)))
+grid.newpage()
+draw.pairwise.venn(area1= length(rownames(resSig_012)), area2 = length(tryp_impulse$vecDEGenes), cross.area = area, category = c("DESeq2 (0h-12h comparison)","ImpulseDE2 (serial analysis)"),lty = rep("blank",2),fill = c("light blue", "light green"))
 
-h h 
+
+#three way comparison - Impulse, maSigPro, DESeq2
+area1 <- length(intersect(rownames(resSig_012),maSigProGenes))
+area2<- length(intersect(tryp_impulse$vecDEGenes,rownames(resSig_012)))
+area3 <- length(intersect(maSigProGenes, tryp_impulse$vecDEGenes))
+area123<-length(intersect(intersect(maSigProGenes, tryp_impulse$vecDEGenes), intersect(maSigProGenes,rownames(resSig_012))))
+grid.newpage()
+draw.triple.venn(area1= length(rownames(resSig_012)), area2 = length(maSigProGenes), area3= length(tryp_impulse$vecDEGenes), n12=area1, n23=area3, n13=area2, n123=area123, category = c("DESeq2 (0h-12h)","maSigPro (serial)", "ImpulseDE2 (serial)"), lty = rep("blank",3), fill = c("light blue", "light green", "pink"))
+
+```
+
+#6 Creating DEG list from three way intersection - Impulse, maSigPro, DESeq2
+
+```{r}
+
+###################################################################################################################################
+#Generate Final DEGList
+###################################################################################################################################
+
+tryp_DEGs<-unique(c(intersect(rownames(resSig_012),maSigProGenes), intersect(tryp_impulse$vecDEGenes,rownames(resSig_012)), intersect(maSigProGenes, tryp_impulse$vecDEGenes)))
+write.csv(tryp_DEGs, "tryp_DEGs.csv")
+
+```
+#7. Clustering 
+```{r}
+
 ```
 
 #7. Grouping Methods
@@ -425,6 +554,94 @@ counts_sum_norm_head %>%
   theme(legend.position = "none")
 ```
 
+#8. Savage Data - DESeq2 pipeline
+
+In order to answer Schulz's question of bromodomain inhibition impact on trypanosome PF, we must compare our results to Savage 2015 data, which includes trypanosoma DE genes gathered from enviromental based experiments in the Tsetse fly. The results of Savage 2015 data details the biological change in trypanosoma based on enviromental conditions. By comparing our DE genes to Savage enviromnet based DE genes, we can come to conclusions about what form the bromodomain inhibited PF will revert to, if at all. 
+By comparing MG to SA, the resulting DE genes are those that exemplify the difference between BF and PF. These genes are very important in our understanding of the changes that Schulz samples undergo. For example, if there is a high amount of correlation between DE genes in MG to SA and 0h - 12h, we can hypothesize that bromodomain inhibition in PF causes a revert to the BF. 
+
+Thus, by completing DESeq and future biological analysis on Savage data, we can come to a more concrete conclusion of bromodomain function in trypanosoma. 
+ 
+
+Similar to analyzing our data, we must analyze 2015 Savage data, using the same pipeline: 
+  1. Run raw read counts
+  2. Filter/Quality Control
+  3. Run Differental Gene Expression Analysis using DESEq2.
+  
+First, we must read in our data table. Variable 'savagecounts' represents this data table of Savage raw read counts. 
+Similar to our data, we must manipulate our savagecounts data table for DESeq2. 
+```{r, include  = FALSE}
+#DESEQ ON SAVAGE DATA - THREE COMPARISON MGSA MGPV PVSA
+
+savagecounts <- read.table("18-5-24_dedup_Savage_deseq_counts.txt", header = TRUE)
+
+ 
+#Creating Data matrix 
+rownames(savagecounts) <- savagecounts$gene #renames the gene row
+savagecounts <- savagecounts %>% dplyr :: select(-"gene") #this gets rid of the name gene in table
+coldata <- data.frame(rownames = colnames(savagecounts),
+                    reps = as.factor(c(1, 2, 3, 1, 2, 3 ,4,
+                                     1, 2 ,3)), 
+                    stage = as.factor(c(rep("MG",3),rep("PV",4), rep("SA",3))))
+
+ddsFullCountTable <- DESeqDataSetFromMatrix(
+   countData = savagecounts,
+   colData = coldata,
+   design = ~ reps + stage)
+#DESeq2 getting DE genes
+savagecounts_dds <- DESeq(ddsFullCountTable )
+
+```  
+ 
+ As you can see in the above chunk, savage data was run through the same pipeline, creating a new data frame for DESeq2 with variables reps, which are the repetition of the samples, and stage, which now represents the location of where the trypanosome was sampled: Migut, Proventiculus, Salivary gland.
+#8. Savage Data  
+Here we are completing DESEq results on Savage data. We have a adjusted pvalue (padj) filter of < 0.01, a log2foldchange > 1.5. 
+The comparisons we completed are:
+1. MgSa (Midgut and Salivary Gland)
+$~$
+2. MgPv (Migut and Proventiculus)
+$~$
+3. PvSa (Proventiculus and Salivary Gland)
+$~$
+ We will complete the same analysis on Schulz data on the comparisons MG/SA, MG/PV and PV/SA. 
+Here we extract results for the log2 of the fold change of MG and SA. 
+```{r}
+#Comparisons of all 
+  #padj filter < 0.01
+  #abs(log2fold) filter > 1.5
+#MG and SA############################################################################
+savageRes_MgSa <- results( savagecounts_dds ,contrast = c("stage",  "MG","SA"))
+savageRes_MgSa
+```
+ 
+For Schulz data, we also considered a fraction of 1% false positives acceptable, due to the accuracy we need in the DE genes for Savage to compare to our dataset. We consider all genes with an adjusted p value below 1%=0.01 as significant.  
+
+Similar to filtering the padj, we want to filter the logfold2change. If a gene has a high absolute value log2foldchange, it means the gene is highly expressed. In order to cut down the amount of DE genes, filtering of this parameter will select only the higly expressed genes for our analysis of Savage data against our own. The cutoff logfold2 value 1.5 was arbitrarly chosen based on needing ~200-500 DE genes for further analysis. 
+
+```{r}
+resSig <- savageRes_MgSa[ which(savageRes_MgSa$padj < 0.01 ), ]
+resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
+MgSa <- resSig
+head(MgSa) 
+```
+Here is the padj and logfold2 filtered results of the log2 of the fold change of MG and SA.
+The rownames of this table are the DE genes calculated from the results function. 
+
+We completed the same analysis on comparisons MG/PV and PV/SA (not shown) with same parameters and filtering. 
+```{r, echo = FALSE}
+#MG and PV############################################################################
+savageRes_MgPv <- results( savagecounts_dds ,contrast = c("stage",  "MG","PV"))
+resSig <- savageRes_MgPv[ which(savageRes_MgPv$padj < 0.01 ), ]
+resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
+MgPv <- resSig
+
+#PV and SA############################################################################
+savageRes_PvSa <- results( savagecounts_dds ,contrast = c("stage",  "PV","SA"))
+resSig <- savageRes_PvSa[ which(savageRes_PvSa$padj < 0.01 ), ]
+resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
+PvSa <- resSig
+
+ 
+```
 
 
 #8. GO analysis 
