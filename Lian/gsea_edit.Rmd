@@ -245,23 +245,23 @@ fgsea_mgpv_fuzzy <- c()
 fgsea_pvsa_fuzzy <- c()
  
 
-bplapply(c(as.list(clust6_cell$`intrinsic component of peroxisomal membrane`), ranks_MgPv, minSize = 1,  nperm = 1000), fgsea, BPPARAM = SnowParam())
+#bplapply(c(as.list(clust6_cell$`intrinsic component of peroxisomal membrane`), ranks_MgPv, minSize = 1,  nperm = 1000), fgsea, BPPARAM = SnowParam())
  
-for (i in 1:9){
-fgsea_mgsa_fuzzy[[i]] = bplapply(c(as.list(all_fuzzy[[i]]),ranks_MgSa, minSize = 1,  nperm = 100), fgsea, BPPARAM = SnowParam())
-fgsea_mgpv_fuzzy[[i]] = bplapply(c(as.list(all_fuzzy[[i]]),ranks_MgPv, minSize = 1,  nperm = 100), fgsea, BPPARAM = SnowParam())
-fgsea_pvsa_fuzzy[[i]] = bplapply(c(as.list(all_fuzzy[[i]]),ranks_PvSa, minSize = 1,  nperm = 100), fgsea, BPPARAM = SnowParam())
-}
+#for (i in 1:9){
+#fgsea_mgsa_fuzzy[[i]] = bplapply(c(as.list(all_fuzzy[[i]]),ranks_MgSa, minSize = 1,  nperm = 100), fgsea, BPPARAM = SnowParam())
+#fgsea_mgpv_fuzzy[[i]] = bplapply(c(as.list(all_fuzzy[[i]]),ranks_MgPv, minSize = 1,  nperm = 100), fgsea, BPPARAM = SnowParam())
+#fgsea_pvsa_fuzzy[[i]] = bplapply(c(as.list(all_fuzzy[[i]]),ranks_PvSa, minSize = 1,  nperm = 100), fgsea, BPPARAM = SnowParam())
+#}
 
-ranks_MgSa
-names(fgsea_mgsa_fuzzy) <- names(all_fuzzy)
-names(fgsea_mgpv_fuzzy) <- names(all_fuzzy)
-names(fgsea_pvsa_fuzzy) <- names(all_fuzzy)
+#ranks_MgSa
+#names(fgsea_mgsa_fuzzy) <- names(all_fuzzy)
+#names(fgsea_mgpv_fuzzy) <- names(all_fuzzy)
+#names(fgsea_pvsa_fuzzy) <- names(all_fuzzy)
 #View(fgsea_mgsa_fuzzy)
 #View(fgsea_mgpv_fuzzy)
 #View(fgsea_pvsa_fuzzy)
 
-fgsea(as.list(sav_all_list), ranks_MgSa, minSize = 15,  nperm = 100)
+ 
 
 #head(ranks_MgSa)
 #head(exampleRanks)
@@ -271,36 +271,7 @@ c <- intersect((clust1_bio$`movement of cell or subcellular component`), names(r
 length(c)
 length(clust1_bio$`movement of cell or subcellular component`)
 
-browseVignettes("GSEABase")
+ 
 ```
 
-```{r}
-############clust 1###############
-plotEnrichment(all_fuzzy$cell1[[head(fgsea_all_fuzzy$cell1[order(pval), ], 1)$pathway]],
-               ranks) + labs(title=head(fgsea_all_fuzzy$cell1[order(pval), ], 1)$pathway)
-
-plotEnrichment(all_fuzzy$mol1[[head(fgsea_all_pos_fuzzy$mol1[order(pval), ], 1)$pathway]],
-               ranks_log.pos) + labs(title=head(fgsea_all_pos_fuzzy$mol1[order(pval), ], 1)$pathway)
-
-############clust 2###############
-plotEnrichment(all_fuzzy$bio2[[head(fgsea_all_fuzzy$bio2[order(pval), ], 1)$pathway]],
-               ranks) + labs(title=head(fgsea_all_fuzzy$bio2[order(pval), ], 1)$pathway)
-plotEnrichment(all_fuzzy$cell2[[head(fgsea_all_pos_fuzzy$cell2[order(pval), ], 1)$pathway]],
-               ranks_log.pos) + labs(title=head(fgsea_all_pos_fuzzy$cell2[order(pval), ], 1)$pathway)
-
-############clust 4###############
-plotEnrichment(all_fuzzy$cell4[[head(fgsea_all_pos_fuzzy$cell4[order(pval), ], 1)$pathway]],
-               ranks_log.pos) + labs(title=head(fgsea_all_pos_fuzzy$cell4[order(pval), ], 1)$pathway)
-
-plotEnrichment(all_fuzzy$mol4[[head(fgsea_all_pos_fuzzy$mol4[order(pval), ], 1)$pathway]],
-               ranks_log.pos) + labs(title=head(fgsea_all_pos_fuzzy$mol4[order(pval), ], 1)$pathway)
-
-plotEnrichment(all_fuzzy$bio4[[head(fgsea_all_fuzzy$bio4[order(pval), ], 1)$pathway]],
-               ranks) + labs(title=head(fgsea_all_fuzzy$bio4[order(pval), ], 1)$pathway)
-
-
-#View(fgsea_all_pos_fuzzy$cell4)
-
-c <- intersect(clust1_bio$'microtubule-based movement', as.character(rownames(MgSa)))
-length(c)
-```
+ 
