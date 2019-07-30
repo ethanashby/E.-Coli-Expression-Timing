@@ -1,0 +1,306 @@
+---
+title: "gsea_edit"
+author: "Lian Morales"
+date: "7/30/2019"
+output: html_document
+---
+
+```{r}
+#LOADING DESEQ2 AND RNASEQ FILE
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+#BiocManager::install("maSigPro")
+
+library("dplyr")
+library("tidyr")
+library("DESeq2")
+library(readr)
+library(devtools)
+library("DESeq2")
+library(dplyr)
+library(readr)
+library(tidyr)
+library(ggplot2)
+library("vsn")
+library("hexbin")
+library("corrplot")
+library(maSigPro)
+#for GSEA
+library(doParallel)
+library(Biobase)
+library(biomaRt)
+library(fgsea)
+library(BiocParallel)
+```
+ 
+
+
+ 
+```{r, include=FALSE}
+#DESEQ ON SAVAGE DATA - THREE COMPARISON MGSA MGPV PVSA
+
+savagecounts <- read.table("18-5-24_dedup_Savage_deseq_counts.txt", header = TRUE)
+
+ 
+#Creating Data matrix 
+rownames(savagecounts) <- savagecounts$gene #renames the gene row
+savagecounts <- savagecounts %>% dplyr :: select(-"gene") #this gets rid of the name gene in table
+coldata <- data.frame(rownames = colnames(savagecounts),
+                    reps = as.factor(c(1, 2, 3, 1, 2, 3 ,4,
+                                     1, 2 ,3)), 
+                    stage = as.factor(c(rep("MG",3),rep("PV",4), rep("SA",3))))
+
+ddsFullCountTable <- DESeqDataSetFromMatrix(
+   countData = savagecounts,
+   colData = coldata,
+   design = ~ reps + stage)
+#DESeq2 getting DE genes
+savagecounts_dds <- DESeq(ddsFullCountTable )
+```
+
+```{r}
+########CREATING GSEA LISTS FROM PATHWAY ANALYSIS OF SAV DE GENES
+#Comparisons of all 
+  #padj filter < 0.01
+  #abs(log2fold) filter > 1.5
+
+#MG and SA############################################################################
+savageRes_MgSa <- results( savagecounts_dds, contrast = c("stage",  "MG","SA"))
+MgSa <- savageRes_MgSa[ which(savageRes_MgSa$padj < 0.01 ), ]
+#resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
+ 
+ 
+#MG and PV############################################################################
+savageRes_MgPv <- results( savagecounts_dds ,contrast = c("stage",  "MG","PV"))
+MgPv <- savageRes_MgPv[ which(savageRes_MgPv$padj < 0.01 ), ]
+#resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
+ 
+
+#PV and SA############################################################################
+savageRes_PvSa <- results( savagecounts_dds ,contrast = c("stage",  "PV","SA"))
+PvSa <- savageRes_PvSa[ which(savageRes_PvSa$padj < 0.01 ), ]
+#resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
+ 
+ 
+
+#######MAKING RANKED METRIC LIST FOR SAVAGE DATA########
+
+#making big data set 'allcomp' with all comparisons to make code easier. Splitting after by 'comparison' 
+MGSA_df <- data.frame(Gene = rownames(MgSa), pvalue = MgSa$pvalue, padj = MgSa$padj, comparison = "MgSa",log2FoldChange= MgSa$log2FoldChange)
+MGPV_df <- data.frame(Gene = rownames(MgPv), pvalue = MgPv$pvalue, padj = MgPv$padj, comparison = "MgPv", log2FoldChange= MgPv$log2FoldChange)
+PVSA_df <- data.frame(Gene = rownames(PvSa), pvalue = PvSa$pvalue, padj = PvSa$padj, comparison = "PvSa",log2FoldChange= PvSa$log2FoldChange)
+ 
+sav_allcomp <- rbind(MGSA_df,MGPV_df, PVSA_df)
+
+#View(gsea_allcomp)
+
+sav_allcomp$logP <- -log10(sav_allcomp$pvalue) #calculating metric == -log10(pvalue)
+sav_allcomp <-  sav_allcomp[which(abs(sav_allcomp$logP) != 0),] #filtering out p-values 
+sav_allcomp$metric <- sav_allcomp$logP * abs(sav_allcomp$log2FoldChange)
+sav_gsea_allcomp <- sav_allcomp[,c("Gene","metric","comparison")]
+
+##filtering out big dataset -- creating data frames for each comparison 
+gsea_MgSa_df<- sav_gsea_allcomp %>% filter(comparison == "MgSa") %>% dplyr :: select(-comparison) 
+gsea_MgPv_df <- sav_gsea_allcomp %>% filter(comparison == "MgPv") %>% dplyr :: select(-comparison) 
+gsea_PvSa_df <- sav_gsea_allcomp %>% filter(comparison == "PvSa") %>% dplyr :: select(-comparison) 
+ 
+#creating stats and pathways for gsea
+  #MgSa
+gseaDat_MgSa <- filter(gsea_MgSa_df, !is.na(Gene))
+ranks_MgSa <- gsea_MgSa_df$metric
+names(ranks_MgSa) <- gseaDat_MgSa$Gene
+ranks_MgSa <- sort(ranks_MgSa)
+  #MgPv
+gseaDat_MgPv <- filter(gsea_MgPv_df, !is.na(Gene))
+ranks_MgPv <- gsea_MgPv_df$metric
+names(ranks_MgPv) <- gseaDat_MgPv$Gene
+ranks_MgPv <- sort(ranks_MgPv)
+#PvSa
+gseaDat_PvSa <- filter(gsea_PvSa_df, !is.na(Gene))
+ranks_PvSa <- gsea_PvSa_df$metric
+names(ranks_PvSa) <- gseaDat_PvSa$Gene
+ranks_PvSa <- sort(ranks_PvSa)
+
+#####FOR LOG POS FOLD CHANGE######
+#CREATING RANKS AND DATA FRAME FOR GSEA
+#resSig_log.pos$fcsign <- sign(resSig_log.pos$log2FoldChange) #fcsign stands for the log2foldchange sign
+#resSig_log.pos <-  resSig_log.pos[which(abs(resSig_log.pos$fcsign) != 0),] #filtering out foldchanges = 0
+ 
+```
+ 
+
+```{r}
+############################FGSEA ON 2019 CLUSTERS#############################
+#In order to answer the biological questions of our data, we need to take statisitcal steps to gather information in order to prove, or answer the hypothesis at hand. Clustering our data is an example of this method. Here we are taking the fuzzy cluster GO analysis results, and preparing them for GSEA pipeline. 
+
+#Reading in huge file with all GO terms of cluster.s 
+fuzzyClust <- read.table("fuzzyclusters_GO.tab") %>% dplyr :: select(Name, Result.gene.list, Cluster,Type)
+fuzzyClust$Result.gene.list <- gsub(',',',',fuzzyClust$Result.gene.list,fixed=TRUE)
+fuzzyClust$Result.gene.list <- strsplit(fuzzyClust$Result.gene.list, ",")
+
+
+#cluster1 <- data.frame(GO[1]) %>%dplyr::select(Cluster1.Name,Cluster1.Result.gene.list,Cluster1.Type) 
+#cluster1$Cluster1.Result.gene.list <- gsub(',',',',cluster1$Cluster1.Result.gene.list,fixed=TRUE)
+#cluster1$Cluster1.Result.gene.list <- strsplit(cluster1$Cluster1.Result.gene.list, ",")
+
+clust1_bio <- fuzzyClust %>% filter(Type == "Biological Process", Cluster == 1)
+clust1_bio_list <- as.list(clust1_bio)
+names(clust1_bio_list$Result.gene.list) <- clust1_bio_list$Name
+clust1_bio <- clust1_bio_list$Result.gene.list
+ 
+
+clust1_cell <- fuzzyClust %>% filter(Type == "Cellular Component", Cluster == 1)
+clust1_cell_list <- as.list(clust1_cell)
+names(clust1_cell_list$Result.gene.list) <- clust1_cell_list$Name
+clust1_cell <- clust1_cell_list$Result.gene.list
+#View(fuzzylist_1_cell)
+
+clust1_mol <- fuzzyClust %>% filter(Type == "Molecular Function",Cluster == 1)
+clust1_mol_list <- as.list(clust1_mol)
+names(clust1_mol_list$Result.gene.list) <- clust1_mol_list$Name
+clust1_mol <- clust1_mol_list$Result.gene.list
+
+#########CLUSTER 2######### 
+ 
+clust2_bio <- fuzzyClust %>% filter(Type == "Biological Process", Cluster == 2)
+clust2_bio_list <- as.list(clust2_bio)
+names(clust2_bio_list$Result.gene.list) <- clust2_bio_list$Name
+clust2_bio <- clust2_bio_list$Result.gene.list
+#View(clust2_bio)
+
+clust2_cell <- fuzzyClust %>% filter(Type == "Cellular Component", Cluster == 2)
+clust2_cell_list <- as.list(clust2_cell)
+names(clust2_cell_list$Result.gene.list) <- clust2_cell_list$Name
+clust2_cell <- clust2_cell_list$Result.gene.list
+#View(fuzzylist_2_cell)
+
+#clust2_mol <- cluster2 %>% filter(Cluster2.Type == "Molecular Function")
+#clust2_mol_list <- as.list(clust2_mol)
+#names(clust2_mol_list$Cluster2.Result.gene.list) <- clust2_mol_list$Cluster2.Name
+#fuzzylist_2_mol <- clust2_mol_list$Cluster2.Result.gene.list
+#View(fuzzylist_2_mol)
+
+#cluster3 <- data.frame(GO[3])%>%dplyr::select(Cluster3.Name,Cluster3.Result.gene.list,Cluster3.Type) 
+#clust3_bio <- cluster3 %>% filter(Cluster3.Type == "Biological Process")
+#clust3_cell <- cluster3 %>% filter(Cluster3.Type == "Cellular Component")
+#clust3_mol <- cluster3 %>% filter(Cluster3.Type == "Molecular Function")
+
+clust4_bio <- fuzzyClust %>% filter(Type == "Biological Process", Cluster == 4)
+clust4_bio_list <- as.list(clust4_bio)
+names(clust4_bio_list$Result.gene.list) <- clust4_bio_list$Name
+clust4_bio <- clust4_bio_list$Result.gene.list
+#View(fuzzylist_4_bio)
+
+clust4_cell <- fuzzyClust %>% filter(Type == "Cellular Component", Cluster == 4)
+clust4_cell_list <- as.list(clust4_cell)
+names(clust4_cell_list$Result.gene.list) <- clust4_cell_list$Name
+clust4_cell <- clust4_cell_list$Result.gene.list
+#View(fuzzylist_4_cell)
+
+clust4_mol <- fuzzyClust %>% filter(Type == "Molecular Function", Cluster == 4)
+clust4_mol_list <- as.list(clust4_mol)
+names(clust4_mol_list$Result.gene.list) <- clust4_mol_list$Name
+clust4_mol <- clust4_mol_list$Result.gene.list
+#View(clust4_mol)
+#cluster5 <- data.frame(GO[5])%>%dplyr::select(Cluster5.Name,Cluster5.Result.gene.list,Cluster5.Type) 
+#clust5_bio <- cluster5 %>% filter(Cluster5.Type == "Biological Process")
+#clust5_cell <- cluster5 %>% filter(Cluster5.Type == "Cellular Component")
+#clust5_mol <- cluster5 %>% filter(Cluster5.Type == "Molecular Function")
+ 
+
+#clust6_bio <- cluster6 %>% filter(Cluster6.Type == "Biological Process")
+clust6_cell <- fuzzyClust %>% filter(Type == "Cellular Component", Cluster == 6) 
+clust6_cell_list <- as.list(clust6_cell)
+names(clust6_cell_list$Result.gene.list) <- clust6_cell_list$Name
+clust6_cell <- clust6_cell_list$Result.gene.list
+```
+
+```{r}
+#making Result.gene.list entry into list 
+ 
+all_fuzzy <- c()
+all_fuzzy$bio1 <-  clust1_bio 
+all_fuzzy$bio2 <- clust2_bio
+all_fuzzy$bio4 <- clust4_bio
+#all_fuzzy$bio6 <- clust6_bio
+
+all_fuzzy$cell1 <- clust1_cell
+all_fuzzy$cell2 <- clust2_cell
+all_fuzzy$cell4 <- clust4_cell
+all_fuzzy$cell6 <- clust6_cell
+
+all_fuzzy$mol1 <- clust1_mol
+#all_fuzzy$mol2 <- clust2_mol
+all_fuzzy$mol4 <- clust4_mol
+#all_fuzzy$mol6 <- clust6_mol
+
+#View(clust2_bio )
+#library(fgsea)
+ 
+ 
+exampleRanks
+fgsea_mgsa_fuzzy <- c()
+fgsea_mgpv_fuzzy <- c()
+fgsea_pvsa_fuzzy <- c()
+ 
+
+bplapply(c(as.list(clust6_cell$`intrinsic component of peroxisomal membrane`), ranks_MgPv, minSize = 1,  nperm = 1000), fgsea, BPPARAM = SnowParam())
+ 
+for (i in 1:9){
+fgsea_mgsa_fuzzy[[i]] = bplapply(c(as.list(all_fuzzy[[i]]),ranks_MgSa, minSize = 1,  nperm = 100), fgsea, BPPARAM = SnowParam())
+fgsea_mgpv_fuzzy[[i]] = bplapply(c(as.list(all_fuzzy[[i]]),ranks_MgPv, minSize = 1,  nperm = 100), fgsea, BPPARAM = SnowParam())
+fgsea_pvsa_fuzzy[[i]] = bplapply(c(as.list(all_fuzzy[[i]]),ranks_PvSa, minSize = 1,  nperm = 100), fgsea, BPPARAM = SnowParam())
+}
+
+ranks_MgSa
+names(fgsea_mgsa_fuzzy) <- names(all_fuzzy)
+names(fgsea_mgpv_fuzzy) <- names(all_fuzzy)
+names(fgsea_pvsa_fuzzy) <- names(all_fuzzy)
+#View(fgsea_mgsa_fuzzy)
+#View(fgsea_mgpv_fuzzy)
+#View(fgsea_pvsa_fuzzy)
+
+fgsea(as.list(sav_all_list), ranks_MgSa, minSize = 15,  nperm = 100)
+
+#head(ranks_MgSa)
+#head(exampleRanks)
+#all_fuzzy$cell1
+#length(ranks_PvSa)
+c <- intersect((clust1_bio$`movement of cell or subcellular component`), names(ranks_MgPv))
+length(c)
+length(clust1_bio$`movement of cell or subcellular component`)
+
+browseVignettes("GSEABase")
+```
+
+```{r}
+############clust 1###############
+plotEnrichment(all_fuzzy$cell1[[head(fgsea_all_fuzzy$cell1[order(pval), ], 1)$pathway]],
+               ranks) + labs(title=head(fgsea_all_fuzzy$cell1[order(pval), ], 1)$pathway)
+
+plotEnrichment(all_fuzzy$mol1[[head(fgsea_all_pos_fuzzy$mol1[order(pval), ], 1)$pathway]],
+               ranks_log.pos) + labs(title=head(fgsea_all_pos_fuzzy$mol1[order(pval), ], 1)$pathway)
+
+############clust 2###############
+plotEnrichment(all_fuzzy$bio2[[head(fgsea_all_fuzzy$bio2[order(pval), ], 1)$pathway]],
+               ranks) + labs(title=head(fgsea_all_fuzzy$bio2[order(pval), ], 1)$pathway)
+plotEnrichment(all_fuzzy$cell2[[head(fgsea_all_pos_fuzzy$cell2[order(pval), ], 1)$pathway]],
+               ranks_log.pos) + labs(title=head(fgsea_all_pos_fuzzy$cell2[order(pval), ], 1)$pathway)
+
+############clust 4###############
+plotEnrichment(all_fuzzy$cell4[[head(fgsea_all_pos_fuzzy$cell4[order(pval), ], 1)$pathway]],
+               ranks_log.pos) + labs(title=head(fgsea_all_pos_fuzzy$cell4[order(pval), ], 1)$pathway)
+
+plotEnrichment(all_fuzzy$mol4[[head(fgsea_all_pos_fuzzy$mol4[order(pval), ], 1)$pathway]],
+               ranks_log.pos) + labs(title=head(fgsea_all_pos_fuzzy$mol4[order(pval), ], 1)$pathway)
+
+plotEnrichment(all_fuzzy$bio4[[head(fgsea_all_fuzzy$bio4[order(pval), ], 1)$pathway]],
+               ranks) + labs(title=head(fgsea_all_fuzzy$bio4[order(pval), ], 1)$pathway)
+
+
+#View(fgsea_all_pos_fuzzy$cell4)
+
+c <- intersect(clust1_bio$'microtubule-based movement', as.character(rownames(MgSa)))
+length(c)
+```
