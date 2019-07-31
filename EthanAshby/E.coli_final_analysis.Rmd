@@ -33,6 +33,9 @@ Affiliation: ^1^ Department of Mathematics, Pomona College ^2^ Department of Mat
 library(ggplot2)
 rposconc<-read.csv("meanExpToStationaryRpoSLevels.csv", header=T)
 ggplot(rposconc, aes(x=Time, y=meanRpoS, color=Trial))+geom_point(aes(size=meanDensity))+geom_rect(aes(xmin=55, xmax=75, ymin=0, ymax=Inf), fill="grey", color="grey", alpha=0.2)+ggtitle("RpoS Kinetics During Cell Starvation")+theme_bw()+labs(subtitle="3 replicates per trial, 3 trials")+ylab("meanRpoS conc. (M)")+geom_smooth()
+
+#growth curve
+
 ```
 Figure 3: RpoS kinetics over 150 min starvation time course.
 
@@ -188,8 +191,7 @@ head(ecounts)
   
   ![Shiny App image illustrating the monotonic expression profiles for DEGs](./annie_shiny.jpg)
   
-  Genes that were identified as significantly differentially expressed at a Benjamini-Hochberg corrected p value of less than 0.01 by two or more tools were included in our DEG list. 1126 genes were labeled as DE and were subjected to further analysis(Figure 4).
-
+  Genes that were identified as significantly differentially expressed at a Benjamini-Hochberg corrected p value of less than 0.01 by ImpulseDE2 and at least one additional tool were included in our DEG list. 1007 genes were labeled as DE and were subjected to further analysis (Figure 4).
   
 ```{r DE Tools, cache=TRUE, eval=TRUE, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE, results='hide', fig.keep='all'}
 ####################################################################################################################
@@ -247,14 +249,14 @@ area3 <- length(intersect(maSigProGenes, impulse_ecoli$vecDEGenes))
 area123<-length(intersect(intersect(maSigProGenes, impulse_ecoli$vecDEGenes), intersect(maSigProGenes,rownames(res))))
 
 #draw venn diagram of DEG overlaps
-draw.triple.venn(area1= length(rownames(res)), area2 = length(maSigProGenes), area3= length(impulse_ecoli$vecDEGenes), n12=area1, n23=area3, n13=area2, n123=area123, category = c("DESeq2 (0h-150 min)","maSigPro (serial)", "ImpulseDE2 (serial)"), lty = rep("blank",3), fill = c("light blue", "light green", "pink"))
+draw.triple.venn(area1= length(rownames(res)), area2 = length(maSigProGenes), area3= length(impulse_ecoli$vecDEGenes), n12=area1, n23=area3, n13=area2, n123=area123, category = c("DESeq2","maSigPro", "ImpulseDE2"), lty = rep("blank",3), fill = c("light blue", "light green", "pink"), cex=rep(3, 7), cat.cex=rep(2.25,3), cat.dist=c(0,0,0), cat.fontface = "bold")
 ```
 
 ```{r DEGs, cache=TRUE, eval=T, echo=FALSE}
 ###################################################################################################################
 #Generate final DEG list: 1126 genes
 ###################################################################################################################
-ecoli_DEGs<-unique(c(intersect(rownames(res),maSigProGenes), intersect(impulse_ecoli$vecDEGenes,rownames(res)), intersect(maSigProGenes, impulse_ecoli$vecDEGenes)))
+ecoli_DEGs<-union(intersect(impulse_ecoli$vecDEGenes, maSigProGenes), intersect(impulse_ecoli$vecDEGenes, rownames(res)))
 ```
 
 ### Simulations for Assessment of Sigmoidal Model Parameters
@@ -263,7 +265,7 @@ Simulations were conducted to understand the effects of dispersion, number of ti
 ## Results
 ### *Visualizing onset times for DEGs and Sensitive/Insensitive Genes*
 
-For genes identfied as differentially expressed, onset timing parameters were extracted and plotted in a density plot. Differentially expressed genes were divided into three groups according to their trajectories: monotonic, transient, and unknown trajectories. Monotonic DEGs were the most abundant (740), followed by unknown (305), followed by transient (40). Monotonic expression trajectories were described using the *sigmoid model* parametrized by four parameters. Transient trajectories were described using the *impulse model*, an extension of the sigmoid model that describes the on/off dyanmics by taking the scaled product of two sigmoid functions.
+For genes identfied as differentially expressed by our pipeline, onset timing parameters were extracted and plotted in a density plot. Differentially expressed genes were divided into three groups according to their trajectories: monotonic, transient, and unknown trajectories. Monotonic DEGs were the most abundant (686), followed by unknown (282), followed by transient (39). Monotonic expression trajectories were described using the *sigmoid model* parametrized by four parameters. Transient trajectories were described using the *impulse model*, an extension of the sigmoid model that describes the on/off dyanmics by taking the scaled product of two sigmoid functions.
 
 The distribution of t params for monotonic DEGs were plotted. Around 92% of the monotonic DEGs have onset times between 55 and 75 minutes, suggesting that the vast majority of monotonic DEGs turn on at around the same time. However, there exists weak bimodality/trimodality in the density curve, perhaps suggestive of waves of *E. coli* genes with coordinated expression times. 
 
@@ -273,9 +275,9 @@ Interestingly, the vast majority of onset time params for genes identified as *t
 #########
 #Visualize t params from monotonic genes, impulse genes
 #########
-DEmono<- impulse_ecoli$dfImpulseDE2Results[impulse_ecoli$dfImpulseDE2Results$isMonotonous==TRUE,] %>% filter(padj<0.01)
-DEtrans<-impulse_ecoli$dfImpulseDE2Results[impulse_ecoli$dfImpulseDE2Results$isTransient==TRUE,] %>% filter(padj<0.01)
-DEother<-impulse_ecoli$dfImpulseDE2Results %>% filter(padj<0.01) %>% filter(isTransient==FALSE) %>% filter(isMonotonous==FALSE)
+DEmono<- impulse_ecoli$dfImpulseDE2Results[impulse_ecoli$dfImpulseDE2Results$isMonotonous==TRUE,] %>% filter(padj<0.01) %>% filter(Gene %in% ecoli_DEGs)
+DEtrans<-impulse_ecoli$dfImpulseDE2Results[impulse_ecoli$dfImpulseDE2Results$isTransient==TRUE,] %>% filter(padj<0.01) %>% filter(Gene %in% ecoli_DEGs)
+DEother<-impulse_ecoli$dfImpulseDE2Results %>% filter(padj<0.01) %>% filter(isTransient==FALSE) %>% filter(isMonotonous==FALSE) %>% filter(Gene %in% ecoli_DEGs)
 
 #pull out sigmoid params for each of the monotonic DEGs
 monoDE<-DEmono$Gene
@@ -287,7 +289,7 @@ colnames(monoparamsdf)<-c("beta", "h0", "h1", "t")
 rownames(monoparamsdf)<-monoDE
 
 #t params of montonic genes, looks somewhat bi/trimodal
-ggplot(monoparamsdf, aes(x=t))+geom_density(color="blue", fill="cyan", binwidth=1)+xlim(50,100)+ggtitle("Distribution of sigmoid t params of 740 monotonic E. coli DEGs")
+ggplot(monoparamsdf, aes(x=t))+geom_density(color="blue", fill="cyan", binwidth=1)+xlim(50,100)+ggtitle("Distribution of sigmoid t params of 686 monotonic E. coli DEGs")
 
 #t1 params of transient genes... multimodal but greatest peak @ 14 min
 transDE<-na.omit(DEtrans$Gene)
@@ -297,7 +299,40 @@ for (i in 1:length(transDE)){
 transparamsdf<-as.data.frame(transparamsmat)
 colnames(transparamsdf)<-c("beta", "h0", "h1", "h2", "t1", "t2")
 rownames(transparamsdf)<-transDE
-ggplot(transparamsdf, aes(x=t1))+geom_histogram(color="blue", fill="cyan", alpha=0.5, binwidth=0.5)+ xlim(0,100)+ggtitle("Distribution of 40 impulse t1 params of monotonic E. coli DEGs")
+ggplot(transparamsdf, aes(x=t1))+geom_histogram(color="blue", fill="cyan", alpha=0.5, binwidth=0.5)+ xlim(0,100)+ggtitle("Distribution of 29 impulse t1 params of transient E. coli DEGs")
+```
+
+```{r Plotting Other and Transient DEGs, eval=F, echo=F}
+#overlay plots for all transient DEGs
+plot_trajectories<-matrix(nrow=151, ncol=dim(transparamsdf)[1])
+rownames(plot_trajectories)<-seq(0,150,1)
+colnames(plot_trajectories)<-rownames(transparamsdf)
+for (i in 1:dim(transparamsdf)[1]){
+  tmpsim<-transparamsdf[i,]
+  plot_trajectories[,i]<-impulse_function(b=tmpsim$beta, h_0=tmpsim$h0, h_1=tmpsim$h1, h_2=tmpsim$h2, t_1=tmpsim$t1, t_2=tmpsim$t2, t=seq(0,150,1))
+}
+plot_trajectories<-as.data.frame(plot_trajectories)
+plot_trajectories$time<-seq(0,150,1)
+df <- melt(plot_trajectories ,  id.vars = 'time', variable.name = 'series')
+ggplot(df, aes(x=time,y=log2(value))) + geom_line(aes(colour = series)) +facet_wrap(~series)+theme_bw()+theme(legend.position = "none")+ggtitle("Trajectory Plots of Transient DEGs")
+
+#what about these mysterious "other" genes: not transient nor monotonically DE
+DEother$Gene[DEother$Gene %in% sensitive$geneName]
+DEother$Gene[DEother$Gene %in% insensitive$geneName]
+DEother$Gene[DEother$Gene %in% linear$geneName]
+
+set.seed(13)
+WT_counts<-normecounts[,grepl("JH01", colnames(normecounts))]
+other_genes<-c("ybeM", sample(DEother$Gene[DEother$sigmoidTOconst_padj<0.01], 11))
+plot_list<-list()
+for (i in 1:length(other_genes)){
+  index=match(other_genes[i], rownames(WT_counts))
+  tmpdf<-as.data.frame(cbind(times[1:18], t(WT_counts[index,])))
+  rownames(tmpdf)<-NULL
+  colnames(tmpdf)<-c("time", "exp")
+  plot_list[[i]]<-ggplot(tmpdf, aes(x=time, y=exp))+ggtitle(as.character(other_genes[i]))+geom_point()+geom_smooth()}
+do.call(grid.arrange, c(plot_list[1:6], ncol=2, nrow=3))
+do.call(grid.arrange, c(plot_list[7:12], ncol=2, nrow=3))
 ```
 
 ### *Simulations*
@@ -980,7 +1015,7 @@ insensitivedf$type<-rep("Insensitive", dim(insensitivedf)[1])
 on_times<-rbind(sensitivedf, insensitivedf)
 
 #plot the densities of the onset times
-ggplot(on_times, aes(x=t, color=type, fill=type))+geom_density(alpha=0.5)+xlim(50, 125)+ggtitle("Distribution of onset times for 87 Sensitive & 15 Insensitive E. coli DEGs")
+ggplot(on_times, aes(x=t, color=type, fill=type))+geom_density(alpha=0.5)+xlim(50, 125)+theme_bw()+ggtitle("Distribution of onset times for 87 Sensitive & 15 Insensitive E. coli DEGs")+theme(plot.title= element_text(size=20, face="bold"), text = element_text(size=20), legend.text=element_text(size=20), axis.text=element_text(size=20), axis.title=element_text(size=20), legend.position="top") 
 
 #####################
 #Test for Significance
@@ -998,7 +1033,7 @@ insens_peak<-density(insensitivedf$t)$x[which.max(density(insensitivedf$t)$y)]
 as.character(sensvec[sensitivedf$t>75])
 ```
 
-Using the R package TopGO, sensitive and insensitive genes were enriched for Gene Ontology (GO) terms (at Kolmorgorov-Smirnoff p value<0.05). These GO terms were added to plots of sensitive and insensitive sigmoidal/impulse trajectories faceted by RpoS sensitivity. Insensitive genes were enriched in Membrane, Response to Abiotic Stimuli, and Transporter Terms while Sensitive Genes were enriched in Cytoplasmic and Metabolic Processes. The vast majority of genes in both groups appeared monotonically upregulated, however, a number of insensitive genes appeared to achieve higher peak levels of expression than sensitive genes.
+Using the R package TopGO, sensitive and insensitive genes were enriched for Gene Ontology (GO) terms (at Kolmorgorov-Smirnoff p value<0.05). These GO terms were added to plots of sensitive and insensitive sigmoidal/impulse trajectories faceted by RpoS sensitivity. Sensitive genes were enriched in Membrane, Response to Abiotic Stimuli, and Transporter Terms while insensitive Genes were enriched in Cytoplasmic and Metabolic Processes. The vast majority of genes in both groups appeared monotonically upregulated, however, a number of insensitive genes appeared to achieve higher peak levels of expression than sensitive genes.
 
 ```{r Overlay Trajectories and Relative mRNA plot, cache=TRUE, warning=FALSE, eval=TRUE, echo=FALSE, message=FALSE, results='hide', fig.keep='all'}
 #####################
@@ -1099,7 +1134,7 @@ sensdf$sens<-rep("Sensitive", dim(sensdf)[1])
 box_df<-rbind(sensdf, insensdf)
 box_df$sens<-as.factor(box_df$sens)
 box_df$time<-as.factor(box_df$time)
-ggplot(box_df, aes(x=time, y=value, fill=sens)) + geom_boxplot(position=position_dodge(1), outlier.size = 0, outlier.shape=NA, coef=0)+ylim(0,1)+theme_bw()+ylab("Relative mRNA level")+ggtitle("Expression Profiles of Sensitive and Insensitive Genes Derived From Sigmoid Imputation when Cells Enter Stationary Phase")+stat_summary(fun.y=median, geom="smooth", color="blue", aes(group=1))+stat_summary(data=insensdf, fun.y=median, geom="smooth", aes(group=2), color="maroon")
+ggplot(box_df, aes(x=time, y=value, fill=sens))+geom_boxplot(position=position_dodge(1), outlier.size = 0, outlier.shape=NA, coef=0)+ylim(0,1)+theme_bw(base_size=15)+theme(plot.title = element_text(size=15, face="bold"), legend.text=element_text(size=16))+ylab("Relative mRNA level")+ggtitle("Sigmoid-imputed expression IQRs of Sensitive & Insensitive Genes in Starvation Time Course")+stat_summary(fun.y=median, geom="smooth", color="blue", aes(group=1))+stat_summary(data=insensdf, fun.y=median, geom="smooth", aes(group=2), color="maroon")
 ```
 
 Adapting the analysis performed by Fong *et al.* 2017 on data from Conway *et. al* 2014, we generated boxplots of relative expressions of sensitive and insensitive genes at fine temporal resolution using sigmoidal imputation during the transition to stationary phase. Shown above are the 1st, 2nd, and 3rd quantiles of expression relative to the 90 minute TP at times between 0 and 90 minutes. While there is a substantial amount of variation in the expression IQR of the insensitive genes, the plot illustrates that the relative transcription of sensitive genes is begins earlier than in insensitive genes during cell starvation. 
@@ -1262,7 +1297,7 @@ In summary, E. coli posesses general stress response to a variety of environment
 
 The transcriptomic remodeling of WT and RpoS-knockout bacterial strains were measured during a 150 minute cell starvation time course RNA-Seq experiment. Differentially expressed genes were identified using a thoughtfully-constructed pipeline using state-of-the-art TC differential expression tools (Spies *et al.* 2019). Sigmoidal models were fit to DEGs using ImpulseDE2. The robustness to dispersion-based noise, outliers, and number of TPs were asssessed using simulations, and the onset time (t) parameter was found to be robust to high dispersions and outliers. What's more, increasing the number of time points (particularly around the spike in transcription witnessed between 55 and 75 minutes) increased the confidence in the t parameter, which will inform the design of future timing-oriented RNA-seq studies.
 
-Density plots of the onset times for monotonic insensitive and sensitive DEGs revealed the probable misclassification of 8 sensitive DEGs, as these genes were among the latest of all DEGs to turn on. Once these genes were excluded from the analysis, a highly signficantly different shift between the distributions of sensitive and insensitive genes was discovered using a Wilcox Rank Sum test (p=0.009). Applying sigmoidal imputation to obtain expression values at unknown time points demonstrated that sensitive genes tend to turn on earlier than insensitive genes during cell starvation, analysis consistent with work done by Fong *et al.* on another dataset (Fong *et. al* 2017). What's more, sensitive genes were found to be enriched for cytosolic and metabolic GO terms, while insensitive genes were enriched in terms pertaining to membrane and membrane transport, perhaps reflecting the ordering of cytosolic/membrane remodeling in response to cell starvation.
+Density plots of the onset times for monotonic insensitive and sensitive DEGs revealed the probable misclassification of 8 sensitive DEGs, as these genes were among the latest of all DEGs to turn on. Once these genes were excluded from the analysis, a highly signficantly different shift between the distributions of sensitive and insensitive genes was discovered using a Wilcox Rank Sum test (p=0.009). Applying sigmoidal imputation to obtain expression values at unknown time points demonstrated that sensitive genes tend to turn on earlier than insensitive genes during cell starvation, analysis consistent with work done by Fong *et al.* on another dataset (Fong *et. al* 2017). What's more, sensitive genes were found to be enriched for membrane and membrane transport GO terms, while insensitive genes were enriched in cytosolic, response to abiotic stimulus, and metabolic terms, perhaps reflecting the ordering of membrane/cytosolic remodeling in response to cell starvation.
 
 This analysis also contextualizes the role of RpoS-sensitivity within the dynamics of global expression during cell starvation in *E. coli*. 92% of all monotonic DEGs turn on within a span of 20 minutes (55 to 75 minutes) during *E. coli* cell starvation. The most sensitive genes turn on at around 62 minutes, while most insensitive genes turn on at around 65 minutes. Thus, sensitive and insensitive genes did not turn on abnormally early nor abnormally late respectively compared to all the other monotonic DEGs, and the short time separating their onsets suggests suggests that RpoS sensitivity may control timing on a finer scale than previously thought.
 
