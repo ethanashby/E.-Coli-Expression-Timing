@@ -66,7 +66,7 @@ savagecounts_dds <- DESeq(ddsFullCountTable )
 #MG and SA############################################################################
 savageRes_MgSa <- results( savagecounts_dds, contrast = c("stage",  "MG","SA"))
 MgSa <- savageRes_MgSa[ which(savageRes_MgSa$padj < 0.01 ), ]
-MgSa <- MgSa[which(abs(MgSa$log2FoldChange) > 1.5),]
+#MgSa <- MgSa[which(abs(MgSa$log2FoldChange) > 1.5),]
 MgSa$logP <- -log10(MgSa$pvalue)
 MgSa$Gene <- rownames(MgSa)
 MgSa <- MgSa[which(abs(MgSa$logP) != 0),]
@@ -80,7 +80,7 @@ names(ranks_MgSa) <- gseaDat_MgSa$Gene
 #MG and PV############################################################################
 savageRes_MgPv <- results( savagecounts_dds ,contrast = c("stage",  "MG","PV"))
 MgPv <- savageRes_MgPv[ which(savageRes_MgPv$padj < 0.01 ), ]
-MgPv <- MgPv[which(abs(MgPv$log2FoldChange) > 1.5),]
+#MgPv <- MgPv[which(abs(MgPv$log2FoldChange) > 1.5),]
 MgPv$logP <- -log10(MgPv$pvalue)
 MgPv$Gene <- rownames(MgPv)
 MgPv <- MgPv[which(abs(MgPv$logP) != 0),]
@@ -94,7 +94,7 @@ names(ranks_MgPv) <- gseaDat_MgPv$Gene
 #PV and SA############################################################################
 savageRes_PvSa <- results( savagecounts_dds ,contrast = c("stage",  "PV","SA"))
 PvSa <- savageRes_PvSa[ which(savageRes_PvSa$padj < 0.01 ), ]
-PvSa <- PvSa[which(abs(PvSa$log2FoldChange) > 1.5),]
+#PvSa <- PvSa[which(abs(PvSa$log2FoldChange) > 1.5),]
 PvSa$logP <- -log10(PvSa$pvalue)
 PvSa$Gene <- rownames(PvSa)
 PvSa <- PvSa[which(abs(PvSa$logP) != 0),]
@@ -248,30 +248,126 @@ fgseaRes_all <- fgsea(pathways = as.list(sav_all_list), stats = ranks, minSize =
 fgseaRes_all_pos <- fgsea(pathways = as.list(sav_all_list), stats = ranks_log.pos, minSize = 1,  nperm = 1000)
 fgseaRes_all_neg <- fgsea(pathways = as.list(sav_all_list), stats = ranks_log.neg, minSize = 1,  nperm = 1000)
  
-##########NEG FOLD CHANGE ENRICHMENT#########
-plotEnrichment(pathway = sav_all_list$MgSa,
-               stats  = ranks_log.neg) + labs(title = "MgSa neg log fold")
-plotEnrichment(pathway = sav_all_list$MgPv,
-               stats  = ranks_log.neg) + labs(title ="MgPv neg log fold")
-plotEnrichment(pathway = sav_all_list$PvSa,
-               stats  = ranks_log.neg) + labs(title ="PvSa neg log fold")
-##########POS FOLD CHANGE ENRICHMENT#########
-plotEnrichment(pathway = sav_all_list$MgSa,
-               stats  = ranks_log.pos) + labs(title ="MgSa pos log fold")
-plotEnrichment(pathway = sav_all_list$MgPv,
-               stats  = ranks_log.pos) + labs(title ="MgPv pos log fold")
-plotEnrichment(pathway = sav_all_list$PvSa,
-               stats  = ranks_log.pos) + labs(title ="PvSa pos log fold")
-##########TOTAL ENRICHMENT##################
-plotEnrichment(pathway = sav_all_list$MgSa,
-               stats  = ranks ) + labs(title ="MgSa")
-plotEnrichment(pathway = sav_all_list$MgPv,
-               stats  = ranks ) + labs(title ="MgPv")
-plotEnrichment(pathway = sav_all_list$PvSa,
-               stats  = ranks ) + labs(title ="PvSa")
+```
+
+
+```{r}
+
+###############MAKING PATHWAY LIST FROM GO ANALYSIS - BIO, CELL,MOLECULAR###########################
+
+####################BIO PROS GO###########################
+MgSa_GObiopros <- read.table("MgSa_GObiopros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
+  MgSa_GObiopros <- data.frame(MgSa_GObiopros, comparison = "MgSa_bio")
+MgPv_GObiopros <- read.table("MgPv_GObiopros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
+  MgPv_GObiopros <- data.frame(MgPv_GObiopros, comparison = "MgPv_bio")
+PvSa_GObiopros <- read.table("PvSa_GObiopros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
+  PvSa_GObiopros <- data.frame(PvSa_GObiopros, comparison = "PvSa_bio")
+  
+all_bio <- rbind(MgSa_GObiopros,MgPv_GObiopros,PvSa_GObiopros)
+all_bio$Result.gene.list <- gsub(',',',',all_bio$Result.gene.list,fixed=TRUE)
+all_bio$Result.gene.list <- strsplit(all_bio$Result.gene.list, ",")
+ `
+#MgSa Bio
+MgSa_GObiopros <- data.frame(all_bio %>% filter(comparison == "MgSa_bio"))
+MgSa_GObiopros_list <- as.list(MgSa_GObiopros)
+names(MgSa_GObiopros_list$Result.gene.list) <- MgSa_GObiopros_list$Name
+MgSaGOlist_bio <- MgSa_GObiopros_list$Result.gene.list
+#MgPv Bio
+MgPv_GObiopros <- data.frame(all_bio %>% filter(comparison == "MgPv_bio"))
+MgPv_GObiopros_list <- as.list(MgPv_GObiopros)
+names(MgPv_GObiopros_list$Result.gene.list) <- MgPv_GObiopros_list$Name
+MgPvGOlist_bio <- MgPv_GObiopros_list$Result.gene.list
+#PvSa Bio
+PvSa_GObiopros <- data.frame(all_bio %>% filter(comparison == "PvSa_bio"))
+PvSa_GObiopros_list <- as.list(PvSa_GObiopros)
+names(PvSa_GObiopros_list$Result.gene.list) <- PvSa_GObiopros_list$Name
+PvSaGOlist_bio <- PvSa_GObiopros_list$Result.gene.list
+
+
+#####################CELL PROS#######################
+  #MGSA
+MgSa_GOcellpros <- read.table("MgSa_GOcellpros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
+  MgSa_GOcellpros <- data.frame(MgSa_GOcellpros, comparison = "MgSa_cell")
+MgPv_GOcellpros <- read.table("MgPv_GOcellularpros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
+  MgPv_GOcellpros <- data.frame(MgPv_GOcellpros, comparison = "MgPv_cell")
+PvSa_GOcellpros <- read.table("PvSa_GOcellularpros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
+  PvSa_GOcellpros <- data.frame(PvSa_GOcellpros, comparison = "PvSa_cell")
+  
+all_cell <- rbind(MgSa_GOcellpros, MgPv_GOcellpros,PvSa_GOcellpros)
+all_cell$Result.gene.list <- gsub(',',',',all_cell$Result.gene.list,fixed=TRUE)
+all_cell$Result.gene.list <- strsplit(all_cell$Result.gene.list, ",")
+
+  #MGSA CELL
+MgSa_GOcellpros <- data.frame(all_cell %>% filter(comparison == "MgSa_cell"))
+MgSa_GOcellpros_list <- as.list(MgSa_GOcellpros)
+names(MgSa_GOcellpros_list$Result.gene.list) <- MgSa_GOcellpros_list$Name
+MgSaGOlist_cell <- MgSa_GOcellpros_list$Result.gene.list
+  #MGPV CELL
+MgPv_GOcellpros <- data.frame(all_cell %>% filter(comparison == "MgPv_cell"))
+MgPv_GOcellpros_list <- as.list(MgPv_GOcellpros)
+names(MgPv_GOcellpros_list$Result.gene.list) <- MgPv_GOcellpros_list$Name
+MgPvGOlist_cell <- MgPv_GOcellpros_list$Result.gene.list
+  #PVSA CELL
+PvSa_GOcellpros <- data.frame(all_cell %>% filter(comparison == "PvSa_cell"))
+PvSa_GOcellpros_list <- as.list(PvSa_GOcellpros)
+names(PvSa_GOcellpros_list$Result.gene.list) <- PvSa_GOcellpros_list$Name
+PvSaGOlist_cell <- PvSa_GOcellpros_list$Result.gene.list
+#View(PvSaGOlist_cell)
+
+
+##################### MOLE PROS #####################
+MgSa_GOmolepros <- read.table("MgSa_GOmolecpros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
+  MgSa_GOmolepros <- data.frame(MgSa_GOmolepros, comparison = "MgSa_mol")
+MgPv_GOmolepros <- read.table("MgPv_GOmolepros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
+  MgPv_GOmolepros <- data.frame(MgPv_GOmolepros, comparison = "MgPv_mol")
+PvSa_GOmolepros <- read.table("PvSa_GOmolepros.tab", sep = "\t",header = TRUE) %>% dplyr :: select(Name, Result.gene.list)
+  PvSa_GOmolepros <- data.frame(PvSa_GOmolepros, comparison = "PvSa_mol")
+  
+all_mol <- rbind(MgSa_GOmolepros,MgPv_GOmolepros, PvSa_GOmolepros)
+all_mol$Result.gene.list <- gsub(',',',',all_mol$Result.gene.list,fixed=TRUE)
+all_mol$Result.gene.list <- strsplit(all_mol$Result.gene.list, ",")
+
+  #MGSA MOL
+MgSa_GOmolepros <- data.frame(all_mol %>% filter(comparison == "MgSa_mol")) 
+MgSa_GOmolepros_list <- as.list(MgSa_GOmolepros)
+names(MgSa_GOmolepros_list$Result.gene.list) <- MgSa_GOmolepros$Name
+MgSaGOlist_mole <- MgSa_GOmolepros_list$Result.gene.list
+  #MGPV MOL
+MgPv_GOmolepros <- data.frame(all_mol %>% filter(comparison == "MgPv_mol")) 
+MgPv_GOmolepros_list <- as.list(MgPv_GOmolepros)
+names(MgPv_GOmolepros_list$Result.gene.list) <- MgPv_GOmolepros$Name
+MgPvGOlist_mole <- MgPv_GOmolepros_list$Result.gene.list
+  #PVSA MOL
+PvSa_GOmolepros <- data.frame(all_mol %>% filter(comparison == "PvSa_mol")) 
+PvSa_GOmolepros_list <- as.list(PvSa_GOmolepros)
+names(PvSa_GOmolepros_list$Result.gene.list) <- PvSa_GOmolepros$Name
+PvSaGOlist_mole <- PvSa_GOmolepros_list$Result.gene.list
 
 ```
 
+```{r}
+all_list <- c()
+all_list$MgSa_bio <- MgSaGOlist_bio
+all_list$MgPv_bio <- MgPvGOlist_bio
+all_list$PvSa_bio <- PvSaGOlist_bio
+all_list$MgSa_cell <- MgSaGOlist_cell
+all_list$MgPv_cell <- MgPvGOlist_cell
+all_list$PvSa_cell <- PvSaGOlist_cell
+all_list$MgSa_mole <- MgSaGOlist_mole
+all_list$MgPv_mole <- MgPvGOlist_mole
+all_list$PvSa_mole <- PvSaGOlist_mole
+ 
+ 
+fgsea_all_pos <- c()
+fgsea_all_neg <- c()
+for (i in 1:12){
+fgsea_all_pos[[i]] = fgsea(pathways = as.list(all_list[[i]]), stats = ranks_log.pos, minSize = 15,  nperm = 1000)
+fgsea_all_neg[[i]] = fgsea(pathways = as.list(all_list[[i]]), stats = ranks_log.neg, minSize = 15,  nperm = 1000)
+}
+names(fgsea_all_neg) <- names(all_list)
+names(fgsea_all_pos) <- names(all_list)
+```
+ 
 
 
 ```{r}
