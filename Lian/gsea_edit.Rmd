@@ -28,8 +28,6 @@ library("corrplot")
 library(maSigPro)
 #for GSEA
 library(doParallel)
-library(Biobase)
-library(biomaRt)
 library(fgsea)
 library(BiocParallel)
 ```
@@ -68,21 +66,97 @@ savagecounts_dds <- DESeq(ddsFullCountTable )
 #MG and SA############################################################################
 savageRes_MgSa <- results( savagecounts_dds, contrast = c("stage",  "MG","SA"))
 MgSa <- savageRes_MgSa[ which(savageRes_MgSa$padj < 0.01 ), ]
-#resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
- 
+MgSa <- MgSa[which(abs(MgSa$log2FoldChange) > 1.5),]
+MgSa$logP <- -log10(MgSa$pvalue)
+MgSa$Gene <- rownames(MgSa)
+MgSa <- MgSa[which(abs(MgSa$logP) != 0),]
+MgSa$metric <- MgSa$logP * abs(MgSa$log2FoldChange)
+MgSa_gsea  <- MgSa[,c("Gene","metric")]
+gsea_MgSa_df <- data.frame(MgSa_gsea)
+gseaDat_MgSa <- filter(gsea_MgSa_df, !is.na(Gene))
+ranks_MgSa <- gsea_MgSa_df$metric
+names(ranks_MgSa) <- gseaDat_MgSa$Gene
  
 #MG and PV############################################################################
 savageRes_MgPv <- results( savagecounts_dds ,contrast = c("stage",  "MG","PV"))
 MgPv <- savageRes_MgPv[ which(savageRes_MgPv$padj < 0.01 ), ]
-#resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
- 
+MgPv <- MgPv[which(abs(MgPv$log2FoldChange) > 1.5),]
+MgPv$logP <- -log10(MgPv$pvalue)
+MgPv$Gene <- rownames(MgPv)
+MgPv <- MgPv[which(abs(MgPv$logP) != 0),]
+MgPv$metric <- MgPv$logP * abs(MgPv$log2FoldChange)
+MgPv_gsea  <- MgPv[,c("Gene","metric")]
+gsea_MgPv_df <- data.frame(MgPv_gsea)
+gseaDat_MgPv <- filter(gsea_MgPv_df, !is.na(Gene))
+ranks_MgPv <- gsea_MgPv_df$metric
+names(ranks_MgPv) <- gseaDat_MgPv$Gene
 
 #PV and SA############################################################################
 savageRes_PvSa <- results( savagecounts_dds ,contrast = c("stage",  "PV","SA"))
 PvSa <- savageRes_PvSa[ which(savageRes_PvSa$padj < 0.01 ), ]
-#resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
+PvSa <- PvSa[which(abs(PvSa$log2FoldChange) > 1.5),]
+PvSa$logP <- -log10(PvSa$pvalue)
+PvSa$Gene <- rownames(PvSa)
+PvSa <- PvSa[which(abs(PvSa$logP) != 0),]
+PvSa$metric <- PvSa$logP * abs(PvSa$log2FoldChange)
+PvSa_gsea  <- PvSa[,c("Gene","metric")]
+gsea_PvSa_df <- data.frame(PvSa_gsea)
+gseaDat_PvSa <- filter(gsea_PvSa_df, !is.na(Gene))
+ranks_PvSa <- gsea_PvSa_df$metric
+names(ranks_PvSa) <- gseaDat_PvSa$Gene 
  
+
+```
+
+```{r}
+################################GSEA on all SAV DE genes########################################
+####need to make list of all 'pathways'
+sav_all_list <- c()
+  #for MgSa
+MgSa_list <- names(ranks_MgSa)#rownames(MgSa)
+  #for MgPv
+MgPv_list <- names(ranks_MgPv)#rownames(MgPv)
+  #for PvSa
+PvSa_list <- names(ranks_PvSa)#rownames(PvSa)
  
+#creating full list for all savage 
+sav_all_list$MgSa <- MgSa_list
+sav_all_list$MgPv <- MgPv_list
+sav_all_list$PvSa <- PvSa_list
+
+#FGSEA on SAV DE GENES (NO GO)
+
+fgseaRes_all <- fgsea(pathways = as.list(sav_all_list), stats = ranks, minSize = 1,  nperm = 1000)
+fgseaRes_all_pos <- fgsea(pathways = as.list(sav_all_list), stats = ranks_log.pos, minSize = 1,  nperm = 1000)
+fgseaRes_all_neg <- fgsea(pathways = as.list(sav_all_list), stats = ranks_log.neg, minSize = 1,  nperm = 1000)
+ 
+##########NEG FOLD CHANGE ENRICHMENT#########
+plotEnrichment(pathway = sav_all_list$MgSa,
+               stats  = ranks_log.neg) + labs(title = "MgSa neg log fold")
+plotEnrichment(pathway = sav_all_list$MgPv,
+               stats  = ranks_log.neg) + labs(title ="MgPv neg log fold")
+plotEnrichment(pathway = sav_all_list$PvSa,
+               stats  = ranks_log.neg) + labs(title ="PvSa neg log fold")
+##########POS FOLD CHANGE ENRICHMENT#########
+plotEnrichment(pathway = sav_all_list$MgSa,
+               stats  = ranks_log.pos) + labs(title ="MgSa pos log fold")
+plotEnrichment(pathway = sav_all_list$MgPv,
+               stats  = ranks_log.pos) + labs(title ="MgPv pos log fold")
+plotEnrichment(pathway = sav_all_list$PvSa,
+               stats  = ranks_log.pos) + labs(title ="PvSa pos log fold")
+##########TOTAL ENRICHMENT##################
+plotEnrichment(pathway = sav_all_list$MgSa,
+               stats  = ranks ) + labs(title ="MgSa")
+plotEnrichment(pathway = sav_all_list$MgPv,
+               stats  = ranks ) + labs(title ="MgPv")
+plotEnrichment(pathway = sav_all_list$PvSa,
+               stats  = ranks ) + labs(title ="PvSa")
+
+```
+
+
+
+```{r}
 
 #######MAKING RANKED METRIC LIST FOR SAVAGE DATA########
 
@@ -138,39 +212,39 @@ ranks_PvSa <- sort(ranks_PvSa)
 fuzzyClust <- read.table("fuzzyclusters_GO.tab") %>% dplyr :: select(Name, Result.gene.list, Cluster,Type)
 fuzzyClust$Result.gene.list <- gsub(',',',',fuzzyClust$Result.gene.list,fixed=TRUE)
 fuzzyClust$Result.gene.list <- strsplit(fuzzyClust$Result.gene.list, ",")
-
+ 
 
 #cluster1 <- data.frame(GO[1]) %>%dplyr::select(Cluster1.Name,Cluster1.Result.gene.list,Cluster1.Type) 
 #cluster1$Cluster1.Result.gene.list <- gsub(',',',',cluster1$Cluster1.Result.gene.list,fixed=TRUE)
 #cluster1$Cluster1.Result.gene.list <- strsplit(cluster1$Cluster1.Result.gene.list, ",")
 
-clust1_bio <- fuzzyClust %>% filter(Type == "Biological Process", Cluster == 1)
-clust1_bio_list <- as.list(clust1_bio)
+cluster1_bio <- fuzzyClust %>% filter(Type == "Biological Process", Cluster == 1)
+clust1_bio_list <- as.list(cluster1_bio)
 names(clust1_bio_list$Result.gene.list) <- clust1_bio_list$Name
-clust1_bio <- clust1_bio_list$Result.gene.list
- 
+clust1_bio <- as.list(clust1_bio_list$Result.gene.list)
+#View(clust1_bio)
 
-clust1_cell <- fuzzyClust %>% filter(Type == "Cellular Component", Cluster == 1)
-clust1_cell_list <- as.list(clust1_cell)
+cluster1_cell <- fuzzyClust %>% filter(Type == "Cellular Component", Cluster == 1)
+clust1_cell_list <- as.list(cluster1_cell)
 names(clust1_cell_list$Result.gene.list) <- clust1_cell_list$Name
 clust1_cell <- clust1_cell_list$Result.gene.list
 #View(fuzzylist_1_cell)
 
-clust1_mol <- fuzzyClust %>% filter(Type == "Molecular Function",Cluster == 1)
-clust1_mol_list <- as.list(clust1_mol)
+cluster1_mol <- fuzzyClust %>% filter(Type == "Molecular Function",Cluster == 1)
+clust1_mol_list <- as.list(cluster1_mol)
 names(clust1_mol_list$Result.gene.list) <- clust1_mol_list$Name
 clust1_mol <- clust1_mol_list$Result.gene.list
 
 #########CLUSTER 2######### 
  
-clust2_bio <- fuzzyClust %>% filter(Type == "Biological Process", Cluster == 2)
-clust2_bio_list <- as.list(clust2_bio)
+cluster2_bio <- fuzzyClust %>% filter(Type == "Biological Process", Cluster == 2)
+clust2_bio_list <- as.list(cluster2_bio)
 names(clust2_bio_list$Result.gene.list) <- clust2_bio_list$Name
 clust2_bio <- clust2_bio_list$Result.gene.list
 #View(clust2_bio)
 
-clust2_cell <- fuzzyClust %>% filter(Type == "Cellular Component", Cluster == 2)
-clust2_cell_list <- as.list(clust2_cell)
+cluster2_cell <- fuzzyClust %>% filter(Type == "Cellular Component", Cluster == 2)
+clust2_cell_list <- as.list(cluster2_cell)
 names(clust2_cell_list$Result.gene.list) <- clust2_cell_list$Name
 clust2_cell <- clust2_cell_list$Result.gene.list
 #View(fuzzylist_2_cell)
@@ -186,20 +260,20 @@ clust2_cell <- clust2_cell_list$Result.gene.list
 #clust3_cell <- cluster3 %>% filter(Cluster3.Type == "Cellular Component")
 #clust3_mol <- cluster3 %>% filter(Cluster3.Type == "Molecular Function")
 
-clust4_bio <- fuzzyClust %>% filter(Type == "Biological Process", Cluster == 4)
-clust4_bio_list <- as.list(clust4_bio)
+cluster4_bio <- fuzzyClust %>% filter(Type == "Biological Process", Cluster == 4)
+clust4_bio_list <- as.list(cluster4_bio)
 names(clust4_bio_list$Result.gene.list) <- clust4_bio_list$Name
 clust4_bio <- clust4_bio_list$Result.gene.list
 #View(fuzzylist_4_bio)
 
-clust4_cell <- fuzzyClust %>% filter(Type == "Cellular Component", Cluster == 4)
-clust4_cell_list <- as.list(clust4_cell)
+cluster4_cell <- fuzzyClust %>% filter(Type == "Cellular Component", Cluster == 4)
+clust4_cell_list <- as.list(cluster4_cell)
 names(clust4_cell_list$Result.gene.list) <- clust4_cell_list$Name
 clust4_cell <- clust4_cell_list$Result.gene.list
 #View(fuzzylist_4_cell)
 
-clust4_mol <- fuzzyClust %>% filter(Type == "Molecular Function", Cluster == 4)
-clust4_mol_list <- as.list(clust4_mol)
+cluster4_mol <- fuzzyClust %>% filter(Type == "Molecular Function", Cluster == 4)
+clust4_mol_list <- as.list(cluster4_mol)
 names(clust4_mol_list$Result.gene.list) <- clust4_mol_list$Name
 clust4_mol <- clust4_mol_list$Result.gene.list
 #View(clust4_mol)
@@ -210,13 +284,11 @@ clust4_mol <- clust4_mol_list$Result.gene.list
  
 
 #clust6_bio <- cluster6 %>% filter(Cluster6.Type == "Biological Process")
-clust6_cell <- fuzzyClust %>% filter(Type == "Cellular Component", Cluster == 6) 
-clust6_cell_list <- as.list(clust6_cell)
+cluster6_cell <- fuzzyClust %>% filter(Type == "Cellular Component", Cluster == 6) 
+clust6_cell_list <- as.list(cluster6_cell)
 names(clust6_cell_list$Result.gene.list) <- clust6_cell_list$Name
 clust6_cell <- clust6_cell_list$Result.gene.list
-```
 
-```{r}
 #making Result.gene.list entry into list 
  
 all_fuzzy <- c()
@@ -234,10 +306,12 @@ all_fuzzy$mol1 <- clust1_mol
 #all_fuzzy$mol2 <- clust2_mol
 all_fuzzy$mol4 <- clust4_mol
 #all_fuzzy$mol6 <- clust6_mol
-
-#View(clust2_bio )
-#library(fgsea)
  
+#View(all_fuzzy)
+#library(fgsea)
+```
+
+```{r}
  
 exampleRanks
 fgsea_mgsa_fuzzy <- c()
@@ -245,8 +319,12 @@ fgsea_mgpv_fuzzy <- c()
 fgsea_pvsa_fuzzy <- c()
  
 
-#bplapply(c(as.list(clust6_cell$`intrinsic component of peroxisomal membrane`), ranks_MgPv, minSize = 1,  nperm = 1000), fgsea, BPPARAM = SnowParam())
- 
+temp <- BiocParallel::bplapply(X = as.list(all_fuzzy[[1]]), FUN = fgsea::fgsea, stats = ranks_MgSa, minSize = 1,  nperm = 2)
+temp2 <- fgsea(as.list(all_fuzzy$bio1), ranks_MgSa, minSize = 1, nperm = 10)
+
+length(intersect(clust1_biopath[[1]], names(ranks_MgSa)))
+ examplePathways
+str(clust1_bio)
 #for (i in 1:9){
 #fgsea_mgsa_fuzzy[[i]] = bplapply(c(as.list(all_fuzzy[[i]]),ranks_MgSa, minSize = 1,  nperm = 100), fgsea, BPPARAM = SnowParam())
 #fgsea_mgpv_fuzzy[[i]] = bplapply(c(as.list(all_fuzzy[[i]]),ranks_MgPv, minSize = 1,  nperm = 100), fgsea, BPPARAM = SnowParam())
