@@ -108,6 +108,124 @@ names(ranks_PvSa) <- gseaDat_PvSa$Gene
 
 ```
 
+
+```{r}
+#DESEQ ON SCHULZ
+library(readr)
+TBcounts <- read.table("18-5-23_Proc_ibet_TC_for_deseq.txt",header = TRUE) %>% dplyr ::select(-ib_3h_1) 
+TBcounts <- TBcounts %>% dplyr :: distinct(gene, .keep_all = TRUE) 
+#NORMALIZATION BY DESEQ2
+rownames(TBcounts) <- TBcounts$gene #renames the gene row
+TBcounts <- TBcounts %>% dplyr :: select(-"gene") #this gets rid of the name gene in table
+#creating new data frame for DESeq to analyze
+tb_new <- data.frame(rownames = colnames(TBcounts),
+                     reps = as.factor(c(1,2,3,1,2,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3)),
+                    stage = as.factor(c(rep("noo_ib",3), rep("ib_3h", 2), rep("ib_6h",3), rep("ib_12h",3),rep("ib_24h",3),rep("ib_48h",3),rep("ib_3d",3),rep("ib_7d",3),rep("ib_10d",3),rep("ib_14d",3))))
+rownames(tb_new) <- tb_new$rownames
+tb_new <- tb_new %>% dplyr ::select(-rownames)
+
+##dds stands for the DESeq Data Set
+TBcounts <- TBcounts[rowSums(TBcounts) > 0 ,]
+ddsFullCountTable <- DESeqDataSetFromMatrix(countData = TBcounts,
+                                            colData = tb_new, 
+                                            design = ~ reps + stage)
+
+TBcounts_dds <- DESeq(ddsFullCountTable)
+
+#calculating norm counts
+##DESeq2 :: allows to specify where this fcn comes from
+normDE_counts <- DESeq2::counts(TBcounts_dds, normalized = TRUE) 
+normDE_counts_df <- data.frame(normDE_counts)
+ 
+
+#COMPARING - DE ANALYSIS - FOR GSEA
+
+#comparing stages noo_ib and ib_12h --- the stage of non inhibited bromodomain at time 0 to inhibited bromodomain at time point 12 hours
+TBcountsRes <- results( TBcounts_dds ,contrast = c("stage","ib_12h", "noo_ib"))
+
+
+#resSig stands for the results of the signigicant genes expressed in comparison of noo_ib and ib_6h
+resSig <- resSig[complete.cases(resSig),]
+resSig <- TBcountsRes[ which(TBcountsRes$padj < 0.01 ), ]
+resSig$gene <- rownames(resSig)
+resSig$fcsign <- sign(resSig$log2FoldChange) #fcsign stands for the log2foldchange sign
+
+#creating negative and positive logfold change data sets
+resSig_log.pos <- resSig[which(resSig$fcsign != -1),]
+resSig_log.neg <- resSig[which(resSig$fcsign == -1),]
+
+#GSEA -- MAKING DATA TABLES AND RUNNING FGSEA
+  #Making metric rank for 0-12h comparison
+
+#creating metric used for ranking DE of genes for TB schulz 0-12h timepoint contrast
+#resSig$fcsign <- sign(resSig$log2FoldChange) #fcsign stands for the log2foldchange sign
+#resSig <-  resSig[which(abs(resSig$fcsign) != 0),] #filtering out foldchanges = 0
+resSig$logP = -log10(resSig$pvalue) 
+resSig <-  resSig[which(abs(resSig$logP) != 0),] 
+resSig$metric= resSig$logP * abs(resSig$log2FoldChange)#calculating metric = log10(pvalue)/fcsign
+resSig$Gene <- rownames(resSig) #creating column Gene for dataframe
+gsea_schulz <-resSig[,c("Gene", "metric")]
+
+#Creating data frame from gsea_schulz for gsea
+gsea_schulz_df <- data.frame(gsea_schulz)
+rownames(gsea_schulz_df) <- NULL
+gsea_schulz_df <- gsea_schulz_df[which(gsea_schulz_df$metric != -Inf),] #removing metric where = -Inf
+gsea_schulz_df <- gsea_schulz_df[which(gsea_schulz_df$metric != Inf),]
+ 
+#creating stats and pathways for gsea
+gseaDat_schulz <- filter(gsea_schulz_df, !is.na(Gene))
+ranks <- gsea_schulz_df$metric
+names(ranks) <- gseaDat_schulz$Gene
+ranks <- sort(ranks)
+
+
+#####FOR LOG POS FOLD CHANGE######
+#CREATING RANKS AND DATA FRAME FOR GSEA
+#resSig_log.pos$fcsign <- sign(resSig_log.pos$log2FoldChange) #fcsign stands for the log2foldchange sign
+#resSig_log.pos <-  resSig_log.pos[which(abs(resSig_log.pos$fcsign) != 0),] #filtering out foldchanges = 0
+resSig_log.pos$logP = -log10(resSig_log.pos$pvalue) 
+resSig_log.pos <-  resSig_log.pos[which(abs(resSig_log.pos$logP) != 0),] 
+resSig_log.pos$metric= resSig_log.pos$logP * abs(resSig_log.pos$log2FoldChange) #metric = -log10(pvalue) *abs(log2FoldChange)
+resSig_log.pos$Gene <- rownames(resSig_log.pos) #creating column Gene for dataframe
+gsea_schulz_log.pos <-resSig_log.pos[,c("Gene", "metric")]
+ 
+  #creating data frame
+gsea_schulz_df_log.pos <- data.frame(gsea_schulz_log.pos)
+rownames(gsea_schulz_df_log.pos) <- NULL
+gsea_schulz_df_log.pos <- gsea_schulz_df_log.pos[which(gsea_schulz_df_log.pos$metric != -Inf),] #removing metric where = -Inf
+gsea_schulz_df_log.pos <- gsea_schulz_df_log.pos[which(gsea_schulz_df_log.pos$metric != Inf),]
+
+  #creating ranks for fgsea
+gseaDat_schulz_log.pos <- filter(gsea_schulz_df_log.pos, !is.na(Gene))
+ranks_log.pos <- gsea_schulz_df_log.pos$metric
+names(ranks_log.pos) <- gseaDat_schulz_log.pos$Gene
+ranks_log.pos <- sort(ranks_log.pos)
+
+#####FOR LOG NEG FOLD CHANGE######
+#CREATING RANKS AND DATA FRAME FOR GSEA
+#resSig_log.neg$fcsign <- sign(resSig_log.neg$log2FoldChange) #fcsign stands for the log2foldchange sign
+#resSig_log.neg <-  resSig_log.neg[which(abs(resSig_log.neg$fcsign) != 0),] #filtering out foldchanges = 0
+resSig_log.neg$logP <-  -log10(resSig_log.neg$pvalue)
+resSig_log.neg <-  resSig_log.neg[which(abs(resSig_log.neg$logP) != 0),] 
+resSig_log.neg$metric <-  resSig_log.neg$logP * abs(resSig_log.neg$log2FoldChange) #calculating metric = log10(pvalue) 
+resSig_log.neg$Gene <- rownames(resSig_log.neg) #creating column Gene for dataframe
+gsea_schulz_log.neg <-resSig_log.neg[,c("Gene", "metric")]
+
+  #creating data frame
+gsea_schulz_df_log.neg <- data.frame(gsea_schulz_log.neg)
+rownames(gsea_schulz_df_log.neg) <- NULL
+gsea_schulz_df_log.neg <- gsea_schulz_df_log.neg[which(gsea_schulz_df_log.neg$metric != -Inf),] #removing metric   where = -Inf
+gsea_schulz_df_log.neg <- gsea_schulz_df_log.neg[which(gsea_schulz_df_log.neg$metric != Inf),] 
+  #creating ranks for fgsea
+gseaDat_schulz_log.neg <- filter(gsea_schulz_df_log.neg, !is.na(Gene))
+ranks_log.neg <- gsea_schulz_df_log.neg$metric
+names(ranks_log.neg) <- gseaDat_schulz_log.neg$Gene
+ranks_log.neg <- sort(ranks_log.neg)
+ 
+ 
+
+```
+
 ```{r}
 ################################GSEA on all SAV DE genes########################################
 ####need to make list of all 'pathways'
