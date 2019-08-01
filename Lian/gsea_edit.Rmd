@@ -145,8 +145,8 @@ TBcountsRes <- results( TBcounts_dds ,contrast = c("stage","ib_12h", "noo_ib"))
 
 
 #resSig stands for the results of the signigicant genes expressed in comparison of noo_ib and ib_6h
-resSig <- TBcountsRes[complete.cases(resSig),]
-resSig <- TBcountsRes[ which(TBcountsRes$padj < 0.01 ), ]
+resSig <- TBcountsRes[complete.cases(TBcountsRes),]
+resSig <- resSig[ which(resSig$padj < 0.01 ), ]
 resSig$gene <- rownames(resSig)
 resSig$fcsign <- sign(resSig$log2FoldChange) #fcsign stands for the log2foldchange sign
 
