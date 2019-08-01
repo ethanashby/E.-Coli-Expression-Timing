@@ -34,8 +34,14 @@ library(ggplot2)
 rposconc<-read.csv("meanExpToStationaryRpoSLevels.csv", header=T)
 ggplot(rposconc, aes(x=Time, y=meanRpoS, color=Trial))+geom_point(aes(size=meanDensity))+geom_rect(aes(xmin=55, xmax=75, ymin=0, ymax=Inf), fill="grey", color="grey", alpha=0.2)+ggtitle("RpoS Kinetics During Cell Starvation")+theme_bw()+labs(subtitle="3 replicates per trial, 3 trials")+ylab("meanRpoS conc. (M)")+geom_smooth()
 
-#growth curve
+meanRpos<-aggregate(rposconc[, 6], list(rposconc$Time), mean)
+colnames(meanRpos)<-c("Time", "Mean_RpoS")
+ggplot(meanRpos, aes(x=Time, y=Mean_RpoS))+geom_point()+geom_smooth()+ggtitle("RpoS kinetics over 150 min cell starvation time course")+theme_bw()
+```
 
+```{r, eval=T, echo=F, warning=FALSE, message=FALSE, results='hide', fig.keep='hide'}
+#growth curve (log) mean density
+ggplot(rposconc, aes(x=Time, y=log(meanDensity), color=Trial))+geom_point()+geom_smooth()+ggtitle("Log mean density of cultures")
 ```
 Figure 3: RpoS kinetics over 150 min starvation time course.
 
@@ -289,7 +295,7 @@ colnames(monoparamsdf)<-c("beta", "h0", "h1", "t")
 rownames(monoparamsdf)<-monoDE
 
 #t params of montonic genes, looks somewhat bi/trimodal
-ggplot(monoparamsdf, aes(x=t))+geom_density(color="blue", fill="cyan", binwidth=1)+xlim(50,100)+ggtitle("Distribution of sigmoid t params of 686 monotonic E. coli DEGs")
+ggplot(monoparamsdf, aes(x=t))+geom_density(color="blue", fill="cyan", binwidth=1)+xlim(50,100)+ggtitle("Distribution of sigmoid t params of 686 monotonic E. coli DEGs")+theme_bw()+theme(plot.title=element_text(size=18), axis.title = element_text(size=15), axis.text = element_text(size=12))
 
 #t1 params of transient genes... multimodal but greatest peak @ 14 min
 transDE<-na.omit(DEtrans$Gene)
@@ -1135,6 +1141,83 @@ box_df<-rbind(sensdf, insensdf)
 box_df$sens<-as.factor(box_df$sens)
 box_df$time<-as.factor(box_df$time)
 ggplot(box_df, aes(x=time, y=value, fill=sens))+geom_boxplot(position=position_dodge(1), outlier.size = 0, outlier.shape=NA, coef=0)+ylim(0,1)+theme_bw(base_size=15)+theme(plot.title = element_text(size=15, face="bold"), legend.text=element_text(size=16))+ylab("Relative mRNA level")+ggtitle("Sigmoid-imputed expression IQRs of Sensitive & Insensitive Genes in Starvation Time Course")+stat_summary(fun.y=median, geom="smooth", color="blue", aes(group=1))+stat_summary(data=insensdf, fun.y=median, geom="smooth", aes(group=2), color="maroon")
+
+###Make smooth function version of above, show all or just median profile
+overlay_sigmoids<-function(contplot_times, median){
+  if (median==FALSE){
+cont_sens_means<-matrix(ncol=length(contplot_times),nrow=length(sens_names))
+for (i in 1:length(sens_names)){
+geneparams<-monoparamsdf[match(sens_names[i], rownames(monoparamsdf)),1:4]
+cont_sens_means[i,]<-sigmoid_function(as.numeric(geneparams[1]), as.numeric(geneparams[2]), as.numeric(geneparams[3]), as.numeric(geneparams[4]), unique(contplot_times))
+}
+cont_sens_means<-cont_sens_means/cont_sens_means[,dim(cont_sens_means)[2]]
+rownames(cont_sens_means)<-sens_names
+colnames(cont_sens_means)<-contplot_times
+cont_sens_means<-na.omit(cont_sens_means)
+cont_sens_means<-as.data.frame(t(cont_sens_means))
+cont_sens_means$time<-contplot_times
+
+cont_insens_means<-matrix(ncol=length(contplot_times),nrow=length(insens_names))
+for (i in 1:length(insens_names)){
+geneparams<-monoparamsdf[match(insens_names[i], rownames(monoparamsdf)),1:4]
+cont_insens_means[i,]<-sigmoid_function(as.numeric(geneparams[1]), as.numeric(geneparams[2]), as.numeric(geneparams[3]), as.numeric(geneparams[4]), unique(contplot_times))
+}
+cont_insens_means<-cont_insens_means/cont_insens_means[,dim(cont_insens_means)[2]]
+rownames(cont_insens_means)<-insens_names
+colnames(cont_insens_means)<-contplot_times
+cont_insens_means<-na.omit(cont_insens_means)
+cont_insens_means<-as.data.frame(t(cont_insens_means))
+cont_insens_means$time<-contplot_times
+
+insensdf <- melt(cont_insens_means,  id.vars = 'time', variable.name = 'series')
+insensdf$sens<-as.character(rep("Insensitive", dim(insensdf)[1]))
+
+sensdf <- melt(cont_sens_means,  id.vars = 'time', variable.name = 'series')
+sensdf$sens<-rep("Sensitive", dim(sensdf)[1])
+cont_df<-rbind(sensdf, insensdf)
+cont_df$time=as.numeric(cont_df$time)
+
+a<-ggplot(cont_df, aes(x=time, y=value, group=series))+geom_line(aes(color=sens))+ylim(0,1)+theme_bw(base_size=15)+theme(plot.title = element_text(size=15, face="bold"))+ylab("Relative mRNA level")+ggtitle("Sigmoid Trajectories of of Sensitive & Insensitive Genes in Starvation Time Course")
+print(a)}
+else if (median==TRUE){
+to_plot<-as.data.frame(matrix(ncol=3, nrow=length(contplot_times)))
+to_plot[,1]<-contplot_times
+  cont_sens_means<-matrix(ncol=length(contplot_times),nrow=length(sens_names))
+for (i in 1:length(sens_names)){
+geneparams<-monoparamsdf[match(sens_names[i], rownames(monoparamsdf)),1:4]
+cont_sens_means[i,]<-sigmoid_function(as.numeric(geneparams[1]), as.numeric(geneparams[2]), as.numeric(geneparams[3]), as.numeric(geneparams[4]), unique(contplot_times))
+}
+cont_sens_means<-cont_sens_means/cont_sens_means[,dim(cont_sens_means)[2]]
+rownames(cont_sens_means)<-sens_names
+colnames(cont_sens_means)<-contplot_times
+cont_sens_means<-na.omit(cont_sens_means)
+cont_sens_means<-as.data.frame(t(cont_sens_means))
+cont_sens_means$time<-contplot_times
+to_plot[,2]<-apply(na.omit(t(cont_sens_means)), 2, FUN = median)
+
+cont_insens_means<-matrix(ncol=length(contplot_times),nrow=length(insens_names))
+for (i in 1:length(insens_names)){
+geneparams<-monoparamsdf[match(insens_names[i], rownames(monoparamsdf)),1:4]
+cont_insens_means[i,]<-sigmoid_function(as.numeric(geneparams[1]), as.numeric(geneparams[2]), as.numeric(geneparams[3]), as.numeric(geneparams[4]), unique(contplot_times))
+}
+cont_insens_means<-cont_insens_means/cont_insens_means[,dim(cont_insens_means)[2]]
+rownames(cont_insens_means)<-insens_names
+colnames(cont_insens_means)<-contplot_times
+cont_insens_means<-na.omit(cont_insens_means)
+cont_insens_means<-as.data.frame(t(cont_insens_means))
+cont_insens_means$time<-contplot_times
+
+to_plot[,3]<-apply(na.omit(t(cont_insens_means)), 2, FUN = median)
+
+colnames(to_plot)<-c("time","sensitive","insensitive")
+
+b<-ggplot(to_plot, aes(x=time, y=sensitive))+geom_line(color="dodgerblue3")+geom_line(data=to_plot, aes(x=time, y=insensitive), color="#F8766D")+ylim(0,1)+theme_bw(base_size=15)+theme(plot.title = element_text(size=15, face="bold"))+ylab("Relative mRNA level")+ggtitle("Median Sigmoid Trajectories of Sensitive & Insensitive Genes in Starvation Time Course")
+print(b)
+}
+}
+
+overlay_sigmoids(seq(30, 150, 1), median=FALSE)
+overlay_sigmoids(seq(50, 80, 1), median=TRUE)
 ```
 
 Adapting the analysis performed by Fong *et al.* 2017 on data from Conway *et. al* 2014, we generated boxplots of relative expressions of sensitive and insensitive genes at fine temporal resolution using sigmoidal imputation during the transition to stationary phase. Shown above are the 1st, 2nd, and 3rd quantiles of expression relative to the 90 minute TP at times between 0 and 90 minutes. While there is a substantial amount of variation in the expression IQR of the insensitive genes, the plot illustrates that the relative transcription of sensitive genes is begins earlier than in insensitive genes during cell starvation. 

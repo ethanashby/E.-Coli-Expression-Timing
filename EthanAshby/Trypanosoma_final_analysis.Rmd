@@ -115,10 +115,12 @@ draw.triple.venn(area1= length(rownames(sigres)), area2 = length(maSigProGenes),
 tryp_DEGs<-unique(c(intersect(rownames(sigres),maSigProGenes), intersect(tryp_impulse$vecDEGenes,rownames(sigres)), intersect(maSigProGenes, tryp_impulse$vecDEGenes)))
 write.csv(tryp_DEGs, "tryp_DEGs.csv")
 
-
 ####################################################################################################
 #Fuzzy clustering of DEGs
 ####################################################################################################
+
+#DEGcounts
+DEGcounts<-tccount[rownames(tccount) %in% tryp_DEGs,]
 
 ###Too many clusters in all TPs. Let's only look at first 24 hours
 cluster_data<-matrix(ncol=5,nrow=dim(DEGcounts)[1])
@@ -128,16 +130,12 @@ rownames(cluster_data)<-rownames(DEGcounts)
 colnames(cluster_data)<-c(0,3,6,12,24)
 Set<-ExpressionSet(cluster_data)
 Set.s<-standardise(Set)
-cl<-mfuzz(Set.s, c=9, m=mestimate(Set.s))
-scaleddata<-t(scale(t(cluster_data)))
+cl<-mfuzz(Set.s, c=6, m=mestimate(Set.s))
 
 #Gap stat Kmeans to estimate number of clusters... may take a few mins
 gap <- clusGap(scaleddata, kmeans, 20, B = 100, verbose = interactive())
 plot(gap, main = "Gap statistic")
 abline(v=which.max(gap$Tab[,3]), lty = 2)
-
-#run clustering
-cl<-mfuzz(Set.s, c=6, m=mestimate(Set.s))
 
 #plot clusters
 pdf("tryp_fuzzy_clusters.pdf", onefile = TRUE)
@@ -295,21 +293,54 @@ rownames(small_cluster_data)<-rownames(small_DEGcounts)
 colnames(small_cluster_data)<-c(0,3,6,12,24)
 Set<-ExpressionSet(small_cluster_data)
 Set.s<-standardise(Set)
-small_cl<-mfuzz(Set.s, c=9, m=mestimate(Set.s))
+small_cl<-mfuzz(Set.s, c=6, m=mestimate(Set.s))
 small_scaleddata<-t(scale(t(small_cluster_data)))
 
-gap_small <- clusGap(small_scaleddata, kmeans, 20, B = 100, verbose = interactive())
+gap_small <- clusGap(small_scaleddata, kmeans, 10, B = 100, verbose = interactive())
 plot(gap_small, main = "Gap statistic for DEGs Identified by all 3 tools")
 abline(v=which.max(gap$Tab[,3]), lty = 2)
 
 pdf("tryp_fuzzy_clusters.pdf", onefile = TRUE)
-mfuzz.plot(Set.s, cl, mfrow=c(1,3), time.labels = c(0,3,6,12,24), min.mem=0, new.window=FALSE)
+mfuzz.plot(Set.s, small_cl, mfrow=c(1,3), time.labels = c(0,3,6,12,24), min.mem=0, new.window=FALSE)
 dev.off()
 #extract alpha-cores of 0.72
 cores<-acore(Set.s, cl, min.acore=0.3)
 
 ###Run GO Analysis on these clusters
 write.csv()
+
+#############################################
+#Fuzzy clustering based off impulse-fitted means, filter out rows with 0 variance
+############################################
+library(Mfuzz)
+profiles_to_cluster<-matrix(ncol=5,nrow=dim(DEGcounts)[1])
+names<-c()
+for (i in 1:dim(DEGcounts)[1]) {
+  a=as.numeric(tryp_impulse@lsModelFits[["case"]][[rownames(DEGcounts)[i]]][["lsImpulseFit"]][["vecImpulseValue"]][seq(1,15,3)])
+  if (var(a)!=0){
+  profiles_to_cluster[i,]<- as.numeric(tryp_impulse@lsModelFits[["case"]][[rownames(DEGcounts)[i]]][["lsImpulseFit"]][["vecImpulseValue"]][seq(1,15,3)])
+  names<-c(names, rownames(DEGcounts)[i])
+  }
+ else {foo()}
+}
+profiles_to_cluster<-profiles_to_cluster[complete.cases(profiles_to_cluster),]
+rownames(profiles_to_cluster)<-names
+colnames(profiles_to_cluster)<-c(0,3,6,12,24)
+Set<-ExpressionSet(profiles_to_cluster)
+Set.s<-standardise(Set)
+cl<-mfuzz(Set.s, c=6, m=mestimate(Set.s))
+mfuzz.plot(Set.s, cl, mfrow=c(2,3), time.labels = c(0,3,6,12,24), min.mem=0, new.window=FALSE)
+cores<-acore(Set.s, cl, min.acore = 0.75)
+
+write.csv(cores[[1]]$NAME, "impulse_core_1.csv")
+write.csv(cores[[2]]$NAME, "impulse_core_2.csv")
+write.csv(cores[[3]]$NAME, "impulse_core_3.csv")
+write.csv(cores[[4]]$NAME, "impulse_core_4.csv")
+write.csv(cores[[5]]$NAME, "impulse_core_5.csv")
+write.csv(cores[[6]]$NAME, "impulse_core_6.csv")
+
+#plot PF marker genes
+plot(c(0,3,6,12,24), small_cluster_data[rownames(small_cluster_data)=="Tb927.10.10250",])
 ```
 
 
