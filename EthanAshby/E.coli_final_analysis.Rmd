@@ -12,14 +12,14 @@ fig_width: 6
 Affiliation: ^1^ Department of Mathematics, Pomona College ^2^ Department of Mathematics, Scripps College, ^3^ Department of Biology, Harvey Mudd College ^4^ NSF Data Science REU at Harvey Mudd College
 
 ## Abstract
-  *E. coli* possesses a general stress response that coordinates physiological responses to a variety of stressful stimuli including cell starvation during exponential growth. A key transcription factor in the general stress response, RpoS, is involved in the transcription of approximately one quarter of *E. coli's* genome. Groups of genes were previously classified by their kinetics with respect to RpoS concentration: genes with expressions that increase linearly with RpoS concentration ('linear' genes), genes that are transcribed *more* than anticipated under the linear hypothesis at low RpoS concentrations ('sensitive' genes), genes that are transcribed *less* than anticipated under the linear hypothesis at low RpoS concentrations ('insensitive' genes). Fong *et al.* proposed that the graded RpoS sensitivity of these genes could function as a mechanism to control the *timing* of genes invovled in *E. coli's* response to stress (Fong *et al* 2017). To address this question, DEGs were determined using a thoughtfully-constructed pipeline, and gene-wise sigmoidal models were fit to significant *E. coli* expression trajectories using ImpulseDE2. The dispersion robustness, impact of number of time points, and outlier robustness of the models' parameters were assessed by simulations. Visualization of the biologically meaningful "onset time" parameter of the sigmoidal model indicated that the *E. coli* genes all begin transcription at roughly the same time. While a significant difference between onset times for sensitive and insensitive genes was observed, the difference in onset times was small and not descriptive of the global trend of transcriptomic response. Implications and future directions are discussed. 
+  *E. coli* possesses a general stress response that coordinates physiological responses to a variety of stressful stimuli including cell starvation during exponential growth. A key transcription factor in the general stress response, RpoS, is involved in the transcription of approximately one quarter of *E. coli's* genome. Groups of genes were previously classified by their kinetics with respect to RpoS concentration: genes with expressions that increase linearly with RpoS concentration ('linear' genes), genes that are transcribed *more* than anticipated under the linear hypothesis at low RpoS concentrations ('sensitive' genes), genes that are transcribed *less* than anticipated under the linear hypothesis at low RpoS concentrations ('insensitive' genes). Wong *et al.* proposed that the graded RpoS sensitivity of these genes could function as a mechanism to control the *timing* of genes invovled in *E. coli's* response to stress (Wong *et al* 2017). To address this question, DEGs were determined using a thoughtfully-constructed pipeline, and gene-wise sigmoidal models were fit to significant *E. coli* expression trajectories using ImpulseDE2. The dispersion robustness, impact of number of time points, and outlier robustness of the models' parameters were assessed by simulations. Visualization of the biologically meaningful "onset time" parameter of the sigmoidal model indicated that the *E. coli* genes all begin transcription at roughly the same time. While a significant difference between onset times for sensitive and insensitive genes was observed, the difference in onset times was small and not descriptive of the global trend of transcriptomic response. Implications and future directions are discussed. 
 
 ## Introduction
   E. coli possesses a general stress response to a variety of environmental stresses (Battesti *et al* 2011, Hengge 2011) ranging from osmotic shock to nutrient starvation. A key transcription factor coordinating this response is RpoS, which regulates one quarter of the bacteria's genome (preliminary data from Professor Dan Stoebel). Simple interpretations of transcriptional networks often invoke an analogy of an on/off switch, in which the presence of a stimulus turns some genes on and other genes off. However, these simple interpretations don't adequately describe the complex, dyanmic processes underlying many transcriptional responses to stimuli. Currently, there exists a limited understanding regarding the dynamic nature of transcriptional responses, and the well-annotated, heavily-studied genome of E. coli presents an excellent model to study these intricate regulatory circuits.
   
-  The RpoS regulon is not a static, 'switch-like' network; rather, the RpoS regulon is a highly complex regulatory circuit influenced by several factors including the duration/degree of stress (Lange and Hengge-Aronis 1994), processes like transcription, translation, and mRNA degradation (Lange and Hengge-Aronis 1994), other proteins (Pratt and Silhavy 1998), competition between transcription factors for RNA polymerase (Farewell *et al.* 1998), and even strain type (Hryckowian *et al.* 2014, Chiang *et al.* 2011). Fong and colleagues previously showed that several genes' expression increases linearly with Rpos concentration: these were dubbed 'linear' genes. However, several genes didn't follow this linear trend. Several genes were transcribed *more* than anticipated under the linear hypothesis at low RpoS concentrations: these were called 'sensitive' genes. Other genes were transcribed *less* than anticipated under the linear hypothesis at low RpoS concentrations: these were dubbed 'insensitive' genes (Figure 1) (Fong *et al* 2017). Fong and colleagues hypothesized that sensitivity to Rpos could be a mechanism to control the **timing** of genes involved in the general stress response.
+  The RpoS regulon is not a static, 'switch-like' network; rather, the RpoS regulon is a highly complex regulatory circuit influenced by several factors including the duration/degree of stress (Lange and Hengge-Aronis 1994), processes like transcription, translation, and mRNA degradation (Lange and Hengge-Aronis 1994), other proteins (Pratt and Silhavy 1998), competition between transcription factors for RNA polymerase (Farewell *et al.* 1998), and even strain type (Hryckowian *et al.* 2014, Chiang *et al.* 2011). Wong and colleagues previously showed that several genes' expression increases linearly with Rpos concentration: these were dubbed 'linear' genes. However, several genes didn't follow this linear trend. Several genes were transcribed *more* than anticipated under the linear hypothesis at low RpoS concentrations: these were called 'sensitive' genes. Other genes were transcribed *less* than anticipated under the linear hypothesis at low RpoS concentrations: these were dubbed 'insensitive' genes (Figure 1) (Wong *et al* 2017). Wong and colleagues hypothesized that sensitivity to Rpos could be a mechanism to control the **timing** of genes involved in the general stress response.
   
-  ![(A) osmY: a linear gene (B) astA: a sensitive gene, (C) gadC: an insenstive gene. Figure obtained from Fong *et al.* 2017](./Steobel_figure_sens_insens_linear.png)
+  ![(A) osmY: a linear gene (B) astA: a sensitive gene, (C) gadC: an insenstive gene. Figure obtained from Wong *et al.* 2017](./Steobel_figure_sens_insens_linear.png)
   
   We aimed to investigate this hypothesis using an *in silico* tool, ImpulseDE2. ImpulseDE2 is a serial Time Course (TC) Differential Expression tool which fits impulse/sigmoidal models to expression trajectories and compares these dynamics models to constant/reduced models to determine differential expression over time or between time courses. The key advantage of ImpulseDE2 is that its models are parametrized by *biologically meaningful* parameters (ex. onset time), allowing researchers to leverage the parameter values to directly address biological questions (Figure 2).
   
@@ -43,7 +43,7 @@ Figure 3: RpoS kinetics over 150 min starvation time course.
 
 ## Methods
 ### Data Pre-Processing
-RNA-Seq data was obtained in the form of read count data. Parsing code developed by Madison Hobbes was used to parse the gene identifiers, extract sequence type, gene names, and other useful information to subset the data.
+RNA-Seq data was obtained in the form of read count data. Code developed by Madison Hobbes was used to parse the gene identifiers, extract sequence type, gene names, and other useful information.
 Since this experiment focuses on the kinetics of gene expression, the read count data was filtered for Coding Sequences (CDS's). Rows with NA counts and 0 counts were filtered out, and duplicate genes were resolved.
 
 ```{r, cache=TRUE, warning=FALSE, include=FALSE, eval=TRUE}
@@ -182,13 +182,13 @@ head(ecounts)
 ### Identifying Differentially Expressed Genes
   Three *in silico* differential expression tools were employed to identify DEGs between the WT and delta_RpoS time courses. Previous research shows that two-sample comparisons using DESeq2 and serial tools maSigPro and ImpulseDE2 are the best performing methods to identify differentially expressed genes in TC experiments (Spies *et al.* 2019). Morever, combining gene lists generated by multiple tools reduces false positives without compromising sensitivity and is thus recommended for optimal DEG identification in TC experiments (Spies *et al.* 2019). 
   
-  **DESeq2** (Love *et al* 2014) is an algorithm that models the read counts using a negative binomial distribution and uses a trimmed mean method (TMM) to normalize the read count data across between-sample effects. DESeq2's main innovation is its Bayesian Shrunken Dispersion and LFC estimates, which improve stability and interpretability of these estimates (Love *et al* 2014). DESeq2 is one of the most widely accepted and empolyed algorithms for differential expression analysis. However, DESeq2 is not built to analyze serial (time course) data, and its categorical treatment of serial data leads to loss in predictive power. Thus, DESeq2 alone is an insufficient method to identify DEGs in TC experiments.
+  **DESeq2** (Love *et al* 2014) is an algorithm that models the read counts using a negative binomial distribution and uses a relative log expression (RLE) method to normalize the read count data across between-sample effects. DESeq2's main innovation is its Bayesian Shrunken Dispersion and LFC estimates, which improve stability and interpretability of these estimates (Love *et al* 2014). DESeq2 is one of the most widely accepted and empolyed algorithms for differential expression analysis. However, DESeq2 is not built to analyze serial (time course) data, and its categorical treatment of serial data leads to loss in power to identify DEGs. Thus, DESeq2 alone is an insufficient method to identify DEGs in TC experiments.
   
-  **NEXT maSigPro** (Nueda *et al.* 2014) is a differential expression algorithm designed to analyze serial/TC RNA-Seq data. maSigPro models the gene expression value using polynomial regression with a NB Generalized Linear Model. The model's parameters are fit using maximum likelihood, and the log likelihood ratio test is applied to the full model and the null model (a flat/alternative model fit to a control time course). In the second step of maSigPro, the goodness of fit, R^2^, is computed for each optimized gene model, allowing filtering based on genes with clear expression trends. maSigPro requires data to be normalized *a priori* (we used the TMM method implemented through DESeq2) and contains a naive dispersion estimate of 10, which according to the authors does not have a substantial impact on downstream DEG identification (Nueda *et al.* 2014). maSigPro is a robust DE tool designed for analysis and interpretation of serial/TC RNA-Seq data.
+  **NEXT maSigPro** (Nueda *et al.* 2014) is a differential expression algorithm designed to analyze serial/TC RNA-Seq data. maSigPro models the gene expression value using polynomial regression with a NB Generalized Linear Model. The model's parameters are fit using maximum likelihood, and the log likelihood ratio test is applied to the full model and the null model (a flat/alternative model fit to a control time course). In the second step of maSigPro, the goodness of fit, R^2^, is computed for each optimized gene model, allowing filtering based on genes with clear expression trends. maSigPro requires data to be normalized *a priori* (we used the RLE method implemented through DESeq2) and contains a naive dispersion estimate of 10, which according to the authors does not have a substantial impact on downstream DEG identification (Nueda *et al.* 2014). maSigPro is a robust DE tool designed for analysis and interpretation of serial/TC RNA-Seq data.
   
   **ImpulseDE2** (Fischer *et al.* 2018) is another differential expression algorithm designed to analyze serial/TC RNA-Seq data. ImpulseDE2 fits impulse/sigmoidal models to the read count data by estimating the parameters using the Broyden–Fletcher– Goldfarb–Shanno algorithm.  Gene-wise dispersion estimates are generated using the bayesian shrinkage approach used in DESeq2. Differential expression is assessed using the log likelihood ratio test comparing the likelihood of the alternative and null (flat or control fit) models.
   
-  Using a shiny app created by Annie Cohen, we noticed that many of E. Coli's DEGs appeared montonically differentially expessed. To capture this global expression change, we ran the categorical DE tool DESeq2 a two-sample contrast across the delta_Rpos and WT strains at the final time point (150min), when expression differences between the two time courses were putatively maximized. maSigPro was run with default arguments and results were filtered by R^2^ of 0.6 to obtain DEGs with cognizable expression trends. ImpulseDE2 was run with defaults and with the specification to differentiate between transient (impulse) and monotonic (sigmoidal/linear) DEGs.
+  Using a shiny app created by Annie Cohen, we noticed that many of E. Coli's DEGs appeared montonically differentially expessed. To capture this global expression change, we ran the categorical DE tool DESeq2 a two-sample contrast across the delta_Rpos and WT strains at the final time point (150min), when expression differences between the two time courses were putatively maximized. maSigPro was run with default arguments and results were filtered by R^2^ of 0.6 to obtain DEGs with relatively clear expression trends. ImpulseDE2 was run with defaults and with the specification to differentiate between transient (impulse) and monotonic (sigmoidal/linear) DEGs.
   
   ![Shiny App image illustrating the monotonic expression profiles for DEGs](./annie_shiny.jpg)
   
@@ -344,7 +344,7 @@ To better understand the effects of dispersion, number of time points, and outli
 
 The simulation pipeline was conducted under three conditions: with the *a priori* DESeq2-shrunk dispersion parameter estimates, a 100-fold *increase* in the dispersion parameter estimate (i.e. a 100-fold reduction in the noise caused by dispersion), and 100-fold *decrease* in the dispersion parameter estimate (i.e. a 100-fold increase in the noise caused by dispersion). 
 
-With unchanged dispersion, beta, t, h0, and h1 all appeared highly reproducible, as the initial parameter values were relatively central to the distributions of simulated values. All expression trajectories were highly correlated (>0.94) with the initial trajectory, and the simulated t-params showed low variability with an IQR of 2.11 minutes.The difference between the initial t param and median simulated t param was 0.64, suggestive of low variability in the t parameter.
+With unchanged dispersion, beta, t, h0, and h1 all appeared highly reproducible, as the initial parameter values were relatively central to the distributions of simulated values. All expression trajectories were highly correlated (>0.94) with the initial trajectory, and the simulated t-params showed low variability with an IQR of 2.11 minutes.The difference between the initial t param and median simulated t param was 0.64, suggestive of stability of the t parameter.
 
 ```{r Normal Dispersion Sim, cache=T, eval=TRUE, echo=FALSE, message=FALSE, results='hide', fig.keep='all'}
 ##############################################################################################################
@@ -444,9 +444,9 @@ paste("IQR:", round(IQR(sim_params_to_plot$t),2), sep=" ")
 paste("Difference between init t and median t:", round(abs(as.numeric(geneparams[4])-median(sim_params_to_plot$t)), 2), sep=" ")
 ```
 
-Increasing the dispersion-based noise lead to profound variability in the resulting simulated trajectories. The slope parameter (beta) was most affected by the additional noise; this distribution of simulated betas was not centered around the initial value (9th quantile) had a substantial right skew suggestive of high variabilities in the simulate slope parameters. Amplitude parameters h0 and h1 were also affected by the dispersion-based noise, as the distribution of their difference (h1-h0) shifted considerably left from the initial value (over 30,000 units). 
+Increasing the dispersion-based noise lead to profound variability in the resulting simulated trajectories. The slope parameter (beta) was most affected by the additional noise; this distribution of simulated betas was not centered around the initial value (9th quantile) had a substantial right skew suggestive of high variabilities in the simulated slope parameters. Amplitude parameters h0 and h1 were also affected by the dispersion-based noise, as the distribution of their difference (h1-h0) shifted considerably left from the initial value (over 30,000 units). 
 
-However, the effect of dispersion-based noise was minimal in the onset time (t) parameter; the distribution of simulated onset times did not profoundly shift or widen. The IQR of the simulated t parametesr remained quite low: 2.34 (an 10.9% increase from the standard dispersion simulation). The difference between initial t and median simulated t also remained quite low: 0.85 (32.8% increase from standard dispersion simulation). Thus, t appears to be the parameter most robust to dispersion-based noise in the sigmoidal model, an encouraging finding for RNA-seq experiments with few replicates hoping to address timing-related questions.
+However, the effect of dispersion-based noise was minimal in the onset time (t) parameter; the distribution of simulated onset times did not profoundly shift or widen. The variability of the simulated t parameter remained quite low: IQR=2.34 (an 10.9% increase from the standard dispersion simulation). The stability of the t parameter was also illustrated by a small difference between initial t and median simulated t: 0.85 (32.8% increase from standard dispersion simulation). Thus, t appears to be the parameter most robust to dispersion-based noise in the sigmoidal model, an encouraging finding for RNA-seq experiments with few replicates hoping to address timing-related questions.
 
 ```{r More noise, cache=T, eval=T, echo=FALSE, warning=FALSE, message=FALSE, results='hide', fig.keep='all'}
 ###########
@@ -938,7 +938,7 @@ do.call(grid.arrange, c(plot_list[7:12], ncol=2, nrow=3))
 
 After identifying the limitations and utilities of the sigmoid model, we applied the sigmoid model and its onset time parameter to address whether sensitive genes turn on significantly earlier in the cell starvation time course than insensitive genes. 
 
-As shown below, the onset times for 87 sensitive and 15 insensitive monotonic DEGs overlap somewhat, however, the density plot of onset times for the insensitive genes appears bimodal, with one peak overlapping with the sensitive peak and the other peak occuring later than the sensitive peak. In addition, a number of sensitive genes have onset times later than the large, single peak, suggesting potential misclassification of some sensitive genes. We recommend reexamining the 8 sensitive genes that turn on later than 75 minutes (prpE, treA, ydcV, ydgD, astB, yeaG, crr, and cysQ), as these may be incorrectly identified as sensitive.
+As shown below, the onset times for 87 sensitive and 15 insensitive monotonic DEGs overlap somewhat, however, the density plot of onset times for the insensitive genes appears bimodal, with one peak overlapping with the sensitive peak and the other peak occuring later than the sensitive peak. Unexpectedly, a number of sensitive genes have onset times later than the large, single peak: 8 sensitive genes turned on later than 75 minutes (prpE, treA, ydcV, ydgD, astB, yeaG, crr, and cysQ).
 
 Wilcox-rank sum tests with unequal variance and confidence levels of 0.95 were conducted on the onset times for sensitive and insensitive genes to ascertain whether there was a signficant difference between the onset times of these two groups. Considering all onset times for the 102 total genes, the true location was nearly significantly different from 0 (p=0.05275). When the 8 potentially misclassified sensitive genes noted above were removed from the analysis, the true location shift was highly significantly different from 0 (p=0.008586), suggesting that sensitive genes may turn on significantly earlier than insensitive genes.
 
@@ -1036,7 +1036,7 @@ as.character(sensvec[sensitivedf$t>75])
 
 Using the R package TopGO, sensitive and insensitive genes were enriched for Gene Ontology (GO) terms (at Kolmorgorov-Smirnoff p value<0.05). These GO terms were added to plots of sensitive and insensitive sigmoidal/impulse trajectories faceted by RpoS sensitivity. Sensitive genes were enriched in Membrane, Response to Abiotic Stimuli, and Transporter Terms while insensitive Genes were enriched in Cytoplasmic and Metabolic Processes. The vast majority of genes in both groups appeared monotonically upregulated, however, a number of insensitive genes appeared to achieve higher peak levels of expression than sensitive genes.
 
-```{r Overlay Trajectories and Relative mRNA plot, cache=TRUE, warning=FALSE, eval=TRUE, echo=FALSE, message=FALSE, results='hide', fig.keep='all'}
+```{r Overlay Trajectories and Relative mRNA plot, cache=TRUE, warning=FALSE, eval=FALSE, echo=FALSE, message=FALSE, results='hide', fig.keep='none'}
 #####################
 #Overlay trajectories of all sensitive and insensitive genes
 #####################
@@ -1136,7 +1136,9 @@ box_df<-rbind(sensdf, insensdf)
 box_df$sens<-as.factor(box_df$sens)
 box_df$time<-as.factor(box_df$time)
 ggplot(box_df, aes(x=time, y=value, fill=sens))+geom_boxplot(position=position_dodge(1), outlier.size = 0, outlier.shape=NA, coef=0)+ylim(0,1)+theme_bw(base_size=15)+theme(plot.title = element_text(size=15, face="bold"), legend.text=element_text(size=16))+ylab("Relative mRNA level")+ggtitle("Sigmoid-imputed expression IQRs of Sensitive & Insensitive Genes in Starvation Time Course")+stat_summary(fun.y=median, geom="smooth", color="blue", aes(group=1))+stat_summary(data=insensdf, fun.y=median, geom="smooth", aes(group=2), color="maroon")
+```
 
+```{r, Overlay Sigmoids, cache=TRUE, warning=FALSE, eval=TRUE, echo=FALSE, message=FALSE, results='hide', fig.keep='all'}
 ###Make smooth function version of above, show all or just median profile
 overlay_sigmoids<-function(contplot_times, median){
   if (median==FALSE){
@@ -1212,10 +1214,10 @@ print(b)
 }
 
 overlay_sigmoids(seq(30, 150, 1), median=FALSE)
-overlay_sigmoids(seq(50, 80, 1), median=TRUE)
+overlay_sigmoids(seq(50, 90, 1), median=TRUE)
 ```
 
-Adapting the analysis performed by Fong *et al.* 2017 on data from Conway *et. al* 2014, we generated boxplots of relative expressions of sensitive and insensitive genes at fine temporal resolution using sigmoidal imputation during the transition to stationary phase. Shown above are the 1st, 2nd, and 3rd quantiles of expression relative to the 90 minute TP at times between 0 and 90 minutes. While there is a substantial amount of variation in the expression IQR of the insensitive genes, the plot illustrates that the relative transcription of sensitive genes is begins earlier than in insensitive genes during cell starvation. 
+Adapting the analysis performed by Wong *et al.* 2017 on data from Conway *et. al* 2014, we generated plots of relative expression levels for median sigmoidal trajectories for sensitive and insensitive genes. Shown above are the sigmoid-determined expression levels scaled by expression at the 90 minute TP. The plot illustrates that the relative transcription of sensitive genes begins earlier than in insensitive genes during cell starvation. 
 
 ```{r Exploratory Analysis, echo=F, eval=F, message=F, cache=T}
 ########################
@@ -1367,13 +1369,11 @@ ggplot(new, aes(x=t, y=log(h1), color=localization))+geom_point(size=1)+xlim(50,
 #####################
 ###Next step: my GO categories were constructed naively with respect to time. None of these GO categories are particularly time important, they just had a bunch of genes in them without a lot of overlap (thus selecting these categories would mean more data points). According to the Chechik and Koller paper on Impulse Models, they looked at the distribution of onset times for genes grouped under GO categories and tested them against the distribution of onset times for a baseline category (genes with similar but not identical function). To generate these baselines, they defined separate baseline for each category using all genes from sibling categories in the GO hierarchy (other children of its parent category). For each GO category and each condition, they calculated a Wilcoxon score to quantify how significantly its gene onsets appear earlier or later than the baseline onsets. 
 ####################
-```
 
-```{r}
-####################################
-###Run analysis with RpoS concentrations instead of time
-####################################
-
+###################
+###Attempted fitting impulse & sigmoidal models to RpoS data and didn't work
+#program never finished when I fed in RpoS data. When I scaled RpoS data by 10^6, ran but only identfied 1 DEG. Not sure why
+##################
 meanRpos<-aggregate(rposconc[, 6], list(rposconc$Time), mean)
 colnames(meanRpos)<-c("Time", "Mean_RpoS")
 
@@ -1383,24 +1383,127 @@ dispersions<-dispersions(ecolidds)
 names(dispersions)<-rownames(ecounts)
 
 RpoS_ecoli<-ImpulseDE2::runImpulseDE2(as.matrix(ecounts), RpoSdesign, boolCaseCtrl=TRUE, vecConfounders=NULL, scaQThres = 0.01, vecSizeFactorsExternal=sizeFactors(ecolidds), vecDispersionsExternal= dispersions, boolIdentifyTransients = TRUE, boolVerbose=FALSE)
+```
 
+```{r, cache=TRUE, echo=FALSE, eval=FALSE, message=F, fig.keep='none'}
+####################################
+###Run analysis with RpoS concentrations instead of time
+####################################
+
+#fit spline to RpoS and time data to see when greatest change in Rpos is: turns out around 80 mins
+library(stats)
+rpos_spline<-smooth.spline(meanRpos$Time, meanRpos$Mean_RpoS)
+
+predict(rpos_spline, deriv=2)
+d2 <- function(x) predict(rpos_spline, x, deriv=2)$y
+
+x <- seq(50, 100, length=500)
+plot(x, d2(x), type="l")
+abline(h=0, lty=2)
+uniroot(f=d2, interval=c(50,100))
+
+#plot sigmoid functions with [Rpos] instead of time
+
+overlay_rpos_sigmoids<-function(contplot_times, median){
+  if (median==FALSE){
+cont_sens_means<-matrix(ncol=length(contplot_times),nrow=length(sens_names))
+for (i in 1:length(sens_names)){
+geneparams<-monoparamsdf[match(sens_names[i], rownames(monoparamsdf)),1:4]
+cont_sens_means[i,]<-sigmoid_function(as.numeric(geneparams[1]), as.numeric(geneparams[2]), as.numeric(geneparams[3]), as.numeric(geneparams[4]), unique(contplot_times))
+}
+cont_sens_means<-cont_sens_means/cont_sens_means[,dim(cont_sens_means)[2]]
+rownames(cont_sens_means)<-sens_names
+colnames(cont_sens_means)<-contplot_times
+cont_sens_means<-na.omit(cont_sens_means)
+cont_sens_means<-as.data.frame(t(cont_sens_means))
+cont_sens_means$time<-predict(rpos_spline, x=contplot_times)$y
+
+cont_insens_means<-matrix(ncol=length(contplot_times),nrow=length(insens_names))
+for (i in 1:length(insens_names)){
+geneparams<-monoparamsdf[match(insens_names[i], rownames(monoparamsdf)),1:4]
+cont_insens_means[i,]<-sigmoid_function(as.numeric(geneparams[1]), as.numeric(geneparams[2]), as.numeric(geneparams[3]), as.numeric(geneparams[4]), unique(contplot_times))
+}
+cont_insens_means<-cont_insens_means/cont_insens_means[,dim(cont_insens_means)[2]]
+rownames(cont_insens_means)<-insens_names
+colnames(cont_insens_means)<-contplot_times
+cont_insens_means<-na.omit(cont_insens_means)
+cont_insens_means<-as.data.frame(t(cont_insens_means))
+cont_insens_means$time<-predict(rpos_spline, x=contplot_times)$y
+
+insensdf <- melt(cont_insens_means,  id.vars = 'time', variable.name = 'series')
+insensdf$sens<-as.character(rep("Insensitive", dim(insensdf)[1]))
+
+sensdf <- melt(cont_sens_means,  id.vars = 'time', variable.name = 'series')
+sensdf$sens<-rep("Sensitive", dim(sensdf)[1])
+cont_df<-rbind(sensdf, insensdf)
+cont_df$time=as.numeric(cont_df$time)
+
+a<-ggplot(cont_df, aes(x=time, y=value, group=series))+geom_line(aes(color=sens))+ylim(0,1)+theme_bw(base_size=15)+theme(plot.title = element_text(size=15, face="bold"))+ylab("Relative mRNA level")+xlab("RpoS Conc. [M]")+ggtitle("Sigmoid Trajectories of of Sensitive & Insensitive Genes in Starvation Time Course")
+print(a)}
+else if (median==TRUE){
+to_plot<-as.data.frame(matrix(ncol=3, nrow=length(contplot_times)))
+to_plot[,1]<-predict(rpos_spline, x=contplot_times)$y
+  cont_sens_means<-matrix(ncol=length(contplot_times),nrow=length(sens_names))
+for (i in 1:length(sens_names)){
+geneparams<-monoparamsdf[match(sens_names[i], rownames(monoparamsdf)),1:4]
+cont_sens_means[i,]<-sigmoid_function(as.numeric(geneparams[1]), as.numeric(geneparams[2]), as.numeric(geneparams[3]), as.numeric(geneparams[4]), unique(contplot_times))
+}
+cont_sens_means<-cont_sens_means/cont_sens_means[,dim(cont_sens_means)[2]]
+rownames(cont_sens_means)<-sens_names
+colnames(cont_sens_means)<-contplot_times
+cont_sens_means<-na.omit(cont_sens_means)
+cont_sens_means<-as.data.frame(t(cont_sens_means))
+cont_sens_means$time<-predict(rpos_spline, x=contplot_times)$y
+to_plot[,2]<-apply(na.omit(t(cont_sens_means)), 2, FUN = median)
+
+cont_insens_means<-matrix(ncol=length(contplot_times),nrow=length(insens_names))
+for (i in 1:length(insens_names)){
+geneparams<-monoparamsdf[match(insens_names[i], rownames(monoparamsdf)),1:4]
+cont_insens_means[i,]<-sigmoid_function(as.numeric(geneparams[1]), as.numeric(geneparams[2]), as.numeric(geneparams[3]), as.numeric(geneparams[4]), unique(contplot_times))
+}
+cont_insens_means<-cont_insens_means/cont_insens_means[,dim(cont_insens_means)[2]]
+rownames(cont_insens_means)<-insens_names
+colnames(cont_insens_means)<-contplot_times
+cont_insens_means<-na.omit(cont_insens_means)
+cont_insens_means<-as.data.frame(t(cont_insens_means))
+cont_insens_means$time<-predict(rpos_spline, x=contplot_times)$y
+
+to_plot[,3]<-apply(na.omit(t(cont_insens_means)), 2, FUN = median)
+
+colnames(to_plot)<-c("time","sensitive","insensitive")
+
+b<-ggplot(to_plot, aes(x=time, y=sensitive))+geom_line(color="dodgerblue3")+geom_line(data=to_plot, aes(x=time, y=insensitive), color="#F8766D")+ylim(0,1)+theme_bw(base_size=15)+theme(plot.title = element_text(size=15, face="bold"))+ylab("Relative mRNA level")+xlab("Rpos Conc. [M]")+ggtitle("Median Sigmoid Trajectories of Sensitive & Insensitive Genes in Starvation Time Course")
+print(b)
+}
+}
+
+overlay_rpos_sigmoids(seq(0, 90, 1), median=FALSE)
 
 ```
 
 ## Discussion
 
-In summary, E. coli posesses general stress response to a variety of environmental stresses (Battesti *et al* 2011, Hengge 2011). A key transcription factor coordinating this response is RpoS, which regulates one quarter of the bacteria's genome (preliminary data from Professor Dan Stoebel). Simple interpretations of transcriptional networks as on/off switches don't adequately describe the dynamism of transcriptional responses to environmental change. Professor Stoebel has shown that groups of genes display different levels of sensitivity to RpoS, and it was hypothesized that sensitivity may be mechanism to control expression timing in response to stress *in vivo* (Fong *et al.* 2017). Thus, study of the timing of the RpoS regulon could lead to a better understanding of the complex regulatory circuits at play in the general stress response.
+In summary, E. coli posesses general stress response to a variety of environmental stresses (Battesti *et al* 2011, Hengge 2011). A key transcription factor coordinating this response is RpoS, which regulates one quarter of the bacteria's genome (preliminary data from Professor Dan Stoebel). Simple interpretations of transcriptional networks as on/off switches don't adequately describe the dynamism of transcriptional responses to environmental change. Professor Stoebel has shown that groups of genes display different levels of sensitivity to RpoS, and it was hypothesized that sensitivity may be mechanism to control expression timing in response to stress *in vivo* (Wong *et al.* 2017). Thus, study of the timing of the RpoS regulon could lead to a better understanding of the complex regulatory circuits at play in the general stress response.
 
-The transcriptomic remodeling of WT and RpoS-knockout bacterial strains were measured during a 150 minute cell starvation time course RNA-Seq experiment. Differentially expressed genes were identified using a thoughtfully-constructed pipeline of TC differential expression tools (Spies *et al.* 2019). Sigmoidal models were fit to DEGs using ImpulseDE2. The robustness to dispersion-based noise, outliers, and number of TPs were asssessed using simulations, and the onset time (t) parameter was found to be stable to high dispersions and outliers. What's more, increasing the number of time points (particularly around the spike in transcription witnessed between 55 and 75 minutes) increased the confidence in the t parameter, which will inform the design of future timing-oriented RNA-seq studies aiming to study *E. coli* resposnes to cell starvation.
+The transcriptomic remodeling of WT and RpoS-knockout bacterial strains were measured during a 150 minute cell starvation time course RNA-Seq experiment. Differentially expressed genes were identified using a thoughtfully-constructed pipeline of TC differential expression tools (Spies *et al.* 2019). Sigmoidal models were fit to DEGs using ImpulseDE2. The robustness to dispersion-based noise, outliers, and number of TPs were asssessed using simulations, and the onset time (t) parameter was found to be stable to high dispersions and outliers. What's more, increasing the number of time points (particularly around the spike in transcription witnessed between 55 and 75 minutes) increased the confidence in the t parameter, which will inform the design of future timing-oriented RNA-seq studies aiming to study *E. coli* responses to cell starvation.
 
-Density plots of onset times for insensitive and sensitive DEGs revealed that while sensitive genes peak onset time occurs earlier than the insensitive group, several sensitive genes turn on much later. A Wilcoxon Rank Sum test identified a significant difference between the onset times of these two groups (p=0.05). While there was no biological justification for excluding outliers, when the late-to-turn-on sensitive genes were excluded,  a highly signficantly different shift between the distributions of sensitive and insensitive genes was discovered using a Wilcox Rank Sum test (p=0.009). Visualization of median sigmoidal curves for each group also suggested that sensitive genes turn on earlier than insensitive genes during cell starvation, analysis consistent with work done by Fong *et al.* on another dataset (Fong *et. al* 2017). What's more, sensitive genes were found to be enriched for membrane and membrane transport GO terms, while insensitive genes were enriched in cytosolic, response to abiotic stimulus, and metabolic terms, perhaps reflecting the ordering of membrane/cytosolic remodeling in response to cell starvation.
+Density plots of onset times for insensitive and sensitive DEGs revealed that while sensitive genes peak onset time occurs earlier than the insensitive group, several sensitive genes turn on much later. A Wilcoxon Rank Sum test identified a significant difference between the onset times of these two groups (p=0.05). While there was no biological justification for excluding outliers, when the late-to-turn-on sensitive genes were excluded,  a highly signficantly different shift between the distributions of sensitive and insensitive genes was discovered using a Wilcox Rank Sum test (p=0.008). Visualization of median sigmoidal curves for each group also suggested that sensitive genes turn on earlier than insensitive genes during cell starvation, analysis consistent with work done by Wong *et al.* on another dataset (Wong *et. al* 2017). What's more, sensitive genes were found to be enriched for membrane and membrane transport GO terms, while insensitive genes were enriched in cytosolic, response to abiotic stimulus, and metabolic terms.
 
-However, RpoS sensitivity does not describe the global trend of transcriptomic response to cell starvation in *E. coli*. Density plots of the onset times for monotonic DEGs indicated that the vast majority of differentially expressed genes turned on at around the same time, with very weak multimodality. The most sensitive genes turn on at around 62 minutes, while most insensitive genes turn on at around 65 minutes. Thus, sensitive and insensitive genes did not turn on abnormally early nor abnormally late respectively compared to all the other monotonic DEGs, and the short time separating their onsets suggests suggests that RpoS sensitivity may control timing on a finer scale than previously thought.
+However, RpoS sensitivity does not describe the global trend of transcriptomic response to cell starvation in *E. coli*. Density plots of the onset times for monotonic DEGs indicated that the vast majority of differentially expressed genes turned on at around the same time, with very weak multimodality. The most sensitive genes turn on at around 62 minutes, while most insensitive genes turn on at around 65 minutes. Thus, sensitive and insensitive genes did not turn on abnormally early nor abnormally late respectively compared to all the other monotonic DEGs, and the short time separating their onsets suggests suggests that RpoS sensitivity may not describe the global transcriptional response to cell starvation.
 
-In the future, we hope to conduct an analysis like those who first developed the impulse model for gene expression data (Chechik and Koller 2009). Chechik and Koller compared the distribution of onset times for genes grouped within GO categories against the distribution of onset times for a baseline category (genes with similar but not identical function). Separate baseline for each category were defined using only genes from sibling categories in the GO hierarchy (other children of its parent category). For each GO category and each condition, they calculated a Wilcoxon score to quantify how significantly a GO category's gene onsets appear earlier or later than the baseline onsets. We could apply this analysis to identify ontologies that are turned on earlier or later than anticipated, helping identify other time-relevant relationships within this dataset.
+In the future, we hope to conduct an analysis like those who first developed the impulse model for gene expression data (Chechik and Koller, 2009). Chechik and Koller compared the distribution of onset times for genes grouped within GO categories against the distribution of onset times for a baseline category (genes with similar but not identical function). Separate baseline for each category were defined using only genes from sibling categories in the GO hierarchy (other children of its parent category). For each GO category and each condition, they calculated a Wilcoxon score to quantify how significantly a GO category's gene onsets appear earlier or later than the baseline onsets. We could apply this analysis to identify ontologies that are turned on earlier or later than anticipated, helping identify other time-relevant relationships within this dataset.
 
 Based on the results of our simulation studies, we suggest future RNA-Seq experiments interested in the timing of the RpoS regulon in response to cell starvation concentrate their sampling between 55 and 75 minutes. This will improve temporal resolution and strengthen confidence in analysis of t parameters. We also suggest the exploration and timing comparison of other stress types in *E. coli*.
 
+In addition, future studies of the sigmoidal and impulse models are warranted. We would like to assess the stability of the onset time (and other parameters) across many different dispersions, sample sizes, number of time points, outliers, and different genes. We'd also like to explore methods of clustering based on these models, as this could mitigate the problem of clustering to noise (a potential danger when clustering RNA-seq data). We're also interested in possible sophistications we can make to these models: one possibility is including another beta parameter to account for differences in rates of mRNA synthesis and degradation.
+
+## Acknowledgements
+
+I would like to sincerely thank Professors Johanna Hardin, Daniel Stoebel, and Danae Schulz for their thoughtful mentorship and insights throughout the research process. 
+
+I would also like to thank everyone involved in the Data Science REU at Harvey Mudd College for fostering a supportive and engaging work environment.
+
+Lastly, I would like to deeply thank the Pomona College Department of Mathematics and the Kenneth Cooke Fellowship for affording me this research opportunity and funding my summer experience.
 
 ## Literature References:
 
