@@ -73,7 +73,7 @@ contrast_vect = c(0, 6,12,24,48,72,168,240,336)
 contrast_list <- list()
 
 for (i in 1:8) {
-  de_results <- results(dds_de, contrast = c("timetreat", coldata$timetreat[i], coldata$timetreat[i+3]))
+  de_results <- results(dds_de, contrast = c("timetreat", name_list[i], name_list[i+1]))
 
   resSig <- de_results[ which(de_results$padj < .05 ), ]
 
@@ -100,10 +100,11 @@ norm_counts_contrast_consec <- bind_rows(contrast_list[[1]],contrast_list[[2]],c
 ## Filter significant results and contrast times from t_0
 
 contrast_vect = c(0, 6,12,24,48,72,168,240,336)
+name_list = c("ib_6h","ib_12h","ib_24h","ib_48h","ib_3d","ib_7d","ib_10d","ib_14d")
 contrast_list <- list()
 
 for (i in 1:8) {
-  de_results <- results(dds_de, contrast = c("timetreat", "noo_ib", coldata$timetreat[i+3]))
+  de_results <- results(dds_de, contrast = c("timetreat", "noo_ib", name_list[i]))
 
   resSig <- de_results[ which(de_results$padj < .05 ), ]
 
