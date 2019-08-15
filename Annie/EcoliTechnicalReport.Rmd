@@ -44,9 +44,29 @@ library(fgsea)
 # import data
 ec_rawcounts <- read.table("LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.txt", header = TRUE)
 
-# assign Geneid as rownames and delete variable
+# ID gene names using Madison's parsing code
 rownames(ec_rawcounts) <- ec_rawcounts$Geneid
-ec_rawcounts <- ec_rawcounts %>% dplyr::select(-Geneid)
+bnum = "b[0-9]{4}"
+ec_rawcounts$GeneidBackup = ec_rawcounts$Geneid
+ec_rawcounts <- ec_rawcounts %>% 
+  separate(GeneidBackup, c("feature", "rest"), sep="[:]")
+ec_rawcounts <- ec_rawcounts %>% 
+  filter(feature %in% c("CDS")) 
+genename = ":[a-z]{3}.."
+ec_cds <- ec_rawcounts %>% 
+  filter(feature %in% c("CDS")) 
+ec_rawcounts$genename <- str_extract(ec_rawcounts$Geneid, genename)
+ec_rawcounts$bnum <- str_extract(ec_rawcounts$Geneid, bnum)
+ec_rawcounts <- ec_rawcounts %>% 
+  separate(genename, into = c("colon", "genename"), sep = ":") %>%
+  dplyr::select(-c(colon, rest, feature, bnum))
+
+# de dupe genenames
+ec_rawcounts <- distinct(ec_rawcounts, genename, .keep_all = TRUE)
+
+# assign Geneid as rownames and delete variable
+rownames(ec_rawcounts) <- ec_rawcounts$genename
+ec_rawcounts <- ec_rawcounts %>% dplyr::select(-c(Geneid, genename))
 ```
 $~$
 
@@ -75,37 +95,42 @@ rownames(ec_coldata) <- colnames(ec_rawcounts)
 ```
 
 DESeq2 normalizes data within the differential expression analysis function pipeline, so we first run DESeq() and then extract the normalized counts:
-```{r run DESeq2 for normalization, cache=TRUE, results='hide', message=FALSE, warning=FALSE}
+```{r run DESeq2 for normalization, results='hide', message=FALSE, warning=FALSE}
 ec_dds <- DESeqDataSetFromMatrix(ec_rawcounts, colData = ec_coldata, design = ~ timetreat)
 ec_dds_de <- DESeq(ec_dds)
 ec_normcounts <- as.data.frame(counts(ec_dds_de, normalized=TRUE))
 ```
 $~$
 
-# **3** Determine Differentially Expressed Genes
+# **3** Differential Expression
 ### **3.1** DESeq2
 
+According to **CITATION**, DESeq2 determines differential expression by:  
+**(1)** normalization of the raw counts by determining size factors and adjusting each sample by the size factor.  
+**(2)** measuring gene-wise dispersions. Dispersion, $\alpha$, measures the variability within biological replicates of the same sample: $\text {Var} = \mu + \alpha\mu^2$.  
+**(3)** adjusting dispersion estimates to fit a curve created by the distribution of dispersion estimates. Use `plotDispEsts()` to see for yourself.
+**(4)** comparing normalized counts with a negative binormial distribution with the sample mean, $\mu_j$, and gene-wise dispersion parameter, $\alpha_j$ to determine the significance of differential expression.
 
-Because we have already run DESeq() above, we can now extract the significant results.
+Because we have already run DESeq() above, we can now extract the significant results. We chose a p-value of 0.01 to be consistent across all of our work.
 ```{r extract DESeq2 results, results='hide', message=FALSE, warning=FALSE}
 EC_sig_genes <- c()
 
 # determine the genes that are differentially expressed between WT0 and WT150
 de_results <- results(ec_dds_de, contrast = c("timetreat", "WT150","WT0"))
-resSig <- de_results[ which(de_results$padj < 0.1 ), ]
-resSig$Geneid <- rownames(resSig)
-ind <- match(rownames(ec_normcounts),resSig$Geneid)
-ec_normcounts$sig <- resSig$Geneid[ind]
+resSig <- de_results[ which(de_results$padj < 0.01 ), ]
+resSig$genename <- rownames(resSig)
+ind <- match(rownames(ec_normcounts),resSig$genename)
+ec_normcounts$sig <- resSig$genename[ind]
 EC_sig_genes$WT_compare <- ec_normcounts %>%
  filter(!is.na(ec_normcounts$sig))
 
 
 # determine the genes that are differentially expressed between WT150 and dRpoS150
 de_results <- results(ec_dds_de, contrast = c("timetreat", "WT150","dRpoS150"))
-resSig <- de_results[ which(de_results$padj < 0.1 ), ]
-resSig$Geneid <- rownames(resSig)
-ind <- match(rownames(ec_normcounts),resSig$Geneid)
-ec_normcounts$sig <- resSig$Geneid[ind]
+resSig <- de_results[ which(de_results$padj < 0.01 ), ]
+resSig$genename <- rownames(resSig)
+ind <- match(rownames(ec_normcounts),resSig$genename)
+ec_normcounts$sig <- resSig$genename[ind]
 EC_sig_genes$treat_compare <- ec_normcounts %>%
  filter(!is.na(ec_normcounts$sig))
 
@@ -115,17 +140,34 @@ EC_sig_genes <- intersect(EC_sig_genes$WT_compare$sig, EC_sig_genes$treat_compar
 
 ### **3.2** ImpulseDE2
 
+ImpulseDE2 is a serial method for differential expression that models data based on the impulse model, which has parameters $t_1, t_2, h_0, h_1, \text{and } b.$ The impulse model has a spike, characterized by its beginning height, $h_0$, inflection point, $t_1$, its height, $h_1$, and its slope at $t_1$, $b$. Then the model decreases into its steady state, characterized by the second inflection point, $t_2$, and its final height, $h_2$.
+
+According to Fischer et al., ImpulseDE2 determines differential expression by:
+**(1)** running DESeq2 and adjusting gene-wise dispersion estimates from DESeq2 to fit a curve;  
+**(2)** computing size factors and normalizing counts;  
+**(3)** fitting null and alternative model to each of the genes  
+**(4)** fitting sigmoid model to the treatment condition -- in our case, samples containing the RpoS translation factor;   
+**(5)** and determining differential expression based on these models fits to each gene using a log-likelihood ratio (Fischer et al. 2018).  
+
 ```{r prep ImpulseDE2}
 ec_design <- data.frame(Sample=colnames(ec_rawcounts),
                         Condition=c(rep("case",6), rep("control",6), rep("case",6), rep("control",6), rep("case",6), rep("control",6)), 
                         Time=rep(c(0,30,60,90,120,150),6))
 ```
 
-```{r run ImpulseDE2, cache=TRUE, results='hide', message=FALSE, warning=FALSE}
+Run ImpulseDE2 with parameters specifying the count matrix, design matrix, the type of analysis: case-control instead of case-only, 
+```{r run ImpulseDE2, results='hide', message=FALSE, warning=FALSE}
 impulse_ecoli <- ImpulseDE2::runImpulseDE2(as.matrix(ec_rawcounts), ec_design, boolCaseCtrl=TRUE, vecConfounders=NULL, scaQThres = 0.01, scaNProc = 8, boolIdentifyTransients = TRUE)
 ```
 
 ### **3.3** maSigPro
+
+maSigPro is another serial method that determines genes with significant expression differences over time and between conditions. According to Conesa and Nueda, by:
+
+**(1)** defining a regression model for the data with the  experimental conditions identified by dummy variables;  
+**(2)** using least-squared method to adjust the model;  
+**(3)** selecting differentially expressed genes controlling for false discovery rates;  
+**(4)** and applying stepwise regression to determine differential expression between groups (Conesa and Nueda 2017).
 
 ```{r prep maSigPro}
 # set up design
@@ -141,7 +183,7 @@ ec_normcounts <- as.data.frame(counts(ec_dds_de, normalized=TRUE))
 ec_design <- make.design.matrix(ec_design, degree=5)
 ```
 
-```{r run maSigPro, cache=TRUE, results='hide', message=FALSE, warning=FALSE}
+```{r run maSigPro, results='hide', message=FALSE, warning=FALSE}
 # ID DEGs
 fits <- p.vector(ec_normcounts, ec_design, Q=0.01, MT.adjust = "BH", min.obs=6, counts=TRUE)
 #variable selection procedure to ID variables for each gene
@@ -156,21 +198,24 @@ $~$
 
 ### **3.4** Find the Intersection
 
-```{r calc intersections, message = FALSE, warning = FALSE}
-# Intersect each gene list with another method to calculate gene list of DEGs found in 2 < methods
+In order to balance our sensitivity with false discovery rates, we decided to consider genes differentially expressed if they were identified in at least 2 of the 3 methods.
 
-DS_IM <- distinct(data.frame("Geneid" = intersect(EC_sig_genes, impulse_ecoli$vecDEGenes)))
-IM_MA <- distinct(data.frame("Geneid" = intersect(impulse_ecoli$vecDEGenes, maSigProGenes)))
-MA_DS <- distinct(data.frame("Geneid" = intersect(maSigProGenes, EC_sig_genes)))
+We first made lists of genes from all of the combinations of intersections between each method and then took the union of that list:
+
+```{r calc intersections, message = FALSE, warning = FALSE}
+# intersect each gene list with another method
+DS_IM <- distinct(data.frame("genename" = intersect(EC_sig_genes, impulse_ecoli$vecDEGenes)))
+IM_MA <- distinct(data.frame("genename" = intersect(impulse_ecoli$vecDEGenes, maSigProGenes)))
+MA_DS <- distinct(data.frame("genename" = intersect(maSigProGenes, EC_sig_genes)))
+
+# take the union of all three of these intersections, making sure to delete duplicate genes.
 EC_DEGs <- distinct(bind_rows(DS_IM, IM_MA, MA_DS))
 ```
 
-This is a visualization of the overlap between these three methods. Our `EC_DEGs` list is a compilation of genes that overlap between two or more methods:
+Next we can visualize this overlap with the `vennDiagram` package:
 
-$~$
-
-```{r plot intersection, echo=FALSE, cache=TRUE}
-# calculate intersection of all three methods' gene lists
+```{r plot intersection, echo=FALSE}
+# in case you would rather be working with a smaller selection of genes, you can calculate the intersection of all three methods' gene lists here:
 all_intersect <- intersect(intersect(EC_sig_genes, impulse_ecoli$vecDEGenes), maSigProGenes)
 
 # calculate the size of each gene list including the intersection lists
@@ -178,9 +223,9 @@ DS <- length(EC_sig_genes)
 IM <- length(impulse_ecoli$vecDEGenes)
 MA <- length(maSigProGenes)
 all_length <- length(all_intersect)
-DS_IM_length <- length(DS_IM$Geneid)
-IM_MA_length <- length(IM_MA$Geneid)
-MA_DS_length <- length(MA_DS$Geneid)
+DS_IM_length <- length(DS_IM$genename)
+IM_MA_length <- length(IM_MA$genename)
+MA_DS_length <- length(MA_DS$genename)
 
 # plot venn diagram
 grid.newpage()
@@ -189,49 +234,59 @@ draw.triple.venn(area1 = DS, area2 = IM, area3 = MA, n12= DS_IM_length, n13 = MA
 
 # **4** Visualization
 ### **4.1** ggplot2
-We used ggplot2 for the standard visualization of the differentially expressed genes' expression over time. 
 
+We used ggplot2 for the standard visualization of the differentially expressed genes' expression over time.
 First, we prepared the list of differentially expressed genes `EC_DEGs` to be tidied:
 
 ```{r prep DEG list}
-ec_normcounts$Geneid <- rownames(ec_normcounts)
-EC_DEGs <- left_join(EC_DEGs, ec_normcounts, by = "Geneid")
-#EC_DEGs <- EC_DEGs %>%
-#  dplyr::select(-sig)
+ec_normcounts$genename <- rownames(ec_normcounts)
+EC_DEGs <- left_join(EC_DEGs, ec_normcounts, by = "genename")
 ```
 
-Then we tidied the data using gather¸() and other functions from the tidyr package. We also use group_by() to calculate the average count across all three biological replicates:
+Then we tidied the data using `gather()` and other functions from the tidyr package. We also use group_by() to calculate the average count across all three biological replicates:
 
 ```{r tidy DEGs}
 EC_counts_gath <- EC_DEGs %>%
-  gather(-Geneid, key="sample", value = "rawcount") %>%
-  separate(sample, c("treat", "rep_time"), "_") %>%
-  mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
+  # gather count data for each sample by gene, so that each sample and replicate is its own line
+  tidyr::gather(-genename, key="sample", value = "rawcount") %>%
+  # separate columns into treat and rep_time
+  tidyr::separate(sample, c("treat", "rep_time"), "_") %>%
+  # create rep column from rep_time column
+  dplyr::mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
                         ifelse(substr(rep_time,start=1,stop = 1) == "B", 2, 3))) %>%
-  mutate(time = ifelse(substr(rep_time,start=3,stop = 3) == "1", 0,
+  # create time column from rep_time column
+  dplyr::mutate(time = ifelse(substr(rep_time,start=3,stop = 3) == "1", 0,
                       ifelse(substr(rep_time,start=3,stop = 3) == "2", 30,
                              ifelse(substr(rep_time,start=3,stop = 3) == "3", 60,
                                     ifelse(substr(rep_time,start=3,stop = 3) == "4", 90,
                                            ifelse(substr(rep_time,start=3,stop = 3) == "5", 120, 150)))))) %>%
-  mutate(treat = ifelse(treat == "JH01", "WT","dRpoS")) %>%
+  # rename treatment with more descriptive value
+  dplyr::mutate(treat = ifelse(treat == "JH01", "WT","dRpoS")) %>%
+  # delete rep_time combo column
   dplyr::select(-c(rep_time))
                                       
 EC_counts_ave <- EC_counts_gath %>%
-  group_by(Geneid, treat, time) %>%
+  # group data frame by genename, treatment, and time
+  dplyr::group_by(genename, treat, time) %>%
+  # take the average of the rawcounts across the grouped variables
   dplyr::summarise(avecount = mean(rawcount)) %>%
+  # select only WT (our case) average count data
   filter(treat == "WT")
-colnames(EC_counts_ave) <- c("Geneid", "treat", "time", "avecount")
+
+# rename columns
+colnames(EC_counts_ave) <- c("genename", "treat", "time", "avecount")
 ```
 
 Finally, we plot the tidy data using ggplot() :
 ```{r plot DEGs}
 EC_counts_ave %>%
   ggplot(aes(x=time, y=log2(avecount))) +
-  geom_line(aes(color = Geneid), alpha = 0.2) +
+  geom_line(aes(color = genename), alpha = 0.4) +
   theme(legend.position = "none")
 ```
 
 ### **4.2** Shiny App
+
 Shiny is an R package that allows us to create interactive web apps inside of R. While our Shiny code is not interactive or compatible with the HTML export format, this code runs within R and creates a pop-up app that allows the viewer to visualize the gene expression data. Shiny is especially helpful when trying to determine optimal cut-offs for p-values or fold changes, or when switching between comparisons of the same data.
 
 ```{r run Shiny App, results = 'hide', echo = FALSE}
@@ -253,7 +308,7 @@ server <- function(input, output, session) {
   dRpoS_list = c("dRpoS0","dRpoS30","dRpoS60","dRpoS90","dRpoS120","dRpoS150")
   WT_list = c("WT0","WT30","WT60","WT90","WT120","WT150")
 
-## analyze contrasts depending on 'amt' parameter
+# analyze contrasts depending on 'amt' parameter
   if (input$amt == "all") {
     contrast_list = c()
     
@@ -266,7 +321,7 @@ server <- function(input, output, session) {
       
       resSig$gene <- rownames(resSig)
     
-      ind <- match(ec_norm_counts$Geneid,resSig$gene)
+      ind <- match(ec_norm_counts$genename,resSig$gene)
     
       ec_norm_counts$sig <- resSig$gene[ind]
       
@@ -294,7 +349,7 @@ server <- function(input, output, session) {
       
     resSig$gene <- rownames(resSig)
     
-    ind <- match(ec_norm_counts$Geneid,resSig$gene)
+    ind <- match(ec_norm_counts$genename,resSig$gene)
     
     ec_norm_counts$sig <- resSig$gene[ind]
   
@@ -305,9 +360,9 @@ server <- function(input, output, session) {
   
   }
 
-## TIDY
+# TIDY data
   ec_counts_gath <- norm_counts_contrast %>%
-    gather(-c(Geneid,contrast), key="sample", value = "rawcount") %>%
+    gather(-c(genename,contrast), key="sample", value = "rawcount") %>%
     separate(sample, c("treat", "rep_time"), "_") %>%
     mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
                           ifelse(substr(rep_time,start=1,stop = 1) == "B", 2, 3))) %>%
@@ -320,13 +375,13 @@ server <- function(input, output, session) {
     select(-c(rep_time))
                                         
   ec_counts_ave <- ec_counts_gath %>%
-    group_by(Geneid, contrast, treat, time) %>%
+    group_by(genename, contrast, treat, time) %>%
     dplyr::summarise(avecount = mean(rawcount)) %>%
-    mutate(gtreat = paste(Geneid,treat,sep = "")) %>%
+    mutate(gtreat = paste(genename,treat,sep = "")) %>%
     filter(treat == "WT")
 
-## plotting the data with the user chosen parameters
-  ## log transformed plots facet wrapped by contrast
+# plotting the data with the user chosen parameters
+  # log transformed plots facet wrapped by contrast
   if (input$trans == "Yes") {
     if (input$amt == "all") {
       ec_counts_ave %>%
@@ -337,7 +392,7 @@ server <- function(input, output, session) {
         theme(legend.position = "none",panel.background = element_blank(), axis.title = element_text(size = 16)) +
         labs(x = "time (min)", y = expression("log"[2]~"(avg count)"))
     }
-  ## no facet wrap
+  # no facet wrap
     else {
       ec_counts_ave %>%
         filter(contrast == input$amt) %>%
@@ -358,7 +413,7 @@ server <- function(input, output, session) {
         theme(legend.position = "none",panel.background = element_blank(), axis.title = element_text(size = 16)) +
         labs(x = "time (min)", y = expression("avg count"))
     }
-  ## no facet wrap
+  # no facet wrap
     else {
       ec_counts_ave %>%
         filter(contrast == input$amt) %>%
@@ -371,7 +426,7 @@ server <- function(input, output, session) {
   }
   })
   
-## hover for coordinates
+# hover for coordinates
   
   output$plot_hover <- renderText({
    paste("expression coordinates: ", input$plot_hover$x, ", ", input$plot_hover$y) 
@@ -381,42 +436,42 @@ server <- function(input, output, session) {
 shinyApp(ui = ui, server = server)
 ```
 
-#5 Clustering
-### 5.1 PAM Clustering 
+# **5** Analysis
+### **5.1** PAM Clustering 
+
 Partitioning Around Medoids (PAM) is a clustering method iteratively groups genes into clusters of genes with similar profiles. For our code, we input a dissimilarity matrix, which is a matrix of the correlation between each gene, based on their counts. We specified the correlation method as "spearman", however "pearson" returns similar results. The PAM method chooses k center genes (medoids) and assigns all of the rest of the genes to the closest medoids New medoids are calculated from these clusters and the cycle is repeated until the clusters and medoids stay the same between iterations.
 
 First, compute an optimal k number of clusters. This package `NbClust` runs through 30 different tests that each determine the optimal k and plots the distribution of all 30 of the optimal k results in order to determine the most common result and the **MOST** optimal k.
-```{r calc optimal k, cache=TRUE, message=FALSE, warning=FALSE}
-library(NbClust)
 
-rownames(EC_DEGs) <- EC_DEGs$Geneid
+```{r calc optimal k, message=FALSE, warning=FALSE}
+rownames(EC_DEGs) <- EC_DEGs$genename
 EC_DEGs <- EC_DEGs %>%
-  dplyr::select(-Geneid)
-
-#k_test <- NbClust(data = EC_DEGs, diss = NULL, distance = "euclidean", min.nc = 2, max.nc = 20, method = "kmeans")
+  dplyr::select(-genename)
+library(NbClust)
+k_test <- NbClust(data = EC_DEGs, diss = NULL, distance = "euclidean", min.nc = 2, max.nc = 20, method = "kmeans")
 ```
 
 Then use the PAM method to cluster the DEGs' count data:
-```{r PAM clustering, cache=TRUE, warning=FALSE}
-k = 6
+```{r PAM clustering, warning=FALSE}
+k = 3
 
 # calculate the dissimilarity matrix. use the transpose of the count matrix because we want all of the genes as columns in order to calculate the correlation.
 dissimilarity_matrix <- 1 - cor(t(EC_DEGs), method = "spearman")
 
 # run the pam() function which clusters the data. the pamonce parameter speeds up the function by maximizing short cuts.
-EC_DESeq_clusters <- cluster::pam(x = dissimilarity_matrix, k = k, pamonce = 5)
+EC_DESeq_clusters <- cluster::pam(x = dissimilarity_matrix, k = k, pamonce = 3)
 
 # create a data table with the cluster name and Geneid
-gene_cluster <- data.frame("cluster" = EC_DESeq_clusters$clustering, "Geneid" = names(EC_DESeq_clusters$clustering))
+gene_cluster <- data.frame("cluster" = EC_DESeq_clusters$clustering, "genename" = names(EC_DESeq_clusters$clustering))
 
 # make a data frame with the names of the medoid for each of the k clusters
-EC_PAM_medoids <- data.frame("Geneid" = rownames(EC_DESeq_clusters$medoids))
+EC_PAM_medoids <- data.frame("genename" = rownames(EC_DESeq_clusters$medoids))
 
 ec_norm_counts <- ec_normcounts %>%
-  mutate("Geneid" = rownames(ec_normcounts))
+  mutate("genename" = rownames(ec_normcounts))
 
 # join the normalized counts with the clusters of genes by their Geneid
-EC_cluster_df <- left_join(gene_cluster, ec_norm_counts, by = "Geneid") #%>%
+EC_cluster_df <- left_join(gene_cluster, ec_norm_counts, by = "genename") #%>%
   #dplyr::select(-sig)
 ```
 
@@ -424,9 +479,9 @@ Now, we will standardize our data using the `Mfuzz` package's standardise() func
 ```{r Mfuzz standardization, warning=FALSE}
 cluster_standard <- EC_cluster_df %>%
   dplyr::select(-cluster)
-rownames(cluster_standard) <- cluster_standard$Geneid
+rownames(cluster_standard) <- cluster_standard$genename
 cluster_standard <- cluster_standard %>%
-  dplyr::select(-Geneid)
+  dplyr::select(-genename)
 
 # create a phenotype data frame, which describes the conditions/columns of the mnain data frame.
 metadata <- data.frame(labelDescription = c("treat", "rep", "time", "timetreat"))
@@ -441,17 +496,17 @@ eset <- Biobase::ExpressionSet(assayData = clusters, phenoData = phenoData)
 # plug ExpressionSet object into the standardise() function and extract the standardized matrix and convert it into a data frame
 cluster_standardized <- Mfuzz::standardise(eset = eset)
 standard_clusters <- data.frame(cluster_standardized@assayData$exprs)
-standard_clusters$Geneid <- rownames(standard_clusters)
+standard_clusters$genename <- rownames(standard_clusters)
 
 # join the cluster data with the standardized expression counts
-clusters <- left_join(standard_clusters, gene_cluster, by = "Geneid")
+clusters <- left_join(standard_clusters, gene_cluster, by = "genename")
 ```
 
 Then we tidied the standardized data using gather() and other functions from the `tidyr` package. We also use group_by() to calculate the average count across all three biological replicates.
 
 ```{r tidy cluster data}
 EC_counts_gath <- clusters %>%
-  gather(-c(Geneid, cluster), key="sample", value = "rawcount") %>%
+  gather(-c(genename, cluster), key="sample", value = "rawcount") %>%
   separate(sample, c("treat", "rep_time"), "_") %>%
   mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
                         ifelse(substr(rep_time,start=1,stop = 1) == "B", 2, 3))) %>%
@@ -464,23 +519,23 @@ EC_counts_gath <- clusters %>%
   dplyr::select(-c(rep_time))
                                       
 EC_counts_sum <- EC_counts_gath %>%
-  group_by(Geneid, cluster, treat, time) %>%
+  group_by(genename, cluster, treat, time) %>%
   dplyr::summarise(avecount = mean(rawcount)) %>%
   filter(treat == "WT") %>%
   filter(!is.na(cluster))
-colnames(EC_counts_sum) <- c("Geneid", "cluster", "treat", "time", "avecount")
+colnames(EC_counts_sum) <- c("genename", "cluster", "treat", "time", "avecount")
 ```
 
 Extract medoid gene expression data and the 
 ```{r tidy medoid data, warning=FALSE}
 # create a data frame that joins the medoid gene names and their standardized expression values
-EC_medoid_df <- left_join(EC_PAM_medoids, clusters, by = "Geneid") %>%
+EC_medoid_df <- left_join(EC_PAM_medoids, clusters, by = "genename") %>%
   dplyr::select(-cluster) %>%
-  mutate(cluster = c(1:6))
+  mutate(cluster = c(1:k))
 
 # tidy medoid data (same pipeline as all count tidying)
 EC_counts_gath_med <- EC_medoid_df %>%
-  gather(-c(Geneid, cluster), key="sample", value = "rawcount") %>%
+  gather(-c(genename, cluster), key="sample", value = "rawcount") %>%
   separate(sample, c("treat", "rep_time"), "_") %>%
   mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
                         ifelse(substr(rep_time,start=1,stop = 1) == "B", 2, 3))) %>%
@@ -493,53 +548,29 @@ EC_counts_gath_med <- EC_medoid_df %>%
   dplyr::select(-c(rep_time))
                                       
 EC_counts_sum_med <- EC_counts_gath_med %>%
-  group_by(Geneid, cluster, treat, time) %>%
+  group_by(genename, cluster, treat, time) %>%
   dplyr::summarise(avecount = mean(rawcount)) %>%
   filter(treat == "WT")
-colnames(EC_counts_sum_med) <- c("Geneid", "cluster", "treat", "time", "avecount")
+colnames(EC_counts_sum_med) <- c("genename", "cluster", "treat", "time", "avecount")
 ```
 
 ```{r plot clusters}
 # plot standardized clusters (facet_wrapped) with medoids
 EC_counts_sum %>%
   ggplot(aes(x=time, y=avecount)) +
-  geom_line(aes(group = Geneid, color = as.factor(cluster)), lineend = "round" , alpha = 0.5) +
-  facet_wrap(~factor(cluster, labels = c("Cluster 1", "Cluster 2", "Cluster 3", "Cluster 4", "Cluster 5", "Cluster 6"))) + geom_line(data = EC_counts_sum_med, aes(x=time, y=avecount, group = Geneid), size = 1) +
+  geom_line(aes(group = genename, color = as.factor(cluster)), lineend = "round" , alpha = 0.5) +
+  facet_wrap(~factor(cluster, labels = c("Cluster 1", "Cluster 2", "Cluster 3"))) + geom_line(data = EC_counts_sum_med, aes(x=time, y=avecount, group = genename), size = 1) +
   theme(legend.position = "none", panel.background = element_blank(), strip.text = element_text(size = 20), axis.title = element_text(size = 13), axis.text = element_text(size = 10))
-```
-
-ID genes in their clusters using Madison's code:
-```{r gene ID, warning = FALSE, message = FALSE}
-cluster_genes <- data.frame("Geneid" = gene_cluster$Geneid)
-rownames(cluster_genes) <- cluster_genes$Geneid
-
-# Identifying gene names
-cluster_genes$Geneid <- rownames(cluster_genes)
-bnum = "b[0-9]{4}"
-cluster_genes$GeneidBackup = cluster_genes$Geneid
-cluster_genes <- cluster_genes %>% 
-  separate(GeneidBackup, c("feature", "rest"), sep="[:]")
-cluster_genes <- cluster_genes %>% 
-  filter(feature %in% c("CDS")) 
-genename = ":[a-z]{3}.."
-ec_cds <- cluster_genes %>% 
-  filter(feature %in% c("CDS")) 
-cluster_genes$genename <- str_extract(cluster_genes$Geneid, genename)
-cluster_genes$bnum <- str_extract(cluster_genes$Geneid, bnum)
-cluster_genes <- cluster_genes %>% 
-  separate(genename, into = c("colon", "genename"), sep = ":") %>%
-  dplyr::select(-c(colon, rest, feature, bnum))
-
-cluster_genes <- left_join(cluster_genes, gene_cluster, by = "Geneid") %>%
-  filter(!is.na(genename))
-
-rownames(cluster_genes) <- cluster_genes$Geneid
-cluster_genes <- cluster_genes %>%
-  dplyr::select(-Geneid)
 ```
 
 Create a list of the clusters with their genes:
 ```{r cluster lists}
+cluster_genes <- data.frame("genename" = gene_cluster$genename)
+rownames(cluster_genes) <- cluster_genes$genename
+cluster_genes <- left_join(cluster_genes, gene_cluster, by = "genename") %>%
+  filter(!is.na(genename))
+rownames(cluster_genes) <- cluster_genes$genename
+
 #list of data frames with gene names for each cluster
 EC_cluster <- c()
 EC_cluster$cluster1 <- cluster_genes %>%
@@ -551,6 +582,8 @@ EC_cluster$cluster2 <- cluster_genes %>%
 EC_cluster$cluster3 <- cluster_genes %>%
   filter(cluster == 3) %>%
   dplyr::select(genename)
+
+
 EC_cluster$cluster4 <- cluster_genes %>%
   filter(cluster == 4) %>%
   dplyr::select(genename)
@@ -562,8 +595,9 @@ EC_cluster$cluster6 <- cluster_genes %>%
   dplyr::select(genename)
 ```
 
+### **5.2** GO Analysis
 Run TopGo for GO 
-```{r TopGO on clusters, cache = TRUE, message=FALSE, warning=FALSE}
+```{r TopGO on clusters, message=FALSE, warning=FALSE}
 go_enrich <- function(go_type, k) {
   selection <- function(k) {
     gene_clust <- cluster_genes$cluster == k
@@ -638,21 +672,11 @@ GO_clusters$cl5 <- cluster5_genes
 GO_clusters$cl6 <- cluster6_genes
 ```
 
-GSEA
+### **5.3** GSEA
 ```{r GSEA sensitivity enrichment in clusters, warning = FALSE, message = FALSE}
-impulse_pval <- data.frame("Geneid" = impulse_ecoli$dfImpulseDE2Results$Gene, "padj" = impulse_ecoli$dfImpulseDE2Results$padj)
+impulse_pval <- data.frame("genename" = impulse_ecoli$dfImpulseDE2Results$Gene, "padj" = impulse_ecoli$dfImpulseDE2Results$padj)
 
 ec_Stat <- impulse_pval
-bnum = "b[0-9]{4}"
-ec_Stat$GeneidBackup = ec_Stat$Geneid
-ec_Stat <- ec_Stat %>% separate(GeneidBackup, c("feature", "rest"), sep="[:]")
-ec_Stat <- ec_Stat %>% filter(feature %in% c("CDS")) 
-genename = ":[a-z]{3}.."
-ec_cds <- ec_Stat %>% filter(feature %in% c("CDS")) 
-ec_Stat$genename <- str_extract(ec_Stat$Geneid, genename)
-ec_Stat$bnum <- str_extract(ec_Stat$Geneid, bnum)
-ec_Stat <- ec_Stat %>% separate(genename, into = c("colon", "genename"), sep = ":") %>%
-  dplyr::select(-c(colon,feature,rest,bnum))
 
 stat_all <- ec_Stat$padj
 names(stat_all) <- ec_Stat$genename
@@ -687,7 +711,7 @@ cluster6 <- left_join(EC_cluster$cluster6,ec_Stat, by = "genename") %>%
 stat_cluster6 <- cluster6$padj
 names(stat_cluster6) <- cluster6$genename
 
-sens <- read_csv("ec_past_EX.csv") %>%
+sens <- read_csv("past_sensitivity.csv") %>%
   dplyr::select(c(geneName,bNum, `Differentially expressed between 0% and 100% RpoS`,`Direction of regulation`, sensitivity)) %>%
   filter(`Differentially expressed between 0% and 100% RpoS` == TRUE) %>%
   dplyr::select(-`Differentially expressed between 0% and 100% RpoS`)
@@ -698,6 +722,7 @@ sens_name$insensitive <- sens$geneName[which(sens$sensitivity=="insensitive")]
 sens_name$linear <- sens$geneName[which(sens$sensitivity=="linear")]
 
 fgsea(sens_name, stat_all, minSize = 1, maxSize = 500, nperm = 10000)
+fgsea(sens_name, stat_cluster1, minSize = 1, maxSize = 500, nperm = 10000)
 fgsea(sens_name, stat_cluster2, minSize = 1, maxSize = 500, nperm = 10000)
 fgsea(sens_name, stat_cluster3, minSize = 1, maxSize = 500, nperm = 10000)
 fgsea(sens_name, stat_cluster4, minSize = 1, maxSize = 500, nperm = 10000)
