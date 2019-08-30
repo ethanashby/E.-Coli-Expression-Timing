@@ -51,8 +51,8 @@ We tested out many normalization methods including DESeq2 and edgeR. DESeq2 is a
 
 
 ```{r}
-######################################################DESeq2#########################################################
 
+# run DESeq2
 ec_coldata <- data.frame(names = colnames(ec_rawcounts)) %>%
   separate(names, c("treat", "rep_time"), "_") %>%
   mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
@@ -165,3 +165,10 @@ MA_DS <- intersect(maSigProGenes, EC_sig_genes)
 
 EC_DEGs <- distinct(data.frame("Geneid" = c(DS_IM, IM_MA, MA_DS)))
 ```
+
+
+```{r}
+library(topGO)
+
+```
+

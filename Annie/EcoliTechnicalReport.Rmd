@@ -4,10 +4,18 @@ author: Ethan Ashby, Annie Cohen, Lian Morales, Prof. Jo Hardin,
   Prof. Dan Stoebel, Prof. Danae Schulz
 date: "7/22/2019"
 output:
+  pdf_document: default
   html_document:
     toc: true
-  pdf_document: default
 ---
+
+#Table of Contents
+1. Introduction
+2. Normalization
+3. Differential Expression
+4. Visualization
+5. Analysis
+6. References
 
 # **1** Introduction
 
@@ -33,15 +41,15 @@ library(stringr)
 library(ImpulseDE2)
 library(maSigPro)
 library(VennDiagram)
+library(NbClust)
 library(topGO)
 library(org.EcK12.eg.db)
 library(shiny)
-library(jpeg)
 library(fgsea)
 ```
 
-```{r import data}
-# import data
+```{r import data, warning=FALSE}
+# Import data
 ec_rawcounts <- read.table("LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.txt", header = TRUE)
 
 # ID gene names using Madison's parsing code
@@ -61,10 +69,10 @@ ec_rawcounts <- ec_rawcounts %>%
   separate(genename, into = c("colon", "genename"), sep = ":") %>%
   dplyr::select(-c(colon, rest, feature, bnum))
 
-# de dupe genenames
+# De-dupe genenames
 ec_rawcounts <- distinct(ec_rawcounts, genename, .keep_all = TRUE)
 
-# assign Geneid as rownames and delete variable
+# Assign Geneid as rownames and delete variable
 rownames(ec_rawcounts) <- ec_rawcounts$genename
 ec_rawcounts <- ec_rawcounts %>% dplyr::select(-c(Geneid, genename))
 ```
@@ -78,7 +86,7 @@ We tested out many normalization methods including DESeq2 and edgeR. DESeq2 is a
 $~$
 
 ```{r DESeq2 prep}
-# prepare for DESeq2
+# Prepare for DESeq2
 ec_coldata <- data.frame(names = colnames(ec_rawcounts)) %>%
   separate(names, c("treat", "rep_time"), "_") %>%
   mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
@@ -94,8 +102,9 @@ ec_coldata <- data.frame(names = colnames(ec_rawcounts)) %>%
 rownames(ec_coldata) <- colnames(ec_rawcounts)
 ```
 
-DESeq2 normalizes data within the differential expression analysis function pipeline, so we first run DESeq() and then extract the normalized counts:
-```{r run DESeq2 for normalization, results='hide', message=FALSE, warning=FALSE}
+DESeq2 normalizes data within the differential expression analysis function pipeline, so we first run the `DESeq()` function and then extract the normalized counts.
+
+```{r run DESeq2 for normalization, cache = TRUE, results='hide', message=FALSE, warning=FALSE}
 ec_dds <- DESeqDataSetFromMatrix(ec_rawcounts, colData = ec_coldata, design = ~ timetreat)
 ec_dds_de <- DESeq(ec_dds)
 ec_normcounts <- as.data.frame(counts(ec_dds_de, normalized=TRUE))
@@ -105,18 +114,20 @@ $~$
 # **3** Differential Expression
 ### **3.1** DESeq2
 
-According to **CITATION**, DESeq2 determines differential expression by:  
-**(1)** normalization of the raw counts by determining size factors and adjusting each sample by the size factor.  
-**(2)** measuring gene-wise dispersions. Dispersion, $\alpha$, measures the variability within biological replicates of the same sample: $\text {Var} = \mu + \alpha\mu^2$.  
-**(3)** adjusting dispersion estimates to fit a curve created by the distribution of dispersion estimates. Use `plotDispEsts()` to see for yourself.
-**(4)** comparing normalized counts with a negative binormial distribution with the sample mean, $\mu_j$, and gene-wise dispersion parameter, $\alpha_j$ to determine the significance of differential expression.
+According to Mistry, Meeta, *et al.* (2017), DESeq2 determines differential expression by:  
+**1.** normalization of the raw counts by determining size factors and adjusting each sample by the size factor;
+**2.** measuring gene-wise dispersions. Dispersion, $\alpha$, measures the variability within biological replicates of the same sample: $\text {Var} = \mu + \alpha\mu^2$;
+**3.** adjusting dispersion estimates to fit a curve created by the distribution of dispersion estimates. Use `plotDispEsts()` to see for yourself; 
+**4.** and comparing normalized counts with a negative binormial distribution with the sample mean, $\mu_j$, and gene-wise dispersion parameter, $\alpha_j$ to determine the significance of differential expression.
 
-Because we have already run DESeq() above, we can now extract the significant results. We chose a p-value of 0.01 to be consistent across all of our work.
+Because we have already run `DESeq()` above, we can now extract the significant results. We chose a p-value of 0.01 to be consistent across all of our work. `DESeq2` is a two-sample comparison method, but we want to accurately determine differentially expressed genes across *all* the time points. Therefore, we compute (1) a list of differentially expressed genes between the treatment group (the RpoS-regulated *E. coli*) at 0 minutes and 150 minutes, and (2) a list of differentially expressed genes between the treatment group and the control (delta-RpoS *E. coli*), both at 150 minutes. We find the genes that appear in both lists and this intersection is our differentially expressed gene list from `DESeq2`.
+
 ```{r extract DESeq2 results, results='hide', message=FALSE, warning=FALSE}
 EC_sig_genes <- c()
 
-# determine the genes that are differentially expressed between WT0 and WT150
+# Determine the genes that are differentially expressed between WT0 and WT150
 de_results <- results(ec_dds_de, contrast = c("timetreat", "WT150","WT0"))
+# Filter for a p-value less than 0.01
 resSig <- de_results[ which(de_results$padj < 0.01 ), ]
 resSig$genename <- rownames(resSig)
 ind <- match(rownames(ec_normcounts),resSig$genename)
@@ -125,8 +136,9 @@ EC_sig_genes$WT_compare <- ec_normcounts %>%
  filter(!is.na(ec_normcounts$sig))
 
 
-# determine the genes that are differentially expressed between WT150 and dRpoS150
+# Determine the genes that are differentially expressed between WT150 and dRpoS150
 de_results <- results(ec_dds_de, contrast = c("timetreat", "WT150","dRpoS150"))
+# Again, filter by p-value.
 resSig <- de_results[ which(de_results$padj < 0.01 ), ]
 resSig$genename <- rownames(resSig)
 ind <- match(rownames(ec_normcounts),resSig$genename)
@@ -134,7 +146,7 @@ ec_normcounts$sig <- resSig$genename[ind]
 EC_sig_genes$treat_compare <- ec_normcounts %>%
  filter(!is.na(ec_normcounts$sig))
 
-# find the intersection of the two lists of differentially expressed genes
+# Find the intersection of the two lists of differentially expressed genes
 EC_sig_genes <- intersect(EC_sig_genes$WT_compare$sig, EC_sig_genes$treat_compare$sig)
 ```
 
@@ -142,35 +154,36 @@ EC_sig_genes <- intersect(EC_sig_genes$WT_compare$sig, EC_sig_genes$treat_compar
 
 ImpulseDE2 is a serial method for differential expression that models data based on the impulse model, which has parameters $t_1, t_2, h_0, h_1, \text{and } b.$ The impulse model has a spike, characterized by its beginning height, $h_0$, inflection point, $t_1$, its height, $h_1$, and its slope at $t_1$, $b$. Then the model decreases into its steady state, characterized by the second inflection point, $t_2$, and its final height, $h_2$.
 
-According to Fischer et al., ImpulseDE2 determines differential expression by:
-**(1)** running DESeq2 and adjusting gene-wise dispersion estimates from DESeq2 to fit a curve;  
-**(2)** computing size factors and normalizing counts;  
-**(3)** fitting null and alternative model to each of the genes  
-**(4)** fitting sigmoid model to the treatment condition -- in our case, samples containing the RpoS translation factor;   
-**(5)** and determining differential expression based on these models fits to each gene using a log-likelihood ratio (Fischer et al. 2018).  
+According to Fischer et al., ImpulseDE2 determines differential expression by:  
+**1.** running DESeq2 and adjusting gene-wise dispersion estimates from DESeq2 to fit a curve;  
+**2.** computing size factors and normalizing counts;  
+**3.** fitting null and alternative model to each of the genes;  
+**4.** fitting sigmoid model to the treatment condition -- in our case, samples containing the RpoS translation factor;   
+**5.** and determining differential expression based on these models fits to each gene using a log-likelihood ratio (Fischer et al. 2018).  
 
 ```{r prep ImpulseDE2}
+# Set up design matrix
 ec_design <- data.frame(Sample=colnames(ec_rawcounts),
                         Condition=c(rep("case",6), rep("control",6), rep("case",6), rep("control",6), rep("case",6), rep("control",6)), 
                         Time=rep(c(0,30,60,90,120,150),6))
 ```
 
-Run ImpulseDE2 with parameters specifying the count matrix, design matrix, the type of analysis: case-control instead of case-only, 
-```{r run ImpulseDE2, results='hide', message=FALSE, warning=FALSE}
+```{r run ImpulseDE2, results='hide', cache = TRUE, message=FALSE, warning=FALSE}
+# Set `boolCaseCtrl = TRUE` because our data has both case and control conditions, `scaQThres = 0.01` specifies the level of significance, `scaNProc = 8` speeds up the function's runtime, and `boolIdentifyTransients = TRUE` indicates that we are also fitting the sigmoidal model.
 impulse_ecoli <- ImpulseDE2::runImpulseDE2(as.matrix(ec_rawcounts), ec_design, boolCaseCtrl=TRUE, vecConfounders=NULL, scaQThres = 0.01, scaNProc = 8, boolIdentifyTransients = TRUE)
 ```
 
 ### **3.3** maSigPro
 
-maSigPro is another serial method that determines genes with significant expression differences over time and between conditions. According to Conesa and Nueda, by:
+maSigPro is another serial method that determines genes with significant expression differences over time and between conditions. According to Conesa and Nueda (2017), the package performs differential expression analysis by:
 
-**(1)** defining a regression model for the data with the  experimental conditions identified by dummy variables;  
-**(2)** using least-squared method to adjust the model;  
-**(3)** selecting differentially expressed genes controlling for false discovery rates;  
-**(4)** and applying stepwise regression to determine differential expression between groups (Conesa and Nueda 2017).
+**1.** defining a regression model for the data with the  experimental conditions identified by dummy variables;  
+**2.** using least-squared method to adjust the model;  
+**3.** selecting differentially expressed genes controlling for false discovery rates;  
+**4.** and applying stepwise regression to determine differential expression between groups (Conesa and Nueda 2017).
 
 ```{r prep maSigPro}
-# set up design
+# Set up design
 Time <- rep(c(0,30,60,90,120,150),6)
 Replicate <- rep(1:3, 12)
 Control <- c(rep(0, 6), rep(1, 6), rep(0, 6), rep(1, 6), rep(0, 6), rep(1,6))
@@ -178,47 +191,48 @@ d_Rpos <- c(rep(1, 6), rep(0, 6), rep(1, 6), rep(0, 6), rep(1, 6), rep(0, 6))
 ec_design <- cbind(Time, Replicate, Control, d_Rpos)
 rownames(ec_design) <- colnames(ec_rawcounts)
 
-# run maSigPro on DESeq2 Normalized Counts, theta=10, Q=0.01
+# Get DESeq2 normalized counts and create a design matrix
 ec_normcounts <- as.data.frame(counts(ec_dds_de, normalized=TRUE))
 ec_design <- make.design.matrix(ec_design, degree=5)
 ```
 
-```{r run maSigPro, results='hide', message=FALSE, warning=FALSE}
-# ID DEGs
+
+```{r run maSigPro, results='hide', cache = TRUE, message=FALSE, warning=FALSE}
+# perform a regression fit for our gene expression data. Set `Q = 0.01` for our significance level, set `MT.adjust = "BH"` to adjust our p-values using the Benajamini & Holderberg (BH) correction method
 fits <- p.vector(ec_normcounts, ec_design, Q=0.01, MT.adjust = "BH", min.obs=6, counts=TRUE)
-#variable selection procedure to ID variables for each gene
+
+# perform a stepwise regression fit for our gene expression data. Set `step.method = "backward"` and `alfa = 0.01` to specify significance level
 tsep <- T.fit(fits, step.method = "backward", alfa=0.01)
 
-# Get sig genes between delta_RpoS and Control
+# Get significant genes between delta_RpoS and Control
 sigs <- get.siggenes(tsep, rsq = 0.6, vars = "groups")
-maSigProGenes<-sigs$summary$d_RposvsControl
+maSigProGenes <- sigs$summary$d_RposvsControl
 ```
 
-$~$
 
 ### **3.4** Find the Intersection
 
 In order to balance our sensitivity with false discovery rates, we decided to consider genes differentially expressed if they were identified in at least 2 of the 3 methods.
 
-We first made lists of genes from all of the combinations of intersections between each method and then took the union of that list:
+First, we made lists of genes from all of the combinations of intersections between each method and then took the union of that list.
 
 ```{r calc intersections, message = FALSE, warning = FALSE}
-# intersect each gene list with another method
+# Intersect each gene list with another method
 DS_IM <- distinct(data.frame("genename" = intersect(EC_sig_genes, impulse_ecoli$vecDEGenes)))
 IM_MA <- distinct(data.frame("genename" = intersect(impulse_ecoli$vecDEGenes, maSigProGenes)))
 MA_DS <- distinct(data.frame("genename" = intersect(maSigProGenes, EC_sig_genes)))
 
-# take the union of all three of these intersections, making sure to delete duplicate genes.
+# Take the union of all three of these intersections, making sure to delete duplicate genes.
 EC_DEGs <- distinct(bind_rows(DS_IM, IM_MA, MA_DS))
 ```
 
-Next we can visualize this overlap with the `vennDiagram` package:
+Next we can visualize this overlap with the `vennDiagram` package.
 
 ```{r plot intersection, echo=FALSE}
-# in case you would rather be working with a smaller selection of genes, you can calculate the intersection of all three methods' gene lists here:
+# Calculate the intersection of all three methods' gene lists
 all_intersect <- intersect(intersect(EC_sig_genes, impulse_ecoli$vecDEGenes), maSigProGenes)
 
-# calculate the size of each gene list including the intersection lists
+# Calculate the size of each gene list including the intersection lists
 DS <- length(EC_sig_genes)
 IM <- length(impulse_ecoli$vecDEGenes)
 MA <- length(maSigProGenes)
@@ -227,65 +241,75 @@ DS_IM_length <- length(DS_IM$genename)
 IM_MA_length <- length(IM_MA$genename)
 MA_DS_length <- length(MA_DS$genename)
 
-# plot venn diagram
+# Plot venn diagram
 grid.newpage()
 draw.triple.venn(area1 = DS, area2 = IM, area3 = MA, n12= DS_IM_length, n13 = MA_DS_length, n23 = IM_MA_length, n123 = all_length, category = c("DESeq2", "ImpulseDE2", "MaSigPro"), fill = c("lightblue", "khaki1", "pink"), lty = "blank")
 ```
 
 # **4** Visualization
-### **4.1** ggplot2
+### **4.1** Tidying Our Data
 
-We used ggplot2 for the standard visualization of the differentially expressed genes' expression over time.
-First, we prepared the list of differentially expressed genes `EC_DEGs` to be tidied:
-
-```{r prep DEG list}
+```{r join DEG counts}
+# Join list of differentially expressed gene names with their normalized counts
 ec_normcounts$genename <- rownames(ec_normcounts)
 EC_DEGs <- left_join(EC_DEGs, ec_normcounts, by = "genename")
+
+head(EC_DEGs[,1:7])
 ```
 
-Then we tidied the data using `gather()` and other functions from the tidyr package. We also use group_by() to calculate the average count across all three biological replicates:
+As you can see from the preview of our data, it is currently in a format where each gene has one row with all of the treatments and time points as columns. However, in order to plot our gene expression data, we want each gene at each time point and condition to have a row. We must tidy our data!
+
+To do so, we use `tidyr` and `dplyr` functions.
 
 ```{r tidy DEGs}
 EC_counts_gath <- EC_DEGs %>%
-  # gather count data for each sample by gene, so that each sample and replicate is its own line
+  # Gather count data for each sample by gene
   tidyr::gather(-genename, key="sample", value = "rawcount") %>%
-  # separate columns into treat and rep_time
+  # Separate columns into treat and rep_time
   tidyr::separate(sample, c("treat", "rep_time"), "_") %>%
-  # create rep column from rep_time column
+  # Create rep column from rep_time column
   dplyr::mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
                         ifelse(substr(rep_time,start=1,stop = 1) == "B", 2, 3))) %>%
-  # create time column from rep_time column
+  # Create time column from rep_time column
   dplyr::mutate(time = ifelse(substr(rep_time,start=3,stop = 3) == "1", 0,
                       ifelse(substr(rep_time,start=3,stop = 3) == "2", 30,
                              ifelse(substr(rep_time,start=3,stop = 3) == "3", 60,
                                     ifelse(substr(rep_time,start=3,stop = 3) == "4", 90,
                                            ifelse(substr(rep_time,start=3,stop = 3) == "5", 120, 150)))))) %>%
-  # rename treatment with more descriptive value
+  # Rename treatment with more descriptive value
   dplyr::mutate(treat = ifelse(treat == "JH01", "WT","dRpoS")) %>%
-  # delete rep_time combo column
+  # Delete rep_time combo column
   dplyr::select(-c(rep_time))
                                       
 EC_counts_ave <- EC_counts_gath %>%
-  # group data frame by genename, treatment, and time
+  # Group data frame by genename, treatment, and time
   dplyr::group_by(genename, treat, time) %>%
-  # take the average of the rawcounts across the grouped variables
+  # Take the average of the rawcounts across the grouped variables
   dplyr::summarise(avecount = mean(rawcount)) %>%
-  # select only WT (our case) average count data
+  # Select only WT (our case) average count data
   filter(treat == "WT")
 
-# rename columns
+# Rename
 colnames(EC_counts_ave) <- c("genename", "treat", "time", "avecount")
 ```
 
-Finally, we plot the tidy data using ggplot() :
+### **4.2** ggplot2
+
+Finally, we can plot the tidy data using `ggplot()`.
+
 ```{r plot DEGs}
 EC_counts_ave %>%
+  # We also apply a `log2()` transformation to the y-axis of our expression data in order to view all of the genes on one plot.
   ggplot(aes(x=time, y=log2(avecount))) +
+  # We use `geom_line()`, with the parameter `color = genename` in order to color the gene names separately and create a line plot with each gene's expression. 
   geom_line(aes(color = genename), alpha = 0.4) +
+  # Make sure to specify `legend.position = "none"`
   theme(legend.position = "none")
 ```
 
-### **4.2** Shiny App
+In our case, these plots are not extremely helpful because they are so overcrowded and it is difficult to see any trends. In Section 5, we will jump into clustering methods and other analyses that can identify specific gene profiles.
+
+### **4.3** Shiny App
 
 Shiny is an R package that allows us to create interactive web apps inside of R. While our Shiny code is not interactive or compatible with the HTML export format, this code runs within R and creates a pop-up app that allows the viewer to visualize the gene expression data. Shiny is especially helpful when trying to determine optimal cut-offs for p-values or fold changes, or when switching between comparisons of the same data.
 
@@ -308,29 +332,22 @@ server <- function(input, output, session) {
   dRpoS_list = c("dRpoS0","dRpoS30","dRpoS60","dRpoS90","dRpoS120","dRpoS150")
   WT_list = c("WT0","WT30","WT60","WT90","WT120","WT150")
 
-# analyze contrasts depending on 'amt' parameter
+# Analyze contrasts depending on `amt` parameter
   if (input$amt == "all") {
     contrast_list = c()
     
     for (i in 1:6) {
       de_results <- results(ec_dds_de, contrast = c("timetreat",dRpoS_list[i],WT_list[i]))
-      
       resSig <- de_results[ which(de_results$padj < input$pval ), ]
-      
       resSig <- resSig[ which(abs(resSig$log2FoldChange) > input$fc ), ]
-      
       resSig$gene <- rownames(resSig)
-    
       ind <- match(ec_norm_counts$genename,resSig$gene)
-    
       ec_norm_counts$sig <- resSig$gene[ind]
-      
       contrast_list[[i]] <- ec_norm_counts %>%
        filter(!is.na(ec_norm_counts$sig)) %>%
        select(-sig) %>%
        mutate(contrast = contrast_vect[i])
     }
-
     norm_counts_contrast <- bind_rows(contrast_list[[1]],contrast_list[[2]],contrast_list[[3]],contrast_list[[4]],contrast_list[[5]],contrast_list[[6]])
   }
   
@@ -342,25 +359,18 @@ server <- function(input, output, session) {
                                           ifelse(input$amt == "120", 5,6)))))
 
     de_results <- results(ec_dds_de, contrast = c("timetreat",dRpoS_list[idx], WT_list[idx]))
-      
     resSig <- de_results[ which(de_results$padj < input$pval ), ]
-      
     resSig <- resSig[ which(abs(resSig$log2FoldChange) > input$fc ), ]
-      
     resSig$gene <- rownames(resSig)
-    
     ind <- match(ec_norm_counts$genename,resSig$gene)
-    
     ec_norm_counts$sig <- resSig$gene[ind]
-  
     norm_counts_contrast <- ec_norm_counts %>%
      filter(!is.na(ec_norm_counts$sig)) %>%
      select(-sig) %>%
      mutate(contrast = as.numeric(input$amt))
-  
   }
 
-# TIDY data
+# Tidy data
   ec_counts_gath <- norm_counts_contrast %>%
     gather(-c(genename,contrast), key="sample", value = "rawcount") %>%
     separate(sample, c("treat", "rep_time"), "_") %>%
@@ -380,8 +390,8 @@ server <- function(input, output, session) {
     mutate(gtreat = paste(genename,treat,sep = "")) %>%
     filter(treat == "WT")
 
-# plotting the data with the user chosen parameters
-  # log transformed plots facet wrapped by contrast
+# Plotting the data with the user chosen parameters
+  # Log transformed plots facet wrapped by contrast
   if (input$trans == "Yes") {
     if (input$amt == "all") {
       ec_counts_ave %>%
@@ -392,7 +402,7 @@ server <- function(input, output, session) {
         theme(legend.position = "none",panel.background = element_blank(), axis.title = element_text(size = 16)) +
         labs(x = "time (min)", y = expression("log"[2]~"(avg count)"))
     }
-  # no facet wrap
+  # No facet wrap
     else {
       ec_counts_ave %>%
         filter(contrast == input$amt) %>%
@@ -413,7 +423,7 @@ server <- function(input, output, session) {
         theme(legend.position = "none",panel.background = element_blank(), axis.title = element_text(size = 16)) +
         labs(x = "time (min)", y = expression("avg count"))
     }
-  # no facet wrap
+  # No facet wrap
     else {
       ec_counts_ave %>%
         filter(contrast == input$amt) %>%
@@ -426,10 +436,10 @@ server <- function(input, output, session) {
   }
   })
   
-# hover for coordinates
+# Hover for coordinates
   
   output$plot_hover <- renderText({
-   paste("expression coordinates: ", input$plot_hover$x, ", ", input$plot_hover$y) 
+   paste("Expression Coordinates: ", input$plot_hover$x, ", ", input$plot_hover$y) 
   })
 }
 
@@ -439,70 +449,76 @@ shinyApp(ui = ui, server = server)
 # **5** Analysis
 ### **5.1** PAM Clustering 
 
-Partitioning Around Medoids (PAM) is a clustering method iteratively groups genes into clusters of genes with similar profiles. For our code, we input a dissimilarity matrix, which is a matrix of the correlation between each gene, based on their counts. We specified the correlation method as "spearman", however "pearson" returns similar results. The PAM method chooses k center genes (medoids) and assigns all of the rest of the genes to the closest medoids New medoids are calculated from these clusters and the cycle is repeated until the clusters and medoids stay the same between iterations.
+Partitioning Around Medoids (PAM) is a clustering method iteratively groups genes into clusters of genes with similar profiles. For our code, we input a dissimilarity matrix, which is the transposed matrix of the correlation between each gene, based on their counts. We use the transpose of the count matrix because we want all of the genes as columns in order to calculate the correlation. To calculate correlation, we specified the method as "spearman", however "pearson" returns similar results. The PAM method determines clusters by:  
+**1.** choosing k center genes (medoids);  
+**2.** assigning all of the rest of the genes to the closest medoids;  
+**3.** calculating new medoids from these clusters -- in our case, this is based off of the dissimilarity matrix provided;  
+**4.** repeating steps 2 and 3 until the clusters and medoids stay the same between iterations.  
 
-First, compute an optimal k number of clusters. This package `NbClust` runs through 30 different tests that each determine the optimal k and plots the distribution of all 30 of the optimal k results in order to determine the most common result and the **MOST** optimal k.
+First, we compute the optimal k number of clusters. This package `NbClust` runs through 30 different tests that each determine the optimal k and plots the distribution of all 30 of the optimal k results in order to determine the most common result and the *most* optimal k.
 
-```{r calc optimal k, message=FALSE, warning=FALSE}
+```{r calc optimal k, cache = TRUE, message=FALSE, warning=FALSE}
 rownames(EC_DEGs) <- EC_DEGs$genename
 EC_DEGs <- EC_DEGs %>%
   dplyr::select(-genename)
-library(NbClust)
+
+# Set `diss = NULL` because our data is not a dissimilarity matrix. We set `distance = euclidean` because euclidean distance is the distance measurement used by the kmeans method, which we specify as the method
 k_test <- NbClust(data = EC_DEGs, diss = NULL, distance = "euclidean", min.nc = 2, max.nc = 20, method = "kmeans")
 ```
 
-Then use the PAM method to cluster the DEGs' count data:
-```{r PAM clustering, warning=FALSE}
-k = 3
+Take the results of this function with a grain of salt because it uses a different clustering method than the PAM method we use. While this program determines k = 3 to be the optimal number of clusters, we used k = 6 so that we did not miss any unique profiles. Then we use the PAM method to cluster the DEGs' count data.
 
-# calculate the dissimilarity matrix. use the transpose of the count matrix because we want all of the genes as columns in order to calculate the correlation.
+```{r PAM clustering, warning=FALSE}
+k = 6
+
+# Calculate the dissimilarity matrix
 dissimilarity_matrix <- 1 - cor(t(EC_DEGs), method = "spearman")
 
-# run the pam() function which clusters the data. the pamonce parameter speeds up the function by maximizing short cuts.
+# Run the pam() function which clusters the data. `pamonce = 3` speeds up the function by maximizing short cuts.
 EC_DESeq_clusters <- cluster::pam(x = dissimilarity_matrix, k = k, pamonce = 3)
 
-# create a data table with the cluster name and Geneid
+# Create a data table with the cluster name and genename
 gene_cluster <- data.frame("cluster" = EC_DESeq_clusters$clustering, "genename" = names(EC_DESeq_clusters$clustering))
 
-# make a data frame with the names of the medoid for each of the k clusters
+# Make a data frame with the names of the medoid for each of the k clusters
 EC_PAM_medoids <- data.frame("genename" = rownames(EC_DESeq_clusters$medoids))
 
 ec_norm_counts <- ec_normcounts %>%
   mutate("genename" = rownames(ec_normcounts))
 
-# join the normalized counts with the clusters of genes by their Geneid
-EC_cluster_df <- left_join(gene_cluster, ec_norm_counts, by = "genename") #%>%
-  #dplyr::select(-sig)
+# Join the normalized counts with the clusters of genes by their genename
+EC_cluster_df <- left_join(gene_cluster, ec_norm_counts, by = "genename")
 ```
 
-Now, we will standardize our data using the `Mfuzz` package's standardise() function. The function standardizes the data so that each gene has a mean expression of 0 and a standard deviation of 1. We standardize our data in order to visualize and understand the profiles within each cluster.
-```{r Mfuzz standardization, warning=FALSE}
+Now, we will standardize our data using the `Mfuzz` package's `standardise()` function. The function standardizes the data so that each gene has a mean expression of 0 and a standard deviation of 1. We standardize our data with the Fuzzy package in order to visualize and understand the profiles within each cluster.
+
+```{r Mfuzz standardization, warning=FALSE, message=FALSE}
 cluster_standard <- EC_cluster_df %>%
   dplyr::select(-cluster)
 rownames(cluster_standard) <- cluster_standard$genename
 cluster_standard <- cluster_standard %>%
   dplyr::select(-genename)
 
-# create a phenotype data frame, which describes the conditions/columns of the mnain data frame.
+# Create a phenotype data frame, which describes the conditions/columns of the mnain data frame.
 metadata <- data.frame(labelDescription = c("treat", "rep", "time", "timetreat"))
 phenoData <- new("AnnotatedDataFrame", data=ec_coldata, varMetadata=metadata)
 
-# convert the gene expression data frame to a matrix
+# Convert the gene expression data frame to a matrix
 clusters <- as.matrix(cluster_standard)
 
-# create an object of type ExpressionSet
+# Create an object of type `ExpressionSet`
 eset <- Biobase::ExpressionSet(assayData = clusters, phenoData = phenoData)
 
-# plug ExpressionSet object into the standardise() function and extract the standardized matrix and convert it into a data frame
+# Plug `eset` into the `standardise()` function and extract the standardized matrix and convert it into a data frame
 cluster_standardized <- Mfuzz::standardise(eset = eset)
 standard_clusters <- data.frame(cluster_standardized@assayData$exprs)
 standard_clusters$genename <- rownames(standard_clusters)
 
-# join the cluster data with the standardized expression counts
+# Join the cluster data with the standardized expression counts
 clusters <- left_join(standard_clusters, gene_cluster, by = "genename")
 ```
 
-Then we tidied the standardized data using gather() and other functions from the `tidyr` package. We also use group_by() to calculate the average count across all three biological replicates.
+Then, we can use the tidying pipeline (see Section 4.1 for more information) to tidy the standardized data.
 
 ```{r tidy cluster data}
 EC_counts_gath <- clusters %>%
@@ -526,14 +542,15 @@ EC_counts_sum <- EC_counts_gath %>%
 colnames(EC_counts_sum) <- c("genename", "cluster", "treat", "time", "avecount")
 ```
 
-Extract medoid gene expression data and the 
+Next, we extract the medoid genes and tidy the medoid gene expression data in order to plot the medoids on top of the gene clusters.
+
 ```{r tidy medoid data, warning=FALSE}
-# create a data frame that joins the medoid gene names and their standardized expression values
+# Create a data frame that joins the medoid gene names and their standardized expression values
 EC_medoid_df <- left_join(EC_PAM_medoids, clusters, by = "genename") %>%
   dplyr::select(-cluster) %>%
   mutate(cluster = c(1:k))
 
-# tidy medoid data (same pipeline as all count tidying)
+# Tidy medoid data (pipeline detailed in section 4.1)
 EC_counts_gath_med <- EC_medoid_df %>%
   gather(-c(genename, cluster), key="sample", value = "rawcount") %>%
   separate(sample, c("treat", "rep_time"), "_") %>%
@@ -554,16 +571,23 @@ EC_counts_sum_med <- EC_counts_gath_med %>%
 colnames(EC_counts_sum_med) <- c("genename", "cluster", "treat", "time", "avecount")
 ```
 
+Now we can plot our clusters using `ggplot`.
+
 ```{r plot clusters}
-# plot standardized clusters (facet_wrapped) with medoids
 EC_counts_sum %>%
+  #Because we have standardized our data using the `Mfuzz` package, we do not need to  transform the y-axis - just use `avecount`
   ggplot(aes(x=time, y=avecount)) +
-  geom_line(aes(group = genename, color = as.factor(cluster)), lineend = "round" , alpha = 0.5) +
-  facet_wrap(~factor(cluster, labels = c("Cluster 1", "Cluster 2", "Cluster 3"))) + geom_line(data = EC_counts_sum_med, aes(x=time, y=avecount, group = genename), size = 1) +
+  # We set `group = genename` and `color = as.factor(cluster)` in order to keep each gene separated and color by cluster. set alpha to a decimal smaller than 1 in order to see the overlap of genes within each cluster.
+  geom_line(aes(group = genename, color = as.factor(cluster)), lineend = "round" , alpha = 0.3) +
+  # We use `facet_wrap()` to separate the clusters into different plots, with the same scale
+  facet_wrap(~factor(cluster, labels = c("Cluster 1", "Cluster 2", "Cluster 3", "Cluster 4", "Cluster 5", "Cluster 6"))) +
+  # Plot the medoids on top of each cluster.
+  geom_line(data = EC_counts_sum_med, aes(x=time, y=avecount, group = genename), size = 1) +
   theme(legend.position = "none", panel.background = element_blank(), strip.text = element_text(size = 20), axis.title = element_text(size = 13), axis.text = element_text(size = 10))
 ```
 
-Create a list of the clusters with their genes:
+And we create a list of data frames that contain each clusters list of genes.
+
 ```{r cluster lists}
 cluster_genes <- data.frame("genename" = gene_cluster$genename)
 rownames(cluster_genes) <- cluster_genes$genename
@@ -571,7 +595,7 @@ cluster_genes <- left_join(cluster_genes, gene_cluster, by = "genename") %>%
   filter(!is.na(genename))
 rownames(cluster_genes) <- cluster_genes$genename
 
-#list of data frames with gene names for each cluster
+# List of data frames with gene names for each cluster called `EC_cluster`
 EC_cluster <- c()
 EC_cluster$cluster1 <- cluster_genes %>%
   filter(cluster == 1) %>%
@@ -582,8 +606,6 @@ EC_cluster$cluster2 <- cluster_genes %>%
 EC_cluster$cluster3 <- cluster_genes %>%
   filter(cluster == 3) %>%
   dplyr::select(genename)
-
-
 EC_cluster$cluster4 <- cluster_genes %>%
   filter(cluster == 4) %>%
   dplyr::select(genename)
@@ -595,26 +617,43 @@ EC_cluster$cluster6 <- cluster_genes %>%
   dplyr::select(genename)
 ```
 
-### **5.2** GO Analysis
-Run TopGo for GO 
+### **5.2** Gene Ontology Analysis
+
+Gene Ontology (GO) analysis is a tool used in order to determine whether specified groups of genes have unique biological significance. Gene Ontology Analysis relies on a list of GO terms, which is a list of all of the genetic functions within the organism and the respective genes involved in each of those functions (Alexa and Rahnenfuhrer, 2019). For each of the specified groups of genes, the analysis determines whether the list of genes is disproportionately distributed across genetic functions. Compared to the null (uniform) distribution of the group's genes across all genetic functions, are the group's genes significantly enriched within specific functions?
+
+To answer this question, we use a package called `TopGO` which has a database with all of *E. coli*'s GO terms. We can specify the statistical method used to determine whether a GO term is significant within a group of genes. Below, I provide code for the Fisher method, but the other option, a Kolmogorov-Smirnov test, is a simple substitution. GO terms are classified within three different categories: Biological Processes, Molecular Functions, and Cellular Components. After consultation with Professor Stoebel, Biological Process appears to be the most relevant in this research. However, the other two types have positives that could be more useful in other work: Molecular Function can offer specific, molecular-level information and Cellular Component can provide broad information about cell parts and structure.
+
 ```{r TopGO on clusters, message=FALSE, warning=FALSE}
+# Create a function that runs GO analysis, with the two parameters being the type of GO and the cluster number.
 go_enrich <- function(go_type, k) {
+  # Create a function within the function that returns a logical list marking whether or not a gene is in cluster k
   selection <- function(k) {
     gene_clust <- cluster_genes$cluster == k
     return(gene_clust)
-    }
+  }
+  # Create a factor with 2 levels: (1) integer versions (TRUE = 1 and FALSE = 0) of the logical result from the above `selection()` function and (2) their respective gene name
   GeneList <- factor(as.integer(selection(k)))
   names(GeneList) <- cluster_genes$genename
+  
+  # Map gene IDs to GO terms, both from database. Set `whichOnto = go_type` so that the function parameter can specify which type of GO terms to use and set `ID = "symbol"` because our gene data is identified by their symbol, the four letter combination associated with each gene
   annot <- annFUN.org(whichOnto = go_type, feasibleGenes = NULL, mapping = "org.EcK12.eg", ID = "symbol")
+  
+  # Create a `topGOdata` object. Again, specify `ontology = go_type`. Set `allGenes = GeneList` which is our factor object with 1s and 0s and gene names. Then we set `annot = annFUN.GO2genes` and `GO2genes = annot`, our previous object of mapped gene IDs and their GO terms.
   GOdata <- new("topGOdata", ontology=go_type, allGenes=GeneList, annot=annFUN.GO2genes, GO2genes = annot, geneSelectionFun = selection, nodeSize = 5)
+  
+  # Run the GO analysis, specifying the algorithm and statistic. If a Kolmogorov-Smirnov test is preferred, change `statistic = "fisher"` to `statistic = "ks"` and rename object as `resultKS`.
   resultFis <- runTest(GOdata, algorithm = "classic", statistic = "fisher")
-  #resultKS <- runTest(GOdata, algorithm = "classic", statistic = "ks")
+  
+  # Generate a table with the results ranked by their p-value. If a Kolmogorov-Smirnov test is preferred, change `fisherPval = "resultFis"` to `ksPval = "resultKS"`
   goEnrich <- GenTable(GOdata, fisherPval = resultFis, topNodes = 30)
-  #ind <- match(goEnrich$GO.ID, names(annot))
-  #goEnrich$Gene <- annot[ind]
+  
+  # Create a column that identifies the genes from the cluster within each GO term. Mostly NULL values
+  ind <- match(goEnrich$GO.ID, names(annot))
+  goEnrich$Gene <- annot[ind]
   return(goEnrich)
 }
 
+# Run the `go_enrich` function for each type within each cluster and bind the results, specifying the type of GO term in each case
 bp <- go_enrich("BP", 1) %>%
   mutate("Type" = "Biological Process")
 mf <- go_enrich("MF", 1) %>%
@@ -663,6 +702,7 @@ cc <- go_enrich("CC", 6) %>%
   mutate("Type" = "Cellular Component")
 cluster6_genes <- bind_rows(bp, mf, cc)
 
+# Create a list of data frames with the results from each of the clusters
 GO_clusters <- c()
 GO_clusters$cl1 <- cluster1_genes
 GO_clusters$cl2 <- cluster2_genes
@@ -730,4 +770,6 @@ fgsea(sens_name, stat_cluster5, minSize = 1, maxSize = 500, nperm = 10000)
 fgsea(sens_name, stat_cluster6, minSize = 1, maxSize = 500, nperm = 10000)
 ```
 
+# 6 References
 
+Mistry, Meeta, et al. “Gene-Level Differential Expression Analysis with DESeq2.” Introduction to DGE, 12 May 2017, hbctraining.github.io/DGE_workshop/lessons/04_DGE_DESeq2_analysis.html.
