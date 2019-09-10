@@ -19,11 +19,12 @@ text and code required to generate the technical report: 'E.coli_final_analysis.
 Included in the folder are several types of data files (detailed below). There are several
 other folders included in this folder. The 'Extra' folder contains general miscellany (data,
 code, etc.) generated during the summer of work. 'Images' contains screenshots that are linked
-into the final technical report. 'GO Clusters' and 'Go Stricter Clusters' contain DEG lists
-of intersections of 2+ and 3 DE tools respectively; these DEGs were run through a fuzzy
-clustering pipeline to identify genes with similar expression profiles. The main goal of
-this report was not a clustering analysis, so these data should be considered supplemental.
-More detail on clustering can be obtained from Annie Cohen's folder.
+into the final technical report. 'GO Clusters' and 'Go Stricter Clusters' contain gene
+ontologies for DEGs identified by the intersections of 2+ and 3 DE tools respectively; 
+these DEGs were run through a fuzzy clustering pipeline to identify genes with similar 
+expression profiles. The main goal of this report was not a clustering analysis, so these 
+data should be considered supplemental. More detail on clustering can be obtained from 
+Annie Cohen's folder.
 
 Data files:
 • meanExptoStationaryRpoSLevels.csv: this is the first data file in the Rmarkdown. This file
@@ -54,4 +55,17 @@ by submitting the DEG list to uniprot online GUI and selecting interesting featu
 	***Mining UNIPROT Db and finding ways to integrate Rstudio with this Db more seamlessly
 	could be a direction of further research.
 	
+General Steps Taken in Rmarkdown Document:
+The following section goes through the Rmarkdown document chunk-by-chunk, and explains
+the process and thought behind each section.
+1) Rpos kinetics: RpoS data from 'meanExptoStationaryRpoSLevels.csv' is visualized thru
+ggplot2, demonstrating that RpoS expression is induced upon cell starvation time course.
+2) Data-pre-processing (5 unnamed chunks): important packages and functions are loaded.
+Read count data is read into R and the gene identifiers are parsed and filtered for CDS
+sequences.
+3) DE tools: Runs DESeq2, maSigPro, and ImpulseDE2 on the read count data. Read count data
+is pre-normalized (using the DESeq2 RLE method) prior to passage through the maSigPro pipeline.
+Venn diagrams are plotted to visualize the overlap between the tools.
+4) DEGs: the intersection of 2+ (2 or more) tools is used to generate a DEG list.
+5)
 
