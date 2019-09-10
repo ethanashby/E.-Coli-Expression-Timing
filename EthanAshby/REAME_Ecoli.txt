@@ -1,7 +1,7 @@
 README 
 E. coli timing analysis and the sigmoidal model
 Ethan Ashby
-Email: ecadeashby@gmail.com, Phone #: (925)586-4191
+Email: ecadeashby@gmail.com, Phone #: (925) 586-4191
 
 Hello! This Github folder contains all the data and code needed to produce a
 writeup (E.coli_final_analysis.pdf) which details the analysis of the timing of E. coli 
@@ -12,4 +12,46 @@ data at hand.
 
 This README will give you a tour of this folder and will walk you through how to reproduce
 these analyses.
+
+A brief tour of the 'EthanAshby' folder:
+The main file in this folder is the 'E.coli_final_analysis.Rmd' file, which includes the
+text and code required to generate the technical report: 'E.coli_final_analysis.pdf'.
+Included in the folder are several types of data files (detailed below). There are several
+other folders included in this folder. The 'Extra' folder contains general miscellany (data,
+code, etc.) generated during the summer of work. 'Images' contains screenshots that are linked
+into the final technical report. 'GO Clusters' and 'Go Stricter Clusters' contain DEG lists
+of intersections of 2+ and 3 DE tools respectively; these DEGs were run through a fuzzy
+clustering pipeline to identify genes with similar expression profiles. The main goal of
+this report was not a clustering analysis, so these data should be considered supplemental.
+More detail on clustering can be obtained from Annie Cohen's folder.
+
+Data files:
+• meanExptoStationaryRpoSLevels.csv: this is the first data file in the Rmarkdown. This file
+contains mean RpoS data and meanDensity for 3 trials of 3 WT and ∆RpoS strains each over 150
+Min time course. These data are used to make the RpoS kinetics figures on pg 4.
+• LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.tsv: this is the second data file
+in the Rmarkdown. This file contains read count data for genomic features (unparsed ident-
+ifier info in the first column) over different experimental conditions and times. The file
+stationary_phase_data_sample_list_revised.xlsx provides a key for the acronyms and the 
+experimental conditions and times. For example, JH01_A01 denotes the first replicate of 
+the WT strain at time 0. In the Data Pre-Processing section, the genomic features were 
+parsed and the read counts were filtered for CDS.
+	***A major consideration here: we only focus on CDS sequences because we were particularly
+	interested in the timing of expressions of genes. However, other genomic features such
+	as IGRs, ncRNAs, etc that are highly differentially expressed could also be of interest.
+	We suggest this as a potential route of further research.
+•Sensitivity.xlsx: These data are used in the results section under the Exploratory and Wilcox
+R chunk. This file (provided by Prof. Daniel Stoebel) contains all the E. coli gene names, 
+bnums, direction of regulation, and the sensitivity to RpoS. This allows us to match DEGs 
+identified by our pipeline to sensitive, insensitive, and linear genes.
+•genesofinterest.txt: These data are used under the 'Overlay Trajectories and Relative mRNA plot'
+R chunk. This is simply a list of genes, their bnums, and their sensitivities. These genes
+were hand-picked by Prof. Stoebel as genes he was particularly interested in.
+•uniprot-yourlist_M201907266746803381A1F0E0DB47453E0216320D5EB8C6I.tab: These data are used
+in the Exploratory Analysis R chunk and is located within the 'Extra' folder. This file 
+contains predicted functions, GO terms, metal associations, etc. This file was generated 
+by submitting the DEG list to uniprot online GUI and selecting interesting features.
+	***Mining UNIPROT Db and finding ways to integrate Rstudio with this Db more seamlessly
+	could be a direction of further research.
+	
 
