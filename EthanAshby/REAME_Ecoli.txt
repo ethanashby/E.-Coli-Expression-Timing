@@ -1,0 +1,15 @@
+README 
+E. coli timing analysis and the sigmoidal model
+Ethan Ashby
+Email: ecadeashby@gmail.com, Phone #: (925)586-4191
+
+Hello! This Github folder contains all the data and code needed to produce a
+writeup (E.coli_final_analysis.pdf) which details the analysis of the timing of E. coli 
+gene expression in response to cell starvation. Gene expression timing analysis is
+conducted through sigmoidal models fit through the ImpulseDE2 package. The properties of
+these sigmoidal models are first assessed through simulations, and then are applied to the
+data at hand.
+
+This README will give you a tour of this folder and will walk you through how to reproduce
+these analyses.
+
