@@ -66,14 +66,17 @@ library(topGO)
 library(org.EcK12.eg.db)
 library(data.table)
 
-#functions
+#define functions
 foo<-function(){}
+
 sigmoid_function<-function(b, h_0, h_1, t_1, t){
 h_0 + (h_1-h_0)*(1/(1+exp(1)^(-b*(t-t_1))))
 }
+
 impulse_function<-function(b, h_0, h_1, h_2, t_1, t_2, t){
   (1/h_1)*(h_0+(h_1-h_0)/(1+exp(-b*(t-t_1))))*(h_2+(h_1-h_2)/(1+exp(b*(t-t_2))))
 }
+
 enrich<-function(core, type){
   selection <- function(x) TRUE
   GeneList <- c(1:length(core))
@@ -942,7 +945,7 @@ As shown below, the onset times for 87 sensitive and 15 insensitive monotonic DE
 
 Wilcox-rank sum tests with unequal variance and confidence levels of 0.95 were conducted on the onset times for sensitive and insensitive genes to ascertain whether there was a signficant difference between the onset times of these two groups. Considering all onset times for the 102 total genes, the true location was nearly significantly different from 0 (p=0.05275). When the 8 potentially misclassified sensitive genes noted above were removed from the analysis, the true location shift was highly significantly different from 0 (p=0.008586), suggesting that sensitive genes may turn on significantly earlier than insensitive genes.
 
-```{r Exploratory Plots and Wilcox, cache=TRUE, warning=FALSE, eval=TRUE, echo=FALSE, message=FALSE}
+```{r Timing Plots and Wilcox, cache=TRUE, warning=FALSE, eval=TRUE, echo=FALSE, message=FALSE}
 #####################
 #Find sensitive and insensitive genes
 #####################
@@ -1139,6 +1142,7 @@ ggplot(box_df, aes(x=time, y=value, fill=sens))+geom_boxplot(position=position_d
 ```
 
 ```{r, Overlay Sigmoids, cache=TRUE, warning=FALSE, eval=TRUE, echo=FALSE, message=FALSE, results='hide', fig.keep='all'}
+
 ###Make smooth function version of above, show all or just median profile
 overlay_sigmoids<-function(contplot_times, median){
   if (median==FALSE){
@@ -1403,6 +1407,7 @@ abline(h=0, lty=2)
 uniroot(f=d2, interval=c(50,100))
 
 #plot sigmoid functions with [Rpos] instead of time
+#define function, if you only want the median profiles plotted, select median=TRUE
 
 overlay_rpos_sigmoids<-function(contplot_times, median){
   if (median==FALSE){
@@ -1440,6 +1445,7 @@ cont_df$time=as.numeric(cont_df$time)
 
 a<-ggplot(cont_df, aes(x=time, y=value, group=series))+geom_line(aes(color=sens))+ylim(0,1)+theme_bw(base_size=15)+theme(plot.title = element_text(size=15, face="bold"))+ylab("Relative mRNA level")+xlab("RpoS Conc. [M]")+ggtitle("Sigmoid Trajectories of of Sensitive & Insensitive Genes in Starvation Time Course")
 print(a)}
+  
 else if (median==TRUE){
 to_plot<-as.data.frame(matrix(ncol=3, nrow=length(contplot_times)))
 to_plot[,1]<-predict(rpos_spline, x=contplot_times)$y

@@ -1,0 +1,16 @@
+---
+title: "Next_steps.rmd"
+output: html_document
+author: "Ethan Ashby"
+contact: "ecadeashby@gmail.com"
+---
+
+This file includes next steps for future research, with code included as potential jumping-off points.
+
+Mining UNIPROT Db and finding ways to integrate Rstudio with this Db more seamlessly
+could be a direction of further research.
+
+A major consideration here: we only focus on CDS sequences because we were particularly
+interested in the timing of expressions of genes. However, other genomic features such
+as IGRs, ncRNAs, etc that are highly differentially expressed could also be of interest.
+We suggest this as a potential route of further research.
