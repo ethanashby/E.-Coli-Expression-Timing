@@ -23,7 +23,7 @@ library(data.table)
 ############################################ GET DEGs LIST ####################################################
 
 rawcounts <- read.table("18-5-23_Proc_ibet_TC_for_deseq.txt", header = TRUE) %>%
-  select(-ib_3h_1)
+  dplyr :: select(-ib_3h_1)
 
 rawcounts <- rawcounts %>%
   dplyr::distinct(gene, .keep_all = TRUE)
