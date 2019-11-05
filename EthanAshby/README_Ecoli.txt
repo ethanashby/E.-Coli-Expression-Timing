@@ -94,3 +94,5 @@ and explores the genes that are ID'ed as DE by ImpulseDE2 but aren't labeled as 
 17) Overlay Sigmoids RpoS x-axis: not printed in pdf. We were interested in rerunning the timing analysis by fitting the models to RpoS concentrations instead of time. Unfortunately, simply supplying RpoS concentrations instead of time to ImpulseDE2 didn't work (the program never finished running). So I used a spline to predict RpoS concentrations from input times, and then just had the RpoS concentrations on all the plot axes. Didn't really change much, but coud be a direction of future research.
 
 
+
+
