@@ -760,7 +760,7 @@ plot_trajectories$time<-unique(Times)
 plot_trajectories <- melt(plot_trajectories ,  id.vars = 'time', variable.name = 'series')
 plot_trajectories$score<-scores
 
-e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient2(low = "yellow", mid="orange", high = "red", name="Score", breaks=waiver(), limits=c(-1, 1), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(genes[k], ": Plots of all expression trajectories (init in black)", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)+geom_vline(xintercept=median(sim_params_to_plot$t), linetype="dashed", color="magenta")+labs(subtitle=paste("Disp:", round(disp,2), sep=" "))
+e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient2(low = "yellow", mid="orange", high = "red", name="Score", breaks=waiver(), limits=c(-1, 1), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(genes[k], ": Plots of all simulated expression trajectories", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)+geom_vline(xintercept=median(sim_params_to_plot$t), linetype="dashed", color="magenta")+labs(subtitle=paste("Disp:", round(disp,2), sep=" "))
 print(grid.arrange(b, c, d, ncol=1))
 print(e)
 }
@@ -773,7 +773,8 @@ paste("Difference between init t and median t:", round(abs(as.numeric(geneparams
 #plot distributions of monotonic t params
 ggplot(monoparamsdf, aes(x=t))+geom_density(color="blue", fill="cyan")+ xlim(50,75)+ggtitle("Distribution of sigmoid t params of 740 monotonic E. coli DEGs")
 ```
-Figure 9: 
+
+Figure 9: Above: distribution of simulated sigmoid parameters compared to 'true' sigmoid params with additional time points. Below: plots of 'true' (black) and simulated (colored) sigmoid profiles and their simulated data points with additional time points. Simulated profiles are colored based on correlation to 'true' profile. Initial/'true' t param (dotted blue line) and median simulated t param (dotted magenta line) are also plotted. Simulated trajectories more closely track the 'true' profile when these additional TPs, particularly around the spike in expression, are included.
 
 ### Effect of outliers on Sigmoid Parameters
 
@@ -873,7 +874,7 @@ plot_trajectories$time<-unique(times)
 plot_trajectories <- melt(plot_trajectories ,  id.vars = 'time', variable.name = 'series')
 plot_trajectories$score<-scores
 
-e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient2(low = "yellow", mid="orange", high = "red", name="Score", breaks=waiver(), limits=c(-1, 1), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(genes[k], ": Plots of all expression trajectories (init in black)", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)+geom_vline(xintercept=median(sim_params_to_plot$t), linetype="dashed", color="magenta")+labs(subtitle=paste("Disp:", round(disp,2), sep=" "))
+e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient2(low = "yellow", mid="orange", high = "red", name="Score", breaks=waiver(), limits=c(-1, 1), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(genes[k], ": Plots of all simulated expression trajectories", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)+geom_vline(xintercept=median(sim_params_to_plot$t), linetype="dashed", color="magenta")+labs(subtitle=paste("Disp:", round(disp,2), sep=" "))
 print(grid.arrange(b, c, d, ncol=1))
 print(e)
 }
@@ -882,14 +883,17 @@ paste("IQR:", round(IQR(sim_params_to_plot$t),2), sep=" ")
 paste("Difference between init t and median t:", round(abs(as.numeric(geneparams[4])-median(sim_params_to_plot$t)), 2), sep=" ")
 ```
 
+Figure 10: Above: distribution of simulated sigmoid parameters compared to 'true' sigmoid params with additional time points. Below: plots of 'true' (black) and simulated (colored) sigmoid profiles and their simulated data points with additional time points. Simulated profiles are colored based on correlation to 'true' profile. Initial/'true' t param (dotted blue line) and median simulated t param (dotted magenta line) are also plotted. Simulated trajectories more closely track the 'true' profile when these additional TPs, particularly around the spike in expression, are included.
+
 ### The Sigmoid Model is Descriptive of Many Monotonic DEGs
 
-All previous simulations were done with gadB as the reference gene. As shown below, the sigmoid model is descriptive of many monotonic DEGs. A random sample of 12 monotonic DEGs were selected and their expression profiles, along with their 100 simulated expression profiles were plotted. Onset time parameters between simulated and real trajectories were nearly identical across all simulations.
+All previous simulations were done with gadB as the reference gene. This was done because the sigmoid model was descriptive of gadB's expression profile, and gadB was a highly differentially expressed gene that was of interest to Prof Stoebel. As shown below, the sigmoid model is descriptive of many monotonic DEGs (Figure 11 & 12). A random sample of 12 monotonic DEGs were selected and their expression profiles, along with their 100 simulated expression profiles were plotted. Onset time parameters between simulated and real trajectories were nearly identical across all simulations.
 
+\setcounter{figure}{11}
 ![Sigmoid function is descriptive of monotonic DEGs](./Images/sigmoid_descriptive_1.png)
 ![Sigmoid function is descriptive of monotonic DEGs](./Images/sigmoid_descriptive_2.png)
 
-```{r Several Genes, message=FALSE, eval=TRUE, warning=FALSE, echo=FALSE, results='hide', fig.keep='all'}
+```{r Several Genes, cache=T, eval=FALSE, echo=FALSE, warning=FALSE, message=FALSE, results='hide', fig.keep='all'}
 ###################
 #Simulate Several Genes
 ###################
@@ -984,11 +988,11 @@ do.call(grid.arrange, c(plot_list[7:12], ncol=2, nrow=3))
 
 ### *Sigmoid parameters of Sensitive and Insensitive Genes*
 
-After identifying the limitations and utilities of the sigmoid model, we applied the sigmoid model and its onset time parameter to address whether sensitive genes turn on significantly earlier in the cell starvation time course than insensitive genes. 
+After learning more abour the sigmoid model through simulations, we applied the sigmoid model and in particular, its onset time (t) parameter, to address whether sensitive genes turn on significantly earlier in the cell starvation time course than insensitive genes. 
 
-As shown below, the onset times for 87 sensitive and 15 insensitive monotonic DEGs overlap somewhat, however, the density plot of onset times for the insensitive genes appears bimodal, with one peak overlapping with the sensitive peak and the other peak occuring later than the sensitive peak. Unexpectedly, a number of sensitive genes have onset times later than the large, single peak: 8 sensitive genes turned on later than 75 minutes (prpE, treA, ydcV, ydgD, astB, yeaG, crr, and cysQ).
+As shown below, the distributin of onset times for 87 sensitive and 15 insensitive monotonic DEGs overlap (Figure 13). Unexpectedly, a number of sensitive genes have onset times later than the large, single peak: 8 sensitive genes turned on later than 75 minutes (prpE, treA, ydcV, ydgD, astB, yeaG, crr, and cysQ).
 
-Wilcox-rank sum tests with unequal variance and confidence levels of 0.95 were conducted on the onset times for sensitive and insensitive genes to ascertain whether there was a signficant difference between the onset times of these two groups. Considering all onset times for the 102 total genes, the true location was nearly significantly different from 0 (p=0.05275). When the 8 potentially misclassified sensitive genes noted above were removed from the analysis, the true location shift was highly significantly different from 0 (p=0.008586), suggesting that sensitive genes may turn on significantly earlier than insensitive genes.
+Wilcox-rank sum tests with unequal variance and significance of 0.05 were conducted on the onset times for sensitive and insensitive genes to ascertain whether there was a significant difference between the onset times of these two groups. Considering all onset times for the 102 total genes, the true location was nearly significantly different from 0 (p=0.05275), suggesting that sensitive genes may turn on significantly earlier than insensitive genes.
 
 ```{r Timing Plots and Wilcox, cache=TRUE, warning=FALSE, eval=TRUE, echo=FALSE, message=FALSE}
 #####################
@@ -1069,9 +1073,9 @@ ggplot(on_times, aes(x=t, color=type, fill=type))+geom_density(alpha=0.5)+xlim(5
 #####################
 #Test for Significance
 #####################
-#Run Wilcox Rank Sum test on these t params, trimming off outliers (>70) for sens_on
+#Run Wilcox Rank Sum test on these t params
 wilcox.test(sensitivedf$t, insensitivedf$t, alternative="two.sided", mu=0, var.equal=FALSE, conf.level=0.95)
-wilcox.test(sensitivedf$t[sensitivedf$t<75], insensitivedf$t, alternative="two.sided", mu=0, var.equal=FALSE, conf.level=0.95)
+#wilcox.test(sensitivedf$t[sensitivedf$t<75], insensitivedf$t, alternative="two.sided", mu=0, var.equal=FALSE, conf.level=0.95)
 #nearly significant at the p=0.05 level if we include probably misclassified genes. If we exclude late to turn on genes (t>75 mins), we get p=0.009.
 
 #extract peak t params for later plotting
@@ -1081,6 +1085,7 @@ insens_peak<-density(insensitivedf$t)$x[which.max(density(insensitivedf$t)$y)]
 #extract potentially misclassified sensitive genes
 as.character(sensvec[sensitivedf$t>75])
 ```
+Figure 13: Distribution of onset time params for sensitive and insensitive DEGs.
 
 Using the R package TopGO, sensitive and insensitive genes were enriched for Gene Ontology (GO) terms (at Kolmorgorov-Smirnoff p value<0.05). These GO terms were added to plots of sensitive and insensitive sigmoidal/impulse trajectories faceted by RpoS sensitivity. Sensitive genes were enriched in Membrane, Response to Abiotic Stimuli, and Transporter Terms while insensitive Genes were enriched in Cytoplasmic and Metabolic Processes. The vast majority of genes in both groups appeared monotonically upregulated, however, a number of insensitive genes appeared to achieve higher peak levels of expression than sensitive genes.
 
@@ -1223,7 +1228,7 @@ sensdf$sens<-rep("Sensitive", dim(sensdf)[1])
 cont_df<-rbind(sensdf, insensdf)
 cont_df$time=as.numeric(cont_df$time)
 
-a<-ggplot(cont_df, aes(x=time, y=value, group=series))+geom_line(aes(color=sens))+ylim(0,1)+theme_bw(base_size=15)+theme(plot.title = element_text(size=15, face="bold"))+ylab("Relative mRNA level")+ggtitle("Sigmoid Trajectories of of Sensitive & Insensitive Genes in Starvation Time Course")
+a<-ggplot(cont_df, aes(x=time, y=value, group=series))+geom_line(aes(color=sens, linetype=sens))+scale_linetype_manual(values=c("solid", "dotted"))+ylim(0,1)+theme_bw(base_size=15)+theme(plot.title = element_text(size=15, face="bold"))+ylab("Relative mRNA level")+ggtitle("Sigmoid Trajectories of of Sensitive & Insensitive Genes")
 print(a)}
 else if (median==TRUE){
 to_plot<-as.data.frame(matrix(ncol=3, nrow=length(contplot_times)))
@@ -1257,16 +1262,17 @@ to_plot[,3]<-apply(na.omit(t(cont_insens_means)), 2, FUN = median)
 
 colnames(to_plot)<-c("time","sensitive","insensitive")
 
-b<-ggplot(to_plot, aes(x=time, y=sensitive))+geom_line(color="dodgerblue3")+geom_line(data=to_plot, aes(x=time, y=insensitive), color="#F8766D")+ylim(0,1)+theme_bw(base_size=15)+theme(plot.title = element_text(size=15, face="bold"))+ylab("Relative mRNA level")+ggtitle("Median Sigmoid Trajectories of Sensitive & Insensitive Genes in Starvation Time Course")
+b<-ggplot(to_plot, aes(x=time, y=sensitive))+geom_line(color="dodgerblue3", linetype="solid")+geom_line(data=to_plot, aes(x=time, y=insensitive), color="#F8766D", linetype="dotted")+ylim(0,1)+theme_bw(base_size=15)+theme(plot.title = element_text(size=15, face="bold"))+ylab("Relative mRNA level")+ggtitle("Median Sigmoid Trajectories of Sensitive & Insensitive Genes in Starvation Time Course")
 print(b)
 }
 }
 
 overlay_sigmoids(seq(30, 150, 1), median=FALSE)
-overlay_sigmoids(seq(50, 90, 1), median=TRUE)
+overlay_sigmoids(seq(50, 150, 1), median=TRUE)
 ```
+Figure 14: Above: Relative mRNA plots of all sensitive and insensitive DEGs. Below: Relative mRNA plots of median sensitive and insensitive DEGs.
 
-Adapting the analysis performed by Wong *et al.* 2017 on data from Conway *et. al* 2014, we generated plots of relative expression levels for median sigmoidal trajectories for sensitive and insensitive genes. Shown above are the sigmoid-determined expression levels scaled by expression at the 90 minute TP. The plot illustrates that the relative transcription of sensitive genes begins earlier than in insensitive genes during cell starvation. 
+Analysis performed by Wong *et al.* 2017 on data from Conway *et. al* 2014, scaled expression of insenstive, sensitive, and linear genes relative to their expressions at the final time points, and IQR's of scaled expressions were plotted at various time points. This graphic showed the relative expression of sensitive genes being induced much earlier than insensitive ones. Adapting this analysis, we generated plots of relative expression levels for median sigmoidal trajectories for sensitive and insensitive genes. Shown above are the sigmoid-determined expression levels scaled by expression at the 150 minute TP. The plot illustrates that the relative transcription of sensitive genes begins earlier than in insensitive genes during cell starvation. 
 
 ```{r Exploratory Analysis, echo=F, eval=F, message=F, cache=T}
 ########################
@@ -1538,7 +1544,7 @@ In summary, E. coli posesses general stress response to a variety of environment
 
 The transcriptomic remodeling of WT and RpoS-knockout bacterial strains were measured during a 150 minute cell starvation time course RNA-Seq experiment. Differentially expressed genes were identified using a thoughtfully-constructed pipeline of TC differential expression tools (Spies *et al.* 2019). Sigmoidal models were fit to DEGs using ImpulseDE2. The robustness to dispersion-based noise, outliers, and number of TPs were asssessed using simulations, and the onset time (t) parameter was found to be stable to high dispersions and outliers. What's more, increasing the number of time points (particularly around the spike in transcription witnessed between 55 and 75 minutes) increased the confidence in the t parameter, which will inform the design of future timing-oriented RNA-seq studies aiming to study *E. coli* responses to cell starvation.
 
-Density plots of onset times for insensitive and sensitive DEGs revealed that while sensitive genes peak onset time occurs earlier than the insensitive group, several sensitive genes turn on much later. A Wilcoxon Rank Sum test identified a significant difference between the onset times of these two groups (p=0.05). While there was no biological justification for excluding outliers, when the late-to-turn-on sensitive genes were excluded,  a highly signficantly different shift between the distributions of sensitive and insensitive genes was discovered using a Wilcox Rank Sum test (p=0.008). Visualization of median sigmoidal curves for each group also suggested that sensitive genes turn on earlier than insensitive genes during cell starvation, analysis consistent with work done by Wong *et al.* on another dataset (Wong *et. al* 2017). What's more, sensitive genes were found to be enriched for membrane and membrane transport GO terms, while insensitive genes were enriched in cytosolic, response to abiotic stimulus, and metabolic terms.
+Density plots of onset times for insensitive and sensitive DEGs revealed that while sensitive genes peak onset time occurs earlier than the insensitive group, several sensitive genes turn on much later (Figure 13). A Wilcoxon Rank Sum test identified a significant difference between the onset times of these two groups (p=0.05). While there was no biological justification for excluding outliers, when the late-to-turn-on sensitive genes were excluded,  a highly signficantly different shift between the distributions of sensitive and insensitive genes was discovered using a Wilcox Rank Sum test (p=0.008). Visualization of median sigmoidal curves for each group also suggested that sensitive genes turn on earlier than insensitive genes during cell starvation, analysis consistent with work done by Wong *et al.* on another dataset (Wong *et. al* 2017). What's more, sensitive genes were found to be enriched for membrane and membrane transport GO terms, while insensitive genes were enriched in cytosolic, response to abiotic stimulus, and metabolic terms.
 
 However, RpoS sensitivity does not describe the global trend of transcriptomic response to cell starvation in *E. coli*. Density plots of the onset times for monotonic DEGs indicated that the vast majority of differentially expressed genes turned on at around the same time, with very weak multimodality. The most sensitive genes turn on at around 62 minutes, while most insensitive genes turn on at around 65 minutes. Thus, sensitive and insensitive genes did not turn on abnormally early nor abnormally late respectively compared to all the other monotonic DEGs, and the short time separating their onsets suggests suggests that RpoS sensitivity may not describe the global transcriptional response to cell starvation.
 
