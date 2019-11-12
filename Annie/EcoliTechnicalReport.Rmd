@@ -144,19 +144,31 @@ Differential expression measures whether or not the gene expression of the same 
 
 ### **3.1** DESeq2
 
-According to Mistry, Meeta, *et al.* (2017), `DESeq2` determines differential expression by:  
-1. Normalization of the raw counts by determining size factors and adjusting each sample by the size factor.   
-2. Measuring gene-wise dispersions, where dispersion, $\alpha$, measures the variability within biological replicates of the same sample: $\text {Var} = \mu + \alpha\mu^2$.   
-3. Adjusting dispersion estimates to fit a curve created by the distribution of dispersion estimates. Use `plotDispEsts()` to see fit estimates for yourself.  
-4. Comparing normalized counts with a negative binomial distribution with the sample mean, $\mu_j$, and gene-wise dispersion parameter, $\alpha_j$ to determine the significance of differential expression.
-
+According to Mistry, Meeta, *et al.* (2017), `DESeq2` determines differential expression by:
+\begin{itemize}\item[1.] Normalization of the raw counts by determining size factors and adjusting each sample by the size factor.   
+\item[2.] Measuring gene-wise dispersions, where dispersion, $\alpha$, measures the variability within biological replicates of the same sample: $\text {Var} = \mu + \alpha\mu^2$.   
+\item[3.] Adjusting dispersion estimates to fit a curve created by the distribution of dispersion estimates. Use `plotDispEsts()` to see fit estimates for yourself.  
+\item[4.] Comparing normalized counts with a negative binomial distribution with the sample mean, $\mu_j$, and gene-wise dispersion parameter, $\alpha_j$ to determine the significance of differential expression.
+\end{itemize}
 Because we already ran `DESeq()` above, we can now extract the significant results. We chose a p-value of 0.01 to be consistent across all of our work. `DESeq2` is a two-sample comparison method, but we want to accurately determine differentially expressed genes across *all* the time points. Therefore, we compute:   
-1. A list of differentially expressed genes between the treatment group (wild-type *E. coli*) at 0 minutes and 150 minutes.  
-2. A list of differentially expressed genes between the treatment group and the control (delta-RpoS *E. coli*), both at 150 minutes.  
-3. The intersection of the gene lists, or the genes that appear in both lists, which we use as our differentially expressed gene list from `DESeq2`.
+\begin{itemize}\item[1.] A list of differentially expressed genes between the treatment group (wild-type *E. coli*) at 0 minutes and 150 minutes.  
+\item[2.] A list of differentially expressed genes between the treatment group and the control (delta-RpoS *E. coli*), both at 150 minutes.  
+\item[3.] The intersection of the gene lists, or the genes that appear in both lists, which we use as our differentially expressed gene list from `DESeq2`.
 
 ```{r}
-ggplot()
+x = data.frame("x" = c(2:148))
+ggplot()+
+  geom_line(data = x, aes(x = x, y = 150.1206 + (1.860341e-15 - 150.1206)/(1 + (x/20.62591)^3.591457)), color = "blue") +
+  geom_line(data = x,aes(x = x, y = x), color = "red", lty = 2, arrow = arrow(length = unit(0.03,"npc"), ends = "both", type = "closed")) +
+  geom_point(aes(x = 0, y = 0)) +
+  geom_point(aes(x = 150, y = 0)) +
+  geom_point(aes(x = 150, y = 150)) +
+  geom_segment(aes(x = 150, y = 3, xend = 150, yend = 147), color = "red", lty = 2,arrow = arrow(length = unit(0.03,"npc"), ends = "both", type = "closed")) +
+  geom_text(aes(x = 78, y = 86, label = "WT 0 vs. WT 150", angle = 30)) +
+  geom_text(aes(x = 145, y = 75, label = "WT 150 vs. dRpoS 150", angle = 90)) +
+  geom_text(aes(x = 115, y = 145, label = "gene expression over time")) +
+  theme(panel.background = element_blank(), axis.line = element_line(color = "black")) +
+  labs(x= "time",y = "expression")
 ```
 
 ```{r extract DESeq2 results, results='hide', message=FALSE, warning=FALSE}
@@ -196,11 +208,11 @@ knitr::include_graphics("Sig_Model.png")
 ```
 
 According to Fischer et al., ImpulseDE2 determines differential expression by:  
-**1.** running DESeq2 and adjusting gene-wise dispersion estimates from DESeq2 to fit a curve;  
-**2.** computing size factors and normalizing counts;  
-**3.** fitting null and alternative model to each of the genes;  
-**4.** fitting sigmoid model to the treatment condition -- in our case, samples containing the RpoS translation factor;   
-**5.** and determining differential expression based on these models fits to each gene using a log-likelihood ratio (Fischer et al. 2018).  
+**1.** Running DESeq2 and adjusting gene-wise dispersion estimates from DESeq2 to fit a curve.  
+**2.** Computing size factors and normalizing counts.  
+**3.** Fitting null and alternative model to each of the genes.  
+**4.** Fitting sigmoid model to the treatment condition -- in our case, samples containing the RpoS translation factor.   
+**5.** Determining differential expression based on these models fits to each gene using a log-likelihood ratio (Fischer et al. 2018).  
 
 ```{r prep ImpulseDE2}
 # Set up design matrix with 
