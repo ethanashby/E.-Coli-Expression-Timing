@@ -189,7 +189,7 @@ EC_sig_genes <- intersect(EC_sig_genes$WT_compare$sig, EC_sig_genes$treat_compar
 
 ### **3.2** ImpulseDE2
 
-ImpulseDE2 is a serial method for differential expression that models data based on the impulse model, which has parameters $t_1, t_2, h_0, h_1, \text{and } b.$ The impulse model has a spike, characterized by its beginning height, $h_0$, inflection point, $t_1$, its height, $h_1$, and its slope at $t_1$, $b$. Then the model decreases into its steady state, characterized by the second inflection point, $t_2$, and its final height, $h_2$.
+ImpulseDE2 is a serial method for differential expression that models data based on the impulse model, which has parameters $t_1, t_2, h_0, h_1, \text{and } b.$ The impulse model has a spike, characterized by its beginning height, $h_0$, inflection point, $t_1$, its height, $h_1$, and its slope at $t_1$, $b$. Then the model decreases into its steady state, characterized by the second inflection point, $t_2$, and its final height, $h_2$. The expression profiles of our data hint at a sigmoid trajectory, where the first four parameters ($h_0,t,\beta,h_1$) are the same, but $h_1$ is the final expression.
 
 ```{r echo = FALSE}
 knitr::include_graphics("Sig_Model.png")
