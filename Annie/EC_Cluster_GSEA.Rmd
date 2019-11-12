@@ -5,7 +5,6 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-ec_rawcounts <- read.table("~/Documents/RNA-Seq/LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.txt", header = TRUE)
 
 library(ggplot2)
 library(tidyr)
@@ -13,14 +12,20 @@ library(shiny)
 library(dplyr)
 library(DESeq2)
 library(readr)
+library(cluster)
 library(fgsea)
-```
+library(data.table)
+library(ImpulseDE2)
 
-```{r}
+ec_rawcounts <- read.table("LB_Time_Course_GCA_000005845.2_ASM584v2_genomic_counts.txt", header = TRUE)
+
 #format data for normalization
 ec_rawcounts_norm <- ec_rawcounts
 rownames(ec_rawcounts_norm) <- ec_rawcounts_norm$Geneid
 ec_rawcounts_norm <- ec_rawcounts_norm %>% dplyr::select(-Geneid)
+```
+
+```{r}
 ec_coldata <- data.frame(names = colnames(ec_rawcounts_norm)) %>%
   separate(names, c("treat", "rep_time"), "_") %>%
   mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
@@ -32,7 +37,7 @@ ec_coldata <- data.frame(names = colnames(ec_rawcounts_norm)) %>%
                                            ifelse(substr(rep_time,start=3,stop = 3) == "5", 120, 150)))))) %>%
   mutate(treat = ifelse(treat == "JH01", "WT","dRpoS")) %>%
   mutate(timetreat = paste(treat,time,sep = "")) %>%
-  dplyr::select(-rep_time)
+  select(-rep_time)
 rownames(ec_coldata) <- colnames(ec_rawcounts_norm)
 ```
 
@@ -42,135 +47,31 @@ ec_dds <- DESeqDataSetFromMatrix(ec_rawcounts_norm, colData = ec_coldata, design
 ec_dds_de <- DESeq(ec_dds)
 ec_norm_counts <- data.frame(counts(ec_dds_de, normalized = TRUE)) %>%
   mutate(Geneid = ec_rawcounts$Geneid)
-
 ```
 
 ```{r}
-## same T comparison
-
-contrast_list = c()
-contrast_vect = c(30,60,90,120,150)
-dRpoS_list = c("dRpoS30","dRpoS60","dRpoS90","dRpoS120","dRpoS150")
-WT_list = c("WT30","WT60","WT90","WT120","WT150")
-
-for (i in 1:5) {
-  de_results <- results(ec_dds_de, contrast = c("timetreat", WT_list[i],dRpoS_list[i]))
+de_results <- results(ec_dds_de, contrast = c("timetreat", "dRpoS150", "WT0"))
   
-  resSig <- de_results[ which(de_results$padj < 0.01 ), ]
+resSig <- de_results[ which(de_results$padj < 0.01 ), ]
   
-  resSig$Geneid <- rownames(resSig)
-
-  ind <- match(ec_norm_counts$Geneid,resSig$Geneid)
-
-  ec_norm_counts$sig <- resSig$Geneid[ind]
+#resSig <- resSig[ which(abs(resSig$log2FoldChange) > 2 ), ]
   
-  norm_counts_sig <- ec_norm_counts %>%
-   filter(!is.na(ec_norm_counts$sig)) %>%
-   dplyr::select(-sig) %>%
-   mutate(contrast = contrast_vect[i])
-  contrast_list[[i]] = norm_counts_sig
-}
+resSig$gene <- rownames(resSig)
 
-norm_counts_contrast <- bind_rows(contrast_list[[1]],contrast_list[[2]],contrast_list[[3]],contrast_list[[4]],contrast_list[[5]])
+ind <- match(ec_norm_counts$Geneid,resSig$gene)
 
-```
-
-```{r}
-##T_0 and T WT comparison
-ec_norm_counts <- data.frame(counts(ec_dds_de, normalized = TRUE)) %>%
-  mutate(Geneid = ec_rawcounts$Geneid)
-contrast_list_0 = c()
-contrast_vect = c(30,60,90,120,150)
-dRpoS_list = c("dRpoS30","dRpoS60","dRpoS90","dRpoS120","dRpoS150")
-WT_list = c("WT30","WT60","WT90","WT120","WT150")
-
-for (i in 1:5) {
-
-  de_results <- results(ec_dds_de, contrast = c("timetreat", "WT0", WT_list[i]))
-    
-  resSig <- de_results[ which(de_results$padj < .01 ), ]
-    
-  resSig$Geneid <- rownames(resSig)
+ec_norm_counts$sig <- resSig$gene[ind]
   
-  ind <- match(ec_norm_counts$Geneid,resSig$Geneid)
-  
-  ec_norm_counts$sig <- resSig$Geneid[ind]
-    
-  norm_counts_sig <- ec_norm_counts %>%
-   filter(!is.na(ec_norm_counts$sig)) %>%
-   dplyr::select(-sig) %>%
-   mutate(contrast = contrast_vect[i])
-  
-  contrast_list_0[[i]] <- norm_counts_sig
-  
-}
+norm_counts_sig <- ec_norm_counts %>%
+ filter(!is.na(ec_norm_counts$sig)) %>%
+ select(-sig)
 
-norm_counts_contrast_0 <- bind_rows(contrast_list_0[[1]], contrast_list_0[[2]], contrast_list_0[[3]], contrast_list_0[[4]], contrast_list_0[[5]])
+rownames(norm_counts_sig) <- norm_counts_sig$Geneid
 
-```
+norm_counts_sig <- norm_counts_sig %>%
+  select(-Geneid)
 
-```{r}
-norm_counts_contrast_0 <- data.frame(norm_counts_contrast_0$Geneid,norm_counts_contrast_0$contrast)
-
-colnames(norm_counts_contrast_0) <- c("Geneid","contrast")
-
-ec_intersection <- inner_join(norm_counts_contrast_0,norm_counts_contrast, by = c("Geneid","contrast"))
-
-EC_gene_name <- distinct(data.frame(ec_intersection$Geneid))
-
-colnames(EC_DEGs) <- "Geneid"
-
-EC_DEGs <- left_join(EC_DEGs, ec_norm_counts, by = "Geneid")
-
-EC_DEGs
-
-table(ec_intersection$contrast)
-
-#hi <- ec_intersection[which(ec_intersection$contrast == "150"),]
-
-#contrast_list_0[[5]]
-
-contrast_intersection_150 <- intersect(contrast_list_0[[5]]$Geneid, contrast_list[[5]]$Geneid)
-
-cross = length(intersect(contrast_intersection_150, EC_DEGs$Geneid))
-area1 <- length(contrast_intersection_150)
-area2 <- length(EC_DEGs$Geneid)
-library(VennDiagram)
-grid.newpage()
-draw.pairwise.venn(area1,area2,cross,category = c("150","union"))
-```
-
-
-```{r}
-## TIDY
-ec_counts_gath <- ec_intersection %>%
-  gather(-c(Geneid,contrast), key="sample", value = "rawcount") %>%
-  separate(sample, c("treat", "rep_time"), "_") %>%
-  mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
-                        ifelse(substr(rep_time,start=1,stop = 1) == "B", 2, 3))) %>%
-  mutate(time = ifelse(substr(rep_time,start=3,stop = 3) == "1", 0,
-                      ifelse(substr(rep_time,start=3,stop = 3) == "2", 30,
-                             ifelse(substr(rep_time,start=3,stop = 3) == "3", 60,
-                                    ifelse(substr(rep_time,start=3,stop = 3) == "4", 90,
-                                           ifelse(substr(rep_time,start=3,stop = 3) == "5", 120, 150)))))) %>%
-  mutate(treat = ifelse(treat == "JH01", "WT","dRpoS")) %>%
-  select(-c(rep_time))
-                                      
-ec_counts_sum <- ec_counts_gath %>%
-  group_by(Geneid, contrast, treat, time) %>%
-  dplyr::summarise(avecount = mean(rawcount)) %>%
-  mutate(gtreat = paste(Geneid,treat,sep = "")) %>%
-  filter(treat == "WT")
-```
-
-
-```{r}
-ec_counts_sum %>%
-  ggplot(aes(x=time, y=log2(avecount))) +
-  geom_line(aes(color = gtreat), alpha = 0.5) +
-  geom_vline(aes(xintercept = contrast)) +
-  facet_wrap(~contrast) +
-  theme(legend.position = "none")
+head(norm_counts_sig)
 ```
 
 
@@ -199,21 +100,22 @@ test_data <- impulse_results@lsModelFits$case
 test_data <- subListExtract(test_data,"lsSigmoidFit")
 
 test_data <- subListExtract(test_data, "vecSigmoidParam")
-p_data <- bind_cols("padj" = impulse_results@dfImpulseDE2Results$padj, "Geneid" = impulse_results@dfImpulseDE2Results$Gene)
+
+p_data <- bind_cols("padj" = impulse_results@dfImpulseDE2Results$padj, "gene" = impulse_results@dfImpulseDE2Results$Gene)
 
 df_param <- c()
 
 for (i in 1:length(test_data)){
 df_param$beta[i] <- test_data[[i]][1]
 df_param$h0[i] <- test_data[[i]][2]
-df_param$Geneid[i] <- names(test_data)[i]
+df_param$gene[i] <- names(test_data)[i]
 df_param$h1[i] <- test_data[[i]][3]
 df_param$t[i] <- test_data[[i]][4]
 }
 
-df_param <- data.frame(bind_cols("Geneid" = df_param$gene, "beta" = df_param$beta,"t" = df_param$t, "h0" = df_param$h0, "h1" = df_param$h1))
+df_param <- data.frame(bind_cols("gene" = df_param$gene, "beta" = df_param$beta,"t" = df_param$t, "h0" = df_param$h0, "h1" = df_param$h1))
 
-df_param <- left_join(df_param, p_data, by = "Geneid")
+df_param <- left_join(df_param, p_data, by = "gene")
 
 df_param
 df_param <- df_param %>%
@@ -226,422 +128,10 @@ df_param <- left_join(df_param_padj,df_param, by = "padj")
 
 t_val_df <- data.frame(df_param$t)
 
-rownames(t_val_df) <- df_param$Geneid
+rownames(t_val_df) <- df_param$gene
 ```
 
 ```{r}
-library(NbClust)
-
-k_test <- NbClust(data = EC_DEGs, diss = NULL, distance = "minkowski",
-        min.nc = 2, max.nc = 20, method = "kmeans")
-```
-
-```{r}
-EC_DEGs <- left_join(EC_DEGs, ec_norm_counts, by = "Geneid")
-
-rownames(EC_DEGs) <- EC_DEGs$Geneid
-EC_DEGs <- EC_DEGs %>%
-  dplyr::select(-c(Geneid, sig))
-
-k = 6
-
-dissimilarity_matrix <- 1 - cor(t(EC_DEGs),method = "spearman")
-
-EC_DESeq_clusters <- cluster::pam(x = dissimilarity_matrix, k = k, pamonce = 5)
-
-EC_DESeq_cluster_list <- data.frame("cluster" = EC_DESeq_clusters$clustering, "Geneid" = names(EC_DESeq_clusters$clustering))
-
-EC_DESeq_medoids <- data.frame("medoids" = (EC_DESeq_clusters$medoids))
-
-ec_norm_counts <- ec_normcounts %>%
-  mutate("Geneid" = rownames(ec_normcounts))
-
-EC_DESeq_cluster_df <- left_join(EC_DESeq_cluster_list, ec_norm_counts, by = "Geneid") %>%
-  dplyr::select(-sig)
-
-EC_counts_gath <- EC_DESeq_cluster_df %>%
-  gather(-c(Geneid,cluster), key="sample", value = "rawcount") %>%
-  separate(sample, c("treat", "rep_time"), "_") %>%
-  mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
-                        ifelse(substr(rep_time,start=1,stop = 1) == "B", 2, 3))) %>%
-  mutate(time = ifelse(substr(rep_time,start=3,stop = 3) == "1", 0,
-                      ifelse(substr(rep_time,start=3,stop = 3) == "2", 30,
-                             ifelse(substr(rep_time,start=3,stop = 3) == "3", 60,
-                                    ifelse(substr(rep_time,start=3,stop = 3) == "4", 90,
-                                           ifelse(substr(rep_time,start=3,stop = 3) == "5", 120, 150)))))) %>%
-  mutate(treat = ifelse(treat == "JH01", "WT","dRpoS")) %>%
-  dplyr::select(-c(rep_time))
-                                      
-EC_counts_sum <- EC_counts_gath %>%
-  group_by(Geneid, cluster, treat, time) %>%
-  dplyr::summarise(avecount = mean(rawcount)) %>%
-  filter(treat == "WT")
-colnames(EC_counts_sum) <- c("Geneid", "cluster", "treat", "time", "avecount")
-
-EC_counts_sum %>%
-  ggplot(aes(x=time, y=log2(avecount))) +
-  geom_line(aes(color = Geneid), alpha = 0.5) +
-  facet_wrap(~cluster) +
-  theme(legend.position = "none")
-```
-
-```{r}
-library(dplyr)
-library("tidyverse")
-library(stringr)
-library(DESeq2)
-library("Hmisc")
-library(cluster)
-library("mclust")
-library(readr)
-
-ec_Counts <- EC_counts_sum
-bnum = "b[0-9]{4}"
-ec_Counts$GeneidBackup = ec_Counts$Geneid
-ec_Counts <- ec_Counts %>% separate(GeneidBackup, c("feature", "rest"), sep="[:]")
-ec_Counts <- ec_Counts %>% filter(feature %in% c("CDS")) 
-genename = ":[a-z]{3}.."
-ec_cds <- ec_Counts %>% filter(feature %in% c("CDS")) 
-ec_Counts$genename <- str_extract(ec_Counts$Geneid, genename)
-ec_Counts$bnum <- str_extract(ec_Counts$Geneid, bnum)
-ec_Counts <- ec_Counts %>% separate(genename, into = c("colon", "genename"), sep = ":") %>%
-  dplyr::select(-colon)
-```
-
-```{r}
-
-EC_DEG_counts <- c()
-EC_counts_sum <- EC_counts_sum %>%
-  ungroup() %>%
-  dplyr::select(-c(treat, cluster, time, avecount))
-
-EC_DEG_counts <- left_join(ec_Counts, EC_counts_sum, by = "Geneid") %>%
-  ungroup()
-
-EC_DEG_counts <- EC_DEG_counts %>%
-  dplyr::select(-c("treat", "Geneid"))
-
-sens <- read_csv("ec_past_EX.csv") %>%
-  dplyr::select(c(geneName,bNum, `Differentially expressed between 0% and 100% RpoS`,`Direction of regulation`, sensitivity)) %>%
-  filter(`Differentially expressed between 0% and 100% RpoS` == TRUE) %>%
-  dplyr::select(-`Differentially expressed between 0% and 100% RpoS`)
-
-colnames(sens) <- c("genename","bnum","direction of regulation", "sensitivity")
-
-sens_unique <- unique(sens, by = "genename")
-
-sens_ec_deg_counts <- left_join(EC_DEG_counts, sens_unique, by = "genename") %>%
-  dplyr::select(genename, bnum.y, cluster, time, avecount, sensitivity)
-
-sens_breakdown <- matrix(data = NA, nrow = 3, ncol = 6)
-sens_breakdown[1,2:4] <- table(sens_ec_deg_counts$cluster[which(sens_ec_deg_counts$sensitivity == "insensitive")])/36
-sens_breakdown[2,1:5] <- table(sens_ec_deg_counts$cluster[which(sens_ec_deg_counts$sensitivity == "sensitive")])/36
-sens_breakdown[3,1:6] <- table(sens_ec_deg_counts$cluster[which(sens_ec_deg_counts$sensitivity == "linear")])/36
-colnames(sens_breakdown) <- c("clus_1", "clus_2", "clus_3", "clus_4", "clus_5", "clus_6")
-rownames(sens_breakdown) <- c("insensitive", "sensitive", "linear")
-print(data.frame(sens_breakdown))
-
-#plot clusters colored by sensitivity
-sens_ec_deg_counts %>%
-  filter(!is.na(sensitivity)) %>%
-  filter(sensitivity != "linear") %>%
-  ggplot(aes(x=time, y=log2(avecount))) +
-  geom_line(aes(group = genename, color = sensitivity), alpha = 0.3) +
-  facet_wrap(~cluster)
-
-# separate by sensitivity
-sens_ec_deg_counts %>%
-  filter(!is.na(sensitivity)) %>%
-  #filter(sensitivity != "linear") %>%
-  ggplot(aes(x=time, y=log2(avecount))) +
-  geom_line(aes(group = genename, color = sensitivity), alpha = 0.3) +
-  facet_wrap(~sensitivity)
-```
-
-
-all three intersect!!!
-
-```{r}
-all_intersect <- left_join(data.frame("Geneid" = all_intersect), ec_norm_counts, by = "Geneid")
-
-rownames(all_intersect) <- all_intersect$Geneid
-all_intersect <- all_intersect %>%
-  dplyr::select(-c(Geneid, sig))
-
-k = 6
-
-dissimilarity_matrix <- 1 - cor(t(all_intersect),method = "spearman")
-
-EC_DESeq_clusters <- cluster::pam(x = dissimilarity_matrix, k = k, pamonce = 5)
-
-EC_DESeq_cluster_list <- data.frame("cluster" = EC_DESeq_clusters$clustering, "Geneid" = names(EC_DESeq_clusters$clustering))
-
-EC_DESeq_medoids <- data.frame("medoids" = (EC_DESeq_clusters$medoids))
-
-ec_norm_counts <- ec_normcounts %>%
-  mutate("Geneid" = rownames(ec_normcounts))
-
-EC_DESeq_cluster_df <- left_join(EC_DESeq_cluster_list, ec_norm_counts, by = "Geneid") %>%
-  dplyr::select(-sig)
-
-EC_counts_gath <- EC_DESeq_cluster_df %>%
-  gather(-c(Geneid,cluster), key="sample", value = "rawcount") %>%
-  separate(sample, c("treat", "rep_time"), "_") %>%
-  mutate(rep = ifelse(substr(rep_time,start=1,stop = 1) == "A", 1, 
-                        ifelse(substr(rep_time,start=1,stop = 1) == "B", 2, 3))) %>%
-  mutate(time = ifelse(substr(rep_time,start=3,stop = 3) == "1", 0,
-                      ifelse(substr(rep_time,start=3,stop = 3) == "2", 30,
-                             ifelse(substr(rep_time,start=3,stop = 3) == "3", 60,
-                                    ifelse(substr(rep_time,start=3,stop = 3) == "4", 90,
-                                           ifelse(substr(rep_time,start=3,stop = 3) == "5", 120, 150)))))) %>%
-  mutate(treat = ifelse(treat == "JH01", "WT","dRpoS")) %>%
-  dplyr::select(-c(rep_time))
-                                      
-EC_counts_sum <- EC_counts_gath %>%
-  group_by(Geneid, cluster, treat, time) %>%
-  dplyr::summarise(avecount = mean(rawcount)) %>%
-  filter(treat == "WT")
-colnames(EC_counts_sum) <- c("Geneid", "cluster", "treat", "time", "avecount")
-
-EC_counts_sum %>%
-  ggplot(aes(x=time, y=log2(avecount))) +
-  geom_line(aes(color = Geneid), alpha = 0.5) +
-  facet_wrap(~cluster) +
-  theme(legend.position = "none")
-```
-
-```{r}
-library(dplyr)
-library("tidyverse")
-library(stringr)
-library(DESeq2)
-library("Hmisc")
-library(cluster)
-library("mclust")
-library(readr)
-
-ec_Counts <- EC_counts_sum
-bnum = "b[0-9]{4}"
-ec_Counts$GeneidBackup = ec_Counts$Geneid
-ec_Counts <- ec_Counts %>% separate(GeneidBackup, c("feature", "rest"), sep="[:]")
-ec_Counts <- ec_Counts %>% filter(feature %in% c("CDS")) 
-genename = ":[a-z]{3}.."
-ec_cds <- ec_Counts %>% filter(feature %in% c("CDS")) 
-ec_Counts$genename <- str_extract(ec_Counts$Geneid, genename)
-ec_Counts$bnum <- str_extract(ec_Counts$Geneid, bnum)
-ec_Counts <- ec_Counts %>% separate(genename, into = c("colon", "genename"), sep = ":") %>%
-  dplyr::select(-colon)
-```
-
-```{r}
-EC_DEG_counts <- c()
-EC_counts_sum <- EC_counts_sum %>%
-  ungroup() %>%
-  dplyr::select(-c(treat, cluster, time, avecount))
-
-EC_DEG_counts <- left_join(ec_Counts, EC_counts_sum, by = "Geneid") %>%
-  ungroup()
-
-EC_DEG_counts <- EC_DEG_counts %>%
-  dplyr::select(-c("treat", "Geneid"))
-
-sens <- read_csv("ec_past_EX.csv") %>%
-  dplyr::select(c(geneName,bNum, `Differentially expressed between 0% and 100% RpoS`,`Direction of regulation`, sensitivity)) %>%
-  filter(`Differentially expressed between 0% and 100% RpoS` == TRUE) %>%
-  dplyr::select(-`Differentially expressed between 0% and 100% RpoS`)
-
-colnames(sens) <- c("genename","bnum","direction of regulation", "sensitivity")
-
-sens_unique <- unique(sens, by = "genename")
-
-sens_ec_deg_counts <- left_join(EC_DEG_counts, sens_unique, by = "genename") %>%
-  dplyr::select(genename, bnum.y, cluster, time, avecount, sensitivity)
-
-sens_breakdown <- matrix(data = NA, nrow = 3, ncol = 6)
-sens_breakdown[1,3:5] <- table(sens_ec_deg_counts$cluster[which(sens_ec_deg_counts$sensitivity == "insensitive")])/36
-sens_breakdown[2,c(1,3,4,5)] <- table(sens_ec_deg_counts$cluster[which(sens_ec_deg_counts$sensitivity == "sensitive")])/36
-sens_breakdown[3,1:6] <- table(sens_ec_deg_counts$cluster[which(sens_ec_deg_counts$sensitivity == "linear")])/36
-colnames(sens_breakdown) <- c("clus_1", "clus_2", "clus_3", "clus_4", "clus_5", "clus_6")
-rownames(sens_breakdown) <- c("insensitive", "sensitive", "linear")
-print(data.frame(sens_breakdown))
-
-#plot clusters colored by sensitivity
-sens_ec_deg_counts %>%
-  filter(!is.na(sensitivity)) %>%
-  filter(sensitivity != "linear") %>%
-  ggplot(aes(x=time, y=log2(avecount))) +
-  geom_line(aes(group = genename, color = sensitivity), alpha = 0.3) +
-  facet_wrap(~cluster)
-
-# separate by sensitivity
-sens_ec_deg_counts %>%
-  filter(!is.na(sensitivity)) %>%
-  filter(sensitivity != "linear") %>%
-  ggplot(aes(x=time, y=avecount)) +
-  geom_line(aes(group = genename, color = sensitivity), alpha = 0.9) +
-  facet_wrap(~factor(sensitivity, labels = c("cytoplasm and metabolic process", "membrane response to abiotic\n stimulus and transporter"))) +
-  theme(panel.background = element_blank(), strip.text.x = element_text(size = 15), axis.text = element_text(size = 10), legend.title = element_text(size = 15), legend.text = element_text(size = 15), axis.title = element_text(size = 15))
-```
-
-```{r}
-impulse_pval <- data.frame("Geneid" = impulse_ecoli$dfImpulseDE2Results$Gene, "padj" = impulse_ecoli$dfImpulseDE2Results$padj)
-
-impulse_pval
-ec_Stat <- impulse_pval
-bnum = "b[0-9]{4}"
-ec_Stat$GeneidBackup = ec_Stat$Geneid
-ec_Stat <- ec_Stat %>% separate(GeneidBackup, c("feature", "rest"), sep="[:]")
-ec_Stat <- ec_Stat %>% filter(feature %in% c("CDS")) 
-genename = ":[a-z]{3}.."
-ec_cds <- ec_Stat %>% filter(feature %in% c("CDS")) 
-ec_Stat$genename <- str_extract(ec_Stat$Geneid, genename)
-ec_Stat$bnum <- str_extract(ec_Stat$Geneid, bnum)
-ec_Stat <- ec_Stat %>% separate(genename, into = c("colon", "genename"), sep = ":") %>%
-  dplyr::select(-c(colon,feature,rest,bnum))
-
-stat_all <- ec_Stat$padj
-names(stat_all) <- ec_Stat$genename
-  
-
-cluster1 <- EC_DESeq_cluster_list %>%
-  filter(cluster == 1) %>%
-  dplyr::select(-cluster)
-cluster1 <- left_join(cluster1,ec_Stat, by = "Geneid") %>%
-  filter(!is.na(genename))
-stat_cluster1 <- cluster1$padj
-names(stat_cluster1) <- cluster1$genename
-
-cluster2 <- EC_DESeq_cluster_list %>%
-  filter(cluster == 2) %>%
-  dplyr::select(-cluster)
-cluster2 <- left_join(cluster2,ec_Stat, by = "Geneid") %>%
-  filter(!is.na(genename))
-stat_cluster2 <- cluster2$padj
-names(stat_cluster2) <- cluster2$genename
-
-cluster3 <- EC_DESeq_cluster_list %>%
-  filter(cluster == 3) %>%
-  dplyr::select(-cluster)
-cluster3 <- left_join(cluster3,ec_Stat, by = "Geneid") %>%
-  filter(!is.na(genename))
-stat_cluster3 <- cluster3$padj
-names(stat_cluster3) <- cluster3$genename
-
-cluster4 <- EC_DESeq_cluster_list %>%
-  filter(cluster == 4) %>%
-  dplyr::select(-cluster)
-cluster4 <- left_join(cluster4,ec_Stat, by = "Geneid") %>%
-  filter(!is.na(genename))
-stat_cluster4 <- cluster4$padj
-names(stat_cluster4) <- cluster4$genename
-
-cluster5 <- EC_DESeq_cluster_list %>%
-  filter(cluster == 5) %>%
-  dplyr::select(-cluster)
-cluster5 <- left_join(cluster5,ec_Stat, by = "Geneid") %>%
-  filter(!is.na(genename))
-stat_cluster5 <- cluster5$padj
-names(stat_cluster5) <- cluster5$genename
-
-cluster6 <- EC_DESeq_cluster_list %>%
-  filter(cluster == 6) %>%
-  dplyr::select(-cluster)
-cluster6 <- left_join(cluster6,ec_Stat, by = "Geneid") %>%
-  filter(!is.na(genename))
-stat_cluster6 <- cluster6$padj
-names(stat_cluster6) <- cluster6$genename
-
-sens_name <- c()
-sens_name$sensitive <- sens$genename[which(sens$sensitivity=="sensitive")]
-sens_name$insensitive <- sens$genename[which(sens$sensitivity=="insensitive")]
-sens_name$linear <- sens$genename[which(sens$sensitivity=="linear")]
-
-fgsea(sens_name, stat_all, minSize = 1, maxSize = 500, nperm = 10000)
-fgsea(sens_name, stat_cluster2, minSize = 1, maxSize = 500, nperm = 10000)
-fgsea(sens_name, stat_cluster3, minSize = 1, maxSize = 500, nperm = 10000)
-fgsea(sens_name, stat_cluster4, minSize = 1, maxSize = 500, nperm = 10000)
-fgsea(sens_name, stat_cluster5, minSize = 1, maxSize = 500, nperm = 10000)
-fgsea(sens_name, stat_cluster6, minSize = 1, maxSize = 500, nperm = 10000)
-```
-
-```{r}
-####################################################################################################
-#Fuzzy clustering of DEGs (2+ methods)
-####################################################################################################
-library(Mfuzz)
-
-#DEGcounts
-DEGcounts <- tryp_DEGs
-length_counts <- length(DEGcounts$gene)
-DEGcounts <- left_join(DEGcounts, rawcounts, by = "gene")
-rownames(DEGcounts) <- DEGcounts$gene
-DEGcounts <- DEGcounts %>%
-  dplyr::select(-gene)
-###Too many clusters in all TPs. Let's only look at first 24 hours
-cluster_data<-matrix(ncol=5,nrow=length_counts)
-for (i in 1:length_counts){
-  cluster_data[i,]<-c(mean(DEGcounts[i, 1:3]), mean(DEGcounts[i, 4:5]), mean(DEGcounts[i, 6:8]), mean(DEGcounts[i, 9:11]), mean(DEGcounts[i, 12:14]))}
-rownames(cluster_data)<-rownames(DEGcounts)
-colnames(cluster_data)<-c(0,3,6,12,24)
-Set<-ExpressionSet(cluster_data)
-Set.s<-standardise(Set)
-cl<-mfuzz(Set.s, c=6, m=mestimate(Set.s))
-
-#Gap stat Kmeans to estimate number of clusters... may take a few mins
-gap <- clusGap(scaleddata, kmeans, 20, B = 100, verbose = interactive())
-plot(gap, main = "Gap statistic")
-abline(v=which.max(gap$Tab[,3]), lty = 2)
-
-#plot clusters
-pdf("tryp_fuzzy_clusters.pdf", onefile = TRUE)
-mfuzz.plot(Set.s, cl, mfrow=c(2,3), time.labels = c(0,3,6,12,24), min.mem=0, new.window=FALSE)
-dev.off()
-
-cores<-acore(Set.s, cl, min.acore=0.8)
-
-###Run GO Analysis on these clusters
-write.csv(cores[[1]]$NAME, "Cluster1_of_6_Tryp.csv")
-write.csv(cores[[2]]$NAME, "Cluster2_of_6_Tryp.csv")
-write.csv(cores[[3]]$NAME, "Cluster3_of_6_Tryp.csv")
-write.csv(cores[[4]]$NAME, "Cluster4_of_6_Tryp.csv")
-write.csv(cores[[5]]$NAME, "Cluster2_of_6_Tryp.csv")
-write.csv(cores[[6]]$NAME, "Cluster6_of_6_Tryp.csv")
-
-####################################################################################################
-#STRICTER DEG LIST: GENES ID'ED BY ALL 3
-#RUN GO ANALYSIS in TriTrypDb for each of the cores (Cellular Component, Biological Process, & Mol Function)
-####################################################################################################
-set1<-intersect(rownames(sigres),maSigProGenes)
-set2<-intersect(tryp_impulse$vecDEGenes,rownames(sigres))
-small_DEGs<-unique(c(intersect(set1, set2)))
-
-#Look at smaller subset (3-way intersection)
-small_DEGcounts<-tccount1[match(small_DEGs, rownames(tccount1)),]
-sdvec<-c()
-for (i in 1:dim(small_DEGcounts)[1]){
-  sdvec<-c(sdvec, sd(small_DEGcounts[i,]))}
-small_DEGcounts<-small_DEGcounts[sdvec>0,]
-small_DEGcounts<-small_DEGcounts+0.1
-small_DEGcounts<-as.matrix(small_DEGcounts)
-small_cluster_data<-matrix(ncol=5,nrow=dim(small_DEGcounts)[1])
-for (i in 1:dim(small_DEGcounts)[1]){
-  small_cluster_data[i,]<-c(mean(small_DEGcounts[i, 1:3]), mean(small_DEGcounts[i, 4:2]), mean(small_DEGcounts[i, 6:8]), mean(small_DEGcounts[i, 9:11]), mean(small_DEGcounts[i, 12:14]))}
-rownames(small_cluster_data)<-rownames(small_DEGcounts)
-colnames(small_cluster_data)<-c(0,3,6,12,24)
-Set<-ExpressionSet(small_cluster_data)
-Set.s<-standardise(Set)
-small_cl<-mfuzz(Set.s, c=6, m=mestimate(Set.s))
-small_scaleddata<-t(scale(t(small_cluster_data)))
-
-gap_small <- clusGap(small_scaleddata, kmeans, 10, B = 100, verbose = interactive())
-plot(gap_small, main = "Gap statistic for DEGs Identified by all 3 tools")
-abline(v=which.max(gap$Tab[,3]), lty = 2)
-
-pdf("tryp_fuzzy_clusters.pdf", onefile = TRUE)
-mfuzz.plot(Set.s, small_cl, mfrow=c(1,3), time.labels = c(0,3,6,12,24), min.mem=0, new.window=FALSE)
-dev.off()
-#extract alpha-cores of 0.72
-cores<-acore(Set.s, cl, min.acore=0.3)
 
 ```
 
