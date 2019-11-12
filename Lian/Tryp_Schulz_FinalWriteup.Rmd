@@ -345,9 +345,14 @@ Here, we will be saving our DE genes from maSigPro, impulse, and DESeq2.
 #Generate Final DEGList
 ###################################################################################################################################
 
-tryp_DEGs <-unique(c(intersect(rownames(resSig_012),maSigProGenes), intersect(tryp_impulse$vecDEGenes,rownames(resSig_012)), intersect(maSigProGenes, tryp_impulse$vecDEGenes)))
+tryp_DEGs_all_3_way <-unique(c(intersect(rownames(resSig_012),maSigProGenes), intersect(tryp_impulse$vecDEGenes,rownames(resSig_012)), intersect(maSigProGenes, tryp_impulse$vecDEGenes)))
 write.csv(tryp_DEGs, "tryp_DEGs.csv")
-
+tryp_DEGs_3_way <- intersect(intersect(rownames(resSig_012),maSigProGenes),tryp_impulse$vecDEGenes)
+tryp_DEGs_3_way_df <- data.frame(tryp_DEGs_3_way) %>% `colnames<-`("gene")
+#we need to have the log, padj, pvalue, and logfoldchange which is given by resSig012 from DESeq2
+#make data frame of resSig_012
+resSig_012_df <- data.frame(resSig_012)
+tryp_DEGs_3_way_sig_df <- right_join(resSig_012_df,tryp_DEGs_3_way_df,by  = "gene")
 ```
 # 3 Clustering  
 
@@ -362,15 +367,15 @@ K-medoids clusters the data set of *n* objects into *k* clusters, with the numbe
 
 ```{r,include =  FALSE}
 
-ind <- match(norm_counts$gene,resSig_012$gene)
+ind <- match(norm_counts$gene,tryp_DEGs_3_way_sig_df$gene)
  
-norm_counts$sig <- resSig_012$gene[ind]
+norm_counts$sig <- tryp_DEGs_3_way_sig_df$gene[ind]
 
-norm_counts$padj <- resSig_012$padj[ind]
+norm_counts$padj <- tryp_DEGs_3_way_sig_df$padj[ind]
 
-norm_counts$pval <- resSig_012$pvalue[ind]
+norm_counts$pval <- tryp_DEGs_3_way_sig_df$pvalue[ind]
 
-norm_counts$log2FoldChange <- resSig_012$log2FoldChange[ind]
+norm_counts$log2FoldChange <- tryp_DEGs_3_way_sig_df$log2FoldChange[ind]
 
 norm_counts <- norm_counts %>%
   filter(!is.na(sig))
@@ -480,6 +485,10 @@ cluster_lists[6] <- counts_sum_norm %>% filter(cluster == 6)
 list_6 <- paste(cluster_lists[[6]], sep = "")
 write.csv(list_6, file = "tryp_cluster_6.csv")
  
+counts_sum_norm %>%
+  ggplot(aes(x=time, y=avecount, color=gene)) +
+  geom_line(alpha = .5) +
+  theme(legend.position = "none")
 ```
 
 # 3.2 Fuzzy Clustering  
@@ -496,7 +505,7 @@ Although we already used PAM as a method of clustering, because there are numero
 
  
 #DEGcounts
-DEGcounts<-as.matrix(TBcounts[rownames(TBcounts) %in% rownames(tb_DEGS),])
+DEGcounts<-as.matrix(TBcounts[rownames(TBcounts) %in% tryp_DEGs_3_way_sig_df$gene,])
  
 ###Too many clusters in all TPs. Let's only look at first 24 hours
 cluster_data<-matrix(ncol=5,nrow=dim(DEGcounts)[1])
@@ -519,7 +528,9 @@ mfuzz.plot(Set.s, cl, mfrow=c(2,3), time.labels = c(0,3,6,12,24), min.mem=0, new
 dev.off()
 
 cores<-acore(Set.s, cl, min.acore=0.8)
+```
 
+```{r}
 ###Run GO Analysis on these clusters
 write.csv(cores[[1]]$NAME, "Cluster1_of_6_Tryp.csv")
 write.csv(cores[[2]]$NAME, "Cluster2_of_6_Tryp.csv")
@@ -537,8 +548,8 @@ In these clusters, we can see that we set the cluster number to 6, and that each
 #STRICTER DEG LIST: GENES ID'ED BY ALL 3
 #RUN GO ANALYSIS in TriTrypDb for each of the cores (Cellular Component, Biological Process, & Mol Function)
 ####################################################################################################
-set1<-intersect(rownames(resSig_012),maSigProGenes)
-set2<-intersect(tryp_impulse$vecDEGenes,rownames(resSig_012))
+set1<-intersect(tryp_DEGs_3_way_sig_df$gene,maSigProGenes)
+set2<-intersect(tryp_impulse$vecDEGenes,tryp_DEGs_3_way_sig_df$gene)
 small_DEGs<-unique(c(intersect(set1, set2)))
 
 #Look at smaller subset (3-way intersection)
@@ -564,13 +575,14 @@ plot(gap_small, main = "Gap statistic for DEGs Identified by all 3 tools")
 abline(v=which.max(gap$Tab[,3]), lty = 2)
 
 pdf("tryp_fuzzy_clusters.pdf", onefile = TRUE)
-```
-
-```{r, echo = FALSE}
 mfuzz.plot(Set.s, small_cl, mfrow=c(1,3), time.labels = c(0,3,6,12,24), min.mem=0, new.window=FALSE)
 dev.off()
 #extract alpha-cores of 0.72
 cores<-acore(Set.s, cl, min.acore=0.3)
+```
+
+```{r, echo = FALSE}
+
 ```
 
 
