@@ -23,7 +23,11 @@ library(data.table)
 ############################################ GET DEGs LIST ####################################################
 
 rawcounts <- read.table("18-5-23_Proc_ibet_TC_for_deseq.txt", header = TRUE) %>%
+<<<<<<< HEAD
   dplyr :: select(-ib_3h_1)
+=======
+  dplyr::select(-ib_3h_1)
+>>>>>>> 496a1c69f3e9d3cfae4462183426f81e3d15f211
 
 rawcounts <- rawcounts %>%
   dplyr::distinct(gene, .keep_all = TRUE)
@@ -31,7 +35,7 @@ rawcounts <- rawcounts %>%
 rownames(rawcounts) <- rawcounts$gene
 
 rawcounts <- rawcounts %>%
-  select(-gene)
+  dplyr::select(-gene)
 
 rawcounts <- rawcounts[rowSums(rawcounts) > 0,]
 
@@ -85,7 +89,7 @@ neg_DEGs <- neg_DEGs_metrics %>%
 
 rownames(norm_counts) <- norm_counts$gene
 norm_counts <- norm_counts %>%
-  select(-c(gene, sig, padj, pval, log2FoldChange))
+  dplyr::select(-c(gene, sig, padj, pval, log2FoldChange))
 
 norm_counts
 ```
@@ -278,7 +282,7 @@ DESeq_medoids <- data.frame("medoids" = (DESeq_clusters$medoids))
 norm_counts <- norm_counts %>%
   mutate("gene" = rownames(norm_counts))
 
-DESeq_cluster_df <- left_join(norm_counts, DESeq_clusters, by = "gene")
+DESeq_cluster_df <- left_join(DESeq_clusters, norm_counts, by = "gene")
 
 DESeq_cluster_counts <- DESeq_cluster_df #%>%
   select(-c(padj,pval,log2FoldChange))
@@ -676,3 +680,94 @@ counts_sum_norm %>%
   geom_line(alpha = .5) +
   theme(legend.position = "none")
 ```
+
+
+
+```{r}
+##############################################################################################
+#Fuzzy clustering of DEGs (2+ methods)
+##############################################################################################
+library(Mfuzz)
+#DEGcounts
+rawcounts <- read.table("18-5-23_Proc_ibet_TC_for_deseq.txt", header = TRUE) %>%
+  dplyr::select(-ib_3h_1)
+tryp_DEGs <- read.csv("tryp_DEGs.csv")
+colnames(tryp_DEGs) <- "gene"
+
+rawcounts <- rawcounts %>%
+  dplyr::distinct(gene, .keep_all = TRUE)
+
+rownames(rawcounts) <- rawcounts$gene
+
+DEGcounts <- left_join(tryp_DEGs, rawcounts, by = "gene")
+
+###Too many clusters in all TPs. Let's only look at first 24 hours
+cluster_data<-matrix(ncol=5,nrow=dim(DEGcounts)[1])
+for (i in 1:dim(DEGcounts)[1]){
+  cluster_data[i,]<-c(mean(DEGcounts[i, 1:3]), mean(DEGcounts[i, 4:5]), mean(DEGcounts[i, 6:8]), mean(DEGcounts[i, 9:11]), mean(DEGcounts[i, 12:14]))}
+rownames(cluster_data)<-rownames(DEGcounts)
+colnames(cluster_data)<-c(0,3,6,12,24)
+Set<-ExpressionSet(cluster_data)
+Set.s<-standardise(Set)
+cl<-mfuzz(Set.s, c=6, m=mestimate(Set.s))
+
+#Gap stat Kmeans to estimate number of clusters... may take a few mins
+gap <- clusGap(scaleddata, kmeans, 20, B = 100, verbose = interactive())
+plot(gap, main = "Gap statistic")
+abline(v=which.max(gap$Tab[,3]), lty = 2)
+
+#plot clusters
+pdf("tryp_fuzzy_clusters.pdf", onefile = TRUE)
+mfuzz.plot(Set.s, cl, mfrow=c(2,3), time.labels = c(0,3,6,12,24), min.mem=0, new.window=FALSE)
+dev.off()
+
+cores<-acore(Set.s, cl, min.acore=0.8)
+
+###Run GO Analysis on these clusters
+write.csv(cores[[1]]$NAME, "Cluster1_of_6_Tryp.csv")
+write.csv(cores[[2]]$NAME, "Cluster2_of_6_Tryp.csv")
+write.csv(cores[[3]]$NAME, "Cluster3_of_6_Tryp.csv")
+write.csv(cores[[4]]$NAME, "Cluster4_of_6_Tryp.csv")
+write.csv(cores[[5]]$NAME, "Cluster2_of_6_Tryp.csv")
+write.csv(cores[[6]]$NAME, "Cluster6_of_6_Tryp.csv")
+
+####################################################################################################
+#STRICTER DEG LIST: GENES ID'ED BY ALL 3
+#RUN GO ANALYSIS in TriTrypDb for each of the cores (Cellular Component, Biological Process, & Mol Function)
+####################################################################################################
+set1<-intersect(rownames(sigres),maSigProGenes)
+set2<-intersect(tryp_impulse$vecDEGenes,rownames(sigres))
+small_DEGs<-unique(c(intersect(set1, set2)))
+
+#Look at smaller subset (3-way intersection)
+small_DEGcounts<-tccount1[match(small_DEGs, rownames(tccount1)),]
+sdvec<-c()
+for (i in 1:dim(small_DEGcounts)[1]){
+  sdvec<-c(sdvec, sd(small_DEGcounts[i,]))}
+small_DEGcounts<-small_DEGcounts[sdvec>0,]
+small_DEGcounts<-small_DEGcounts+0.1
+small_DEGcounts<-as.matrix(small_DEGcounts)
+small_cluster_data<-matrix(ncol=5,nrow=dim(small_DEGcounts)[1])
+for (i in 1:dim(small_DEGcounts)[1]){
+  small_cluster_data[i,]<-c(mean(small_DEGcounts[i, 1:3]), mean(small_DEGcounts[i, 4:2]), mean(small_DEGcounts[i, 6:8]), mean(small_DEGcounts[i, 9:11]), mean(small_DEGcounts[i, 12:14]))}
+rownames(small_cluster_data)<-rownames(small_DEGcounts)
+colnames(small_cluster_data)<-c(0,3,6,12,24)
+Set<-ExpressionSet(small_cluster_data)
+Set.s<-standardise(Set)
+small_cl<-mfuzz(Set.s, c=6, m=mestimate(Set.s))
+small_scaleddata<-t(scale(t(small_cluster_data)))
+
+gap_small <- clusGap(small_scaleddata, kmeans, 10, B = 100, verbose = interactive())
+plot(gap_small, main = "Gap statistic for DEGs Identified by all 3 tools")
+abline(v=which.max(gap$Tab[,3]), lty = 2)
+
+pdf("tryp_fuzzy_clusters.pdf", onefile = TRUE)
+mfuzz.plot(Set.s, small_cl, mfrow=c(1,3), time.labels = c(0,3,6,12,24), min.mem=0, new.window=FALSE)
+dev.off()
+#extract alpha-cores of 0.72
+cores<-acore(Set.s, cl, min.acore=0.3)
+```
+
+
+
+

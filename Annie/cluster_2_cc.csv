@@ -1,9 +1,0 @@
-ID	Name	Bgd count	Result count	Result gene list	Pct of bgd	Fold enrichment	Odds ratio	P-value	Benjamini	Bonferroni
-GO:0003839	gamma-glutamylcyclotransferase activity	1	1	Tb927.7.3220,	100.0	99.73	inf	0.0100269957579	0.319275633503	0.962591592754
-GO:0004385	guanylate kinase activity	1	1	Tb927.10.11700,	100.0	99.73	inf	0.0100269957579	0.319275633503	0.962591592754
-GO:0016840	carbon-nitrogen lyase activity	2	1	Tb927.7.3220,	50.0	49.87	100.0	0.019954727094	0.319275633503	1.0
-GO:0016842	amidine-lyase activity	2	1	Tb927.7.3220,	50.0	49.87	100.0	0.019954727094	0.319275633503	1.0
-GO:0046789	host cell surface receptor binding	2	1	Tb927.1.5170,	50.0	49.87	100.0	0.019954727094	0.319275633503	1.0
-GO:0046812	host cell surface binding	2	1	Tb927.1.5170,	50.0	49.87	100.0	0.019954727094	0.319275633503	1.0
-GO:0004536	deoxyribonuclease activity	3	1	Tb927.11.6090,	33.3	33.24	49.99	0.0297841640595	0.408468535674	1.0
-GO:0017176	phosphatidylinositol N-acetylglucosaminyltransferase activity	5	1	Tb927.5.3680,	20.0	19.95	24.99	0.0491519884004	0.563445786752	1.0

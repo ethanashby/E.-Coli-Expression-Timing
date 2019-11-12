@@ -159,8 +159,7 @@ server <- function(input, output, session) {
         geom_line(aes(y=log2(avecount), color = gtreat, linetype = treat), alpha = 0.5) +
         geom_vline(aes(xintercept = contrast)) +
         theme(legend.position = "none",panel.background = element_blank(), axis.title = element_text(size = 16)) +
-        labs(x = "time (min)", y = expression("log"[2]~"(avg count)")) +
-        geom_line(aes(x = time, y = time))
+        labs(x = "time (min)", y = expression("log"[2]~"(avg count)"))
     }
   })
   
