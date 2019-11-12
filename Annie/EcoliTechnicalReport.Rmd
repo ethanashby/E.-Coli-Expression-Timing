@@ -191,7 +191,9 @@ EC_sig_genes <- intersect(EC_sig_genes$WT_compare$sig, EC_sig_genes$treat_compar
 
 ImpulseDE2 is a serial method for differential expression that models data based on the impulse model, which has parameters $t_1, t_2, h_0, h_1, \text{and } b.$ The impulse model has a spike, characterized by its beginning height, $h_0$, inflection point, $t_1$, its height, $h_1$, and its slope at $t_1$, $b$. Then the model decreases into its steady state, characterized by the second inflection point, $t_2$, and its final height, $h_2$.
 
-!["Sigmoid model of expression has parameters h_0, the height of expression at time 0, t, the time at beta, beta, the maximum slope, and h_1, the final slope."]("/EthanAshby/Sig Model.png")
+```{r echo = FALSE}
+knitr::include_graphics("Sig_Model.png")
+```
 
 According to Fischer et al., ImpulseDE2 determines differential expression by:  
 **1.** running DESeq2 and adjusting gene-wise dispersion estimates from DESeq2 to fit a curve;  
@@ -201,7 +203,7 @@ According to Fischer et al., ImpulseDE2 determines differential expression by:
 **5.** and determining differential expression based on these models fits to each gene using a log-likelihood ratio (Fischer et al. 2018).  
 
 ```{r prep ImpulseDE2}
-# Set up design matrix
+# Set up design matrix with 
 ec_design <- data.frame(Sample=colnames(ec_rawcounts),
                         Condition=c(rep("case",6), rep("control",6), rep("case",6), 
                                     rep("control",6), rep("case",6), 
@@ -698,7 +700,7 @@ Gene Ontology (GO) analysis is a tool used in order to determine whether specifi
 
 To answer this question, we use a package called `TopGO` which has a database with all of *E. coli*'s GO terms. We can specify the statistical method used to determine whether a GO term is significant within a group of genes. Below, I provide code for the Fisher method, but the other option, a Kolmogorov-Smirnov test, is a simple substitution. GO terms are classified within three different categories: Biological Processes, Molecular Functions, and Cellular Components. After consultation with Professor Stoebel, Biological Process appears to be the most relevant in this research. However, the other two types have positives that could be more useful in other work: Molecular Function can offer specific, molecular-level information and Cellular Component can provide broad information about cell parts and structure.
 
-```{r TopGO on clusters, message=FALSE, warning=FALSE}
+```{r TopGO on clusters, message=FALSE, warning=FALSE, cache=TRUE}
 # Create a function that runs GO analysis, 
 # with the two parameters being the type of GO and the cluster number.
 go_enrich <- function(go_type, k) {
