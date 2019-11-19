@@ -1,13 +1,13 @@
 ---
 title: "Analysis of *E. coli* Time Course RNA-Seq Data"
-author: Ethan Ashby, Annie Cohen, Lian Morales, Prof. Jo Hardin,
-  Prof. Dan Stoebel, Prof. Danae Schulz
-date: "9/17/2019"
+author: Annie Cohen^1,4^, Ethan Ashby^2,4^, Lian Morales^3,4^, Prof. Jo Hardin^2^,
+  Prof. Dan Stoebel^3^, Prof. Danae Schulz^3^
 output:
   pdf_document: default
   html_document:
     toc: true
 ---
+Affiliation: ^1^Department of Mathematics, Scripps College ^2^Department of Mathematics, Pomona College, ^3^Department of Biology, Harvey Mudd College ^4^NSF Data Science REU at Harvey Mudd College
 
 # Table of Contents
 1. Introduction  
@@ -28,7 +28,8 @@ output:
 \indent 5.1 PAM Clustering  
 \indent 5.2 Gene Ontology Analysis   
 \indent 5.3 Gene Set Enrichment Analysis
-6. References  
+6. Conclusion
+7. References  
 
 # **1** Introduction
 
@@ -140,7 +141,7 @@ $~$
 
 # **3** Differential Expression
 
-Differential expression measures whether or not the gene expression of the same gene in different groups or treatments is significantly different. We apply three different differential expression analysis methods below to determine a list of differentially expressed genes in our data se.
+Differential expression measures whether or not the gene expression of the same gene in different groups or treatments is significantly different. We apply three different differential expression analysis methods below to determine a list of differentially expressed genes in our data set.
 
 ### **3.1** DESeq2
 
@@ -154,7 +155,7 @@ Because we already ran `DESeq()` above, we can now extract the significant resul
 \begin{itemize}\item[1.] A list of differentially expressed genes between the treatment group (wild-type *E. coli*) at 0 minutes and 150 minutes.  
 \item[2.] A list of differentially expressed genes between the treatment group and the control (delta-RpoS *E. coli*), both at 150 minutes.  
 \item[3.] The intersection of the gene lists, or the genes that appear in both lists, which we use as our differentially expressed gene list from `DESeq2`.
-
+\end{itemize}
 ```{r}
 x = data.frame("x" = c(2:148))
 ggplot()+
@@ -208,12 +209,12 @@ knitr::include_graphics("Sig_Model.png")
 ```
 
 According to Fischer et al., ImpulseDE2 determines differential expression by:  
-**1.** Running DESeq2 and adjusting gene-wise dispersion estimates from DESeq2 to fit a curve.  
-**2.** Computing size factors and normalizing counts.  
-**3.** Fitting null and alternative model to each of the genes.  
-**4.** Fitting sigmoid model to the treatment condition -- in our case, samples containing the RpoS translation factor.   
-**5.** Determining differential expression based on these models fits to each gene using a log-likelihood ratio (Fischer et al. 2018).  
-
+\begin{itemize} \item[1.] Running `DESeq2` and adjusting gene-wise dispersion estimates from `DESeq2` to fit a curve.  
+\item[2.] Computing size factors and normalizing counts.  
+\item[3.] Fitting null and alternative model to each of the genes.  
+\item[4.] Fitting sigmoid model to the treatment condition -- in our case, samples containing the RpoS translation factor.   
+\item[5.] Determining differential expression based on these models fits to each gene using a log-likelihood ratio (Fischer et al. 2018).  
+\end{itemize}
 ```{r prep ImpulseDE2}
 # Set up design matrix with 
 ec_design <- data.frame(Sample=colnames(ec_rawcounts),
@@ -239,10 +240,11 @@ impulse_ecoli <- ImpulseDE2::runImpulseDE2(as.matrix(ec_rawcounts),
 
 maSigPro is another serial method that determines genes with significant expression differences over time and between conditions. According to Conesa and Nueda (2017), the package performs differential expression analysis by:
 
-**1.** defining a regression model for the data with the  experimental conditions identified by dummy variables;  
-**2.** using least-squared method to adjust the model;  
-**3.** selecting differentially expressed genes controlling for false discovery rates;  
-**4.** and applying stepwise regression to determine differential expression between groups (Conesa and Nueda 2017).
+\begin{itemize} \item[1.] Defining a regression model for the data with the  experimental conditions identified by dummy variables.  
+\item[2.] Using least-squared method to adjust the model.  
+\item[3.] Selecting differentially expressed genes controlling for false discovery rates.  
+\item[4.] Applying stepwise regression to determine differential expression between groups (Conesa and Nueda 2017).
+\end{itemize}
 
 ```{r prep maSigPro}
 # Set up design
@@ -278,7 +280,7 @@ maSigProGenes <- sigs$summary$d_RposvsControl
 
 ### **3.4** Find the Intersection
 
-In order to balance our sensitivity with false discovery rates, we decided to consider genes differentially expressed if they were identified in at least 2 of the 3 methods.
+In order to balance our sensitivity with false discovery rates, we decided to consider genes differentially expressed if they were identified in at least 2 of the 3 differential expression methods. For the Impulse trajectory analysis, we extracted genes identified by ImpulseDE and one other method, but for the analysis in this write up, we used genes from any 2 of the 3 methods. 
 
 First, we made lists of genes from all of the combinations of intersections between each method and then took the union of that list.
 
@@ -318,6 +320,8 @@ draw.triple.venn(area1 = DS, area2 = IM, area3 = MA,
                  category = c("DESeq2", "ImpulseDE2", "MaSigPro"))
 ```
 
+Here we can see that the overlap of all of the methods has 591 differentially experssed genes and the overlap of 2 of the 3 methods has 981 differentially expressed genes. Choosing which intersections to use depends on research intentions and optimal numbers of differentially expressed genes.
+
 # **4** Visualization
 ### **4.1** Tidying Our Data
 
@@ -329,9 +333,7 @@ EC_DEGs <- left_join(EC_DEGs, ec_normcounts, by = "genename")
 head(EC_DEGs[,1:7])
 ```
 
-As you can see from the preview of our data, it is currently in a format where each gene has one row with all of the treatments and time points as columns. However, in order to plot our gene expression data, we want each gene at each time point and condition to have a row. We must tidy our data!
-
-To do so, we use `tidyr` and `dplyr` functions.
+As you can see from the preview of our data, it is currently in a format where each gene has one row with all of the treatments and time points as columns. However, in order to plot our gene expression data, we want each gene at each time point and condition to have a row. We must tidy our data using `tidyr` and `dplyr` functions. We also average our data over the three samples for each time frame in order to minimize variability from the samples.
 
 ```{r tidy DEGs}
 EC_counts_gath <- EC_DEGs %>%
@@ -363,11 +365,12 @@ EC_counts_ave <- EC_counts_gath %>%
 
 # Rename
 colnames(EC_counts_ave) <- c("genename", "treat", "time", "avecount")
+head(EC_counts_ave)
 ```
 
 ### **4.2** ggplot2
 
-Finally, we can plot the tidy data using `ggplot()`.
+Finally, we can plot the tidy average expression data using `ggplot()`.
 
 ```{r plot DEGs}
 EC_counts_ave %>%
@@ -380,11 +383,11 @@ EC_counts_ave %>%
   theme(legend.position = "none")
 ```
 
-In our case, these plots are not extremely helpful because they are so overcrowded and it is difficult to see any trends. In Section 5, we will jump into clustering methods and other analyses that can identify specific gene profiles.
+In our case, these plots are not extremely helpful because they are so overcrowded and it is difficult to see any trends. In Section 5, we will jump into clustering methods and other analyses that can help to identify specific gene profiles.
 
 ### **4.3** Shiny App
 
-Shiny is an R package that allows us to create interactive web apps inside of R. While our Shiny code is not interactive or compatible with the HTML export format, this code runs within R and creates a pop-up app that allows the viewer to visualize the gene expression data. Shiny is especially helpful when trying to determine optimal cut-offs for p-values or fold changes, or when switching between comparisons of the same data.
+`Shiny` is an R package that allows us to create interactive web apps inside of R. While our Shiny code is not interactive or compatible with the PDF export format, this code runs within R and creates a pop-up app that allows the viewer to visualize the gene expression data. The code is included in the .Rmd version of this file. `Shiny` is especially helpful when trying to determine optimal cut-offs for p-values or fold changes, or when switching between comparisons of the same data.
 
 ```{r run Shiny App, results = 'hide', echo = FALSE}
 ui <- fluidPage(
@@ -520,15 +523,18 @@ shinyApp(ui = ui, server = server)
 ```
 
 # **5** Analysis
+
+As seen in 4.2, our data is still messy and fairly meaningless. We use PAM clustering, Gene Ontology, and Gene Set Enrichment Analysis in order to identify unique profiles within the mass of differentially expressed genes and extract biologically significant results. With Professor Schulz's *T. brucei* data, we used Fuzzy clustering as well, which is a potential future research area for the *E. coli* data.
+
 ### **5.1** PAM Clustering 
 
-Partitioning Around Medoids (PAM) is a clustering method iteratively groups genes into clusters of genes with similar profiles. For our code, we input a dissimilarity matrix, which is the transposed matrix of the correlation between each gene, based on their counts. We use the transpose of the count matrix because we want all of the genes as columns in order to calculate the correlation. To calculate correlation, we specified the method as "spearman", however "pearson" returns similar results. The PAM method determines clusters by:  
-**1.** choosing k center genes (medoids);  
-**2.** assigning all of the rest of the genes to the closest medoids;  
-**3.** calculating new medoids from these clusters -- in our case, this is based off of the dissimilarity matrix provided;  
-**4.** repeating steps 2 and 3 until the clusters and medoids stay the same between iterations.  
-
-First, we compute the optimal k number of clusters. This package `NbClust` runs through 30 different tests that each determine the optimal k and plots the distribution of all 30 of the optimal k results in order to determine the most common result and the *most* optimal k.
+Partitioning Around Medoids (PAM) is a clustering method that iteratively groups genes into clusters of genes with similar profiles. For our code, we input a dissimilarity matrix, which is the transposed matrix of the correlation between each gene, based on their counts. We transpose the count matrix because we want all of the genes as columns in order to calculate the correlation. To calculate correlation, we specified the method as "spearman", however "pearson" returns similar results. The PAM method determines clusters by:  
+\begin{itemize}\item[1.] Choosing k center genes (medoids).
+\item[2.] Assigning all of the rest of the genes to the closest medoids.
+\item[3.] Calculating new medoids from these clusters -- in our case, this is based off of the dissimilarity matrix created at the beginning. 
+\item[4.] Repeating steps 2 and 3 until the clusters and medoids stay the same between iterations.  
+\end{itemize}
+First however, we compute the optimal k number of clusters. This package `NbClust` runs through 22 different tests that each determine the optimal k and plots the distribution of all 22 of the optimal k results in order to determine the most common optimal k. Different values for k will categorize the data differently, thus it is importatnt to determine an optimal k value.
 
 ```{r calc optimal k, cache = TRUE, message=FALSE, warning=FALSE}
 rownames(EC_DEGs) <- EC_DEGs$genename
@@ -542,7 +548,9 @@ k_test <- NbClust(data = EC_DEGs, diss = NULL, distance = "euclidean",
                   min.nc = 2, max.nc = 20, method = "kmeans")
 ```
 
-Take the results of this function with a grain of salt because it uses a different clustering method than the PAM method we use. While this program determines k = 3 to be the optimal number of clusters, we used k = 6 so that we did not miss any unique profiles. [This is a potential area for more research looking into the best k and the outcomes of the clusters and the significance of their GO terms depending on the number of clusters.] Then we use the PAM method to cluster the DEGs' count data.
+In these plots, `NbClust` determines k=3 to be optimal, because 13 of the 22 methods identify 3 as the optimal number of clusters. However, we take the results of this function with a grain of salt, because `NbClust` uses a different clustering method than the PAM method that we use. We ended up using k = 6 so that we did not miss any unique profiles. This is a potential area for more research, looking into the best k, the outcomes of the clusters, and the significance of their GO terms depending on the number of clusters. 
+
+Then we use the PAM method to cluster the DEGs' count data.
 
 ```{r PAM clustering, warning=FALSE}
 k = 6
@@ -568,7 +576,7 @@ ec_norm_counts <- ec_normcounts %>%
 EC_cluster_df <- left_join(gene_cluster, ec_norm_counts, by = "genename")
 ```
 
-Now, we will standardize our data using the `Mfuzz` package's `standardise()` function. The function standardizes the data so that each gene has a mean expression of 0 and a standard deviation of 1. We standardize our data with the Fuzzy package in order to visualize and understand the profiles within each cluster.
+If we plot the clusters from PAM, the different profiles are not very distinct. So we scale our data using the `Mfuzz` package's `standardise()` function. The function standardizes the data so that each gene has a mean expression of 0 and a standard deviation of 1. We standardize our data with the Fuzzy package in order to visualize and understand the profiles within each cluster and scale the plots appropriately in order to compare expression dynamics.
 
 ```{r Mfuzz standardization, warning=FALSE, message=FALSE}
 cluster_standard <- EC_cluster_df %>%
@@ -597,9 +605,9 @@ standard_clusters$genename <- rownames(standard_clusters)
 clusters <- left_join(standard_clusters, gene_cluster, by = "genename")
 ```
 
-Then, we can use the tidying pipeline (see Section 4.1 for more information) to tidy the standardized data.
+Then, we can use the tidying pipeline from Section 4.1 to tidy the standardized data.
 
-```{r tidy cluster data}
+```{r tidy cluster data, echo = FALSE}
 EC_counts_gath <- clusters %>%
   gather(-c(genename, cluster), key="sample", value = "rawcount") %>%
   separate(sample, c("treat", "rep_time"), "_") %>%
@@ -621,9 +629,9 @@ EC_counts_sum <- EC_counts_gath %>%
 colnames(EC_counts_sum) <- c("genename", "cluster", "treat", "time", "avecount")
 ```
 
-Next, we extract the medoid genes and tidy the medoid gene expression data in order to plot the medoids on top of the gene clusters.
+Next, we extract the medoid genes and tidy the medoid gene expression data in order to plot the medoids on top of the gene clusters. This step can be helpful to determine a general trend for each cluster.
 
-```{r tidy medoid data, warning=FALSE}
+```{r tidy medoid data, warning=FALSE, echo = FALSE}
 # Create a data frame that joins the medoid gene names
 # and their standardized expression values
 EC_medoid_df <- left_join(EC_PAM_medoids, clusters, by = "genename") %>%
@@ -653,7 +661,7 @@ colnames(EC_counts_sum_med) <- c("genename", "cluster", "treat", "time", "avecou
 
 Now we can plot our clusters using `ggplot`.
 
-```{r plot clusters}
+```{r plot clusters, echo=FALSE}
 EC_counts_sum %>%
   #Because we have standardized our data using the `Mfuzz` package,
   # we do not need to  transform the y-axis - just use `avecount`
@@ -672,10 +680,11 @@ EC_counts_sum %>%
   geom_line(data = EC_counts_sum_med, aes(x=time, y=avecount, group = genename), size = 1) +
   theme(legend.position = "none", panel.background = element_blank(), 
         strip.text = element_text(size = 20), 
-        axis.title = element_text(size = 13), axis.text = element_text(size = 10))
+        axis.title = element_text(size = 13), axis.text = element_text(size = 10)) +
+  labs(y = "standardized average counts")
 ```
 
-And we create a list of data frames that contain each clusters list of genes.
+Finally, we create a list of data frames that contain each clusters list of genes.
 
 ```{r cluster lists}
 cluster_genes <- data.frame("genename" = gene_cluster$genename)
@@ -689,6 +698,11 @@ EC_cluster <- c()
 EC_cluster$cluster1 <- cluster_genes %>%
   filter(cluster == 1) %>%
   dplyr::select(genename)
+# Repeat for rest clusters 2-6
+```
+
+```{r, echo = FALSE}
+# Repeat for rest clusters 2-6
 EC_cluster$cluster2 <- cluster_genes %>%
   filter(cluster == 2) %>%
   dplyr::select(genename)
@@ -708,9 +722,9 @@ EC_cluster$cluster6 <- cluster_genes %>%
 
 ### **5.2** Gene Ontology Analysis
 
-Gene Ontology (GO) analysis is a tool used in order to determine whether specified groups of genes have unique biological significance. Gene Ontology Analysis relies on a list of GO terms, which is a list of all of the genetic functions within the organism and the respective genes involved in each of those functions (Alexa and Rahnenfuhrer, 2019). For each of the specified groups of genes, the analysis determines whether the list of genes is disproportionately distributed across genetic functions. Compared to the null (uniform) distribution of the group's genes across all genetic functions, are the group's genes significantly enriched within specific functions?
+Gene Ontology (GO) analysis is a tool used in order to determine whether specified groups of genes have unique biological significance. Gene Ontology Analysis relies on a list of GO terms, which is a list of all of the genetic functions within the organism and the respective genes involved in each of those functions (Alexa and Rahnenfuhrer, 2019). For each of the specified groups of genes, the analysis determines whether the list of genes is disproportionately distributed across genetic functions. Compared to the null (uniform) distribution of the group's genes across all genetic functions, the analysis tests whether or not the group's genes are significantly enriched within specific functions.
 
-To answer this question, we use a package called `TopGO` which has a database with all of *E. coli*'s GO terms. We can specify the statistical method used to determine whether a GO term is significant within a group of genes. Below, I provide code for the Fisher method, but the other option, a Kolmogorov-Smirnov test, is a simple substitution. GO terms are classified within three different categories: Biological Processes, Molecular Functions, and Cellular Components. After consultation with Professor Stoebel, Biological Process appears to be the most relevant in this research. However, the other two types have positives that could be more useful in other work: Molecular Function can offer specific, molecular-level information and Cellular Component can provide broad information about cell parts and structure.
+To answer this question, we use a package called `TopGO` which has a database with all of *E. coli*'s GO terms. We can specify the statistical method used to determine whether a GO term is significant within a group of genes. Below, I provide code for the Fisher method, but the other option, a Kolmogorov-Smirnov test, is a simple substitution. GO terms are classified within three different categories: Biological Processes (BP), Molecular Functions (MF), and Cellular Components (CC). After consultation with Professor Stoebel, Biological Process appears to be the most relevant in this research. However, the other two types have positives that could be more useful in other work: Molecular Function can offer specific, molecular-level information and Cellular Component can provide broad information about cell parts and structure.
 
 ```{r TopGO on clusters, message=FALSE, warning=FALSE, cache=TRUE}
 # Create a function that runs GO analysis, 
@@ -771,6 +785,12 @@ cc <- go_enrich("CC", 1) %>%
   mutate("Type" = "Cellular Component")
 cluster1_genes <- bind_rows(bp, mf, cc)
 
+# Repeat for clusters 2-6
+```
+
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+# Repeat for clusters 2-6
+
 bp <- go_enrich("BP", 2) %>%
   mutate("Type" = "Biological Process")
 mf <- go_enrich("MF", 2) %>%
@@ -810,10 +830,17 @@ mf <- go_enrich("MF", 6) %>%
 cc <- go_enrich("CC", 6) %>%
   mutate("Type" = "Cellular Component")
 cluster6_genes <- bind_rows(bp, mf, cc)
+```
 
+```{r}
 # Create a list of data frames with the results from each of the clusters
 GO_clusters <- c()
 GO_clusters$cl1 <- cluster1_genes
+# Repeat for clusters 2-6
+```
+
+```{r echo = FALSE}
+# Repeat for clusters 2-6
 GO_clusters$cl2 <- cluster2_genes
 GO_clusters$cl3 <- cluster3_genes
 GO_clusters$cl4 <- cluster4_genes
@@ -823,9 +850,9 @@ GO_clusters$cl6 <- cluster6_genes
 
 ### **5.3** Gene Set Enrichment Analysis
 
-Gene Set Enrichment Analysis (GSEA) is a tool that allows us to test whether or not a determined set of genes is enriched in a list of genes with different levels of differential expression, noted by a test statistic. GSEA requires this list of genes to have a ranking statistic. In our case, we used a p-value statistic which describes the significance of the gene's differential expression. GSEA results with high positive enrichment scores indicate enrichment at the top of the ranked gene list, while large negative enrichment scores indicate enrichment at the bottom of the list.
+Gene Set Enrichment Analysis (GSEA) is a tool that allows us to test whether or not a determined set of genes is enriched in a list of genes with different levels of differential expression, noted by a test statistic. GSEA requires this list of genes to have a ranking statistic. In our case, we used a p-value statistic which describes the significance of the gene's differential expression. GSEA results with high positive enrichment scores indicate enrichment at the top of the ranked gene list, while large negative enrichment scores indicate enrichment at the bottom of the list. Small enrichment scores, regardless of the sign, are not as significant.
 
-We compared each the 6 clusters to the lists of sensitive, insensitive, and linear genes to determine whether the sensitive, insensitive, or linear genes were enriched in any of our clusters. That is, for example, were there more sensitive genes in cluster 1 than would be expected under a uniform distribution of sensitive genes? Our results were not very significant, however further analysis could potentially check other gene sets for enrichment.
+We were interested in determining whether or not sensitive or insensitive genes were over represented in a particular cluster, so we compared each the 6 clusters to the lists of sensitive, insensitive, and linear genes to determine whether the sensitive, insensitive, or linear genes were enriched in any of our clusters. For example, were there more sensitive genes in cluster 1 than would be expected under a uniform distribution of sensitive genes? Our results were not very significant, however further analysis could potentially check other gene sets for enrichment.
 
 ```{r GSEA sensitivity enrichment in clusters, warning = FALSE, message = FALSE}
 
@@ -843,6 +870,11 @@ cluster1 <- left_join(EC_cluster$cluster1,ec_Stat, by = "genename") %>%
 stat_cluster1 <- cluster1$padj
 names(stat_cluster1) <- cluster1$genename
 
+# Repeat for clusters 2-6
+```
+
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+# Repeat for clusters 2-6
 cluster2 <- left_join(EC_cluster$cluster2,ec_Stat, by = "genename") %>%
   filter(!is.na(genename))
 stat_cluster2 <- cluster2$padj
@@ -867,7 +899,9 @@ cluster6 <- left_join(EC_cluster$cluster6,ec_Stat, by = "genename") %>%
   filter(!is.na(genename))
 stat_cluster6 <- cluster6$padj
 names(stat_cluster6) <- cluster6$genename
+```
 
+```{r, warning = FALSE, message = FALSE, }
 sens <- read_csv("past_sensitivity.csv") %>%
   dplyr::select(c(geneName,bNum, 
                   `Differentially expressed between 0% and 100% RpoS`,
@@ -882,6 +916,12 @@ sens_name$linear <- sens$geneName[which(sens$sensitivity=="linear")]
 
 fgsea(sens_name, stat_all, minSize = 1, maxSize = 500, nperm = 10000)
 fgsea(sens_name, stat_cluster1, minSize = 1, maxSize = 500, nperm = 10000)
+
+# Repeat for clusters 2-6
+```
+
+```{r, message = FALSE, warning = FALSE, echo=FALSE}
+# Repeat for clusters 2-6
 fgsea(sens_name, stat_cluster2, minSize = 1, maxSize = 500, nperm = 10000)
 fgsea(sens_name, stat_cluster3, minSize = 1, maxSize = 500, nperm = 10000)
 fgsea(sens_name, stat_cluster4, minSize = 1, maxSize = 500, nperm = 10000)
@@ -889,11 +929,15 @@ fgsea(sens_name, stat_cluster5, minSize = 1, maxSize = 500, nperm = 10000)
 fgsea(sens_name, stat_cluster6, minSize = 1, maxSize = 500, nperm = 10000)
 ```
 
-# 6 References
+# 6 Conclusion
 
-```{r}
-citation("dplyr")
-```
+This pipeline provides the structure for understanding noisy RNA-Seq data through normalization, differential expression analysis, tidying, clustering, gene ontology, and gene set enrichment analysis.
+
+Gene set enrichment analysis allowed us to compare our differentially expressed gene clusters to the lists of sensitive and insensitive genes from past research. We used gene ontology analysis to compare our clusters with genetic functions to determine whether specific functions are enriched in certain profiles. 
+
+Further research is mainly centered around the ImpulseDE trajectories and parameters from 3.2 for previously labeled sensitive and insensitive genes. Other research could look into clustering -- specifically, looking at what value of k is optimal and which clustering method produces the clearest results for downstream analysis such as gene ontology or gene set enrichment analysis.
+
+# 7 References
 
 Alexa A, Rahnenfuhrer J (2019). topGO: Enrichment Analysis for Gene Ontology. R package version 2.36.0.
 
