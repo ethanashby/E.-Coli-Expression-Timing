@@ -2,6 +2,7 @@
 title: "Analysis of *E. coli* Time Course RNA-Seq Data"
 author: Annie Cohen^1,4^, Ethan Ashby^2,4^, Lian Morales^3,4^, Prof. Jo Hardin^2^,
   Prof. Dan Stoebel^3^, Prof. Danae Schulz^3^
+bibliography: bibliography.bib
 output:
   pdf_document: default
   html_document:
