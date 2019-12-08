@@ -5,6 +5,7 @@ date: "7/22/2019"
 output: 
   pdf_document:
     latex_engine: xelatex
+bibliography: bibliography.bib
 ---
 
 ```{r, include=FALSE}
@@ -51,6 +52,7 @@ library(biomaRt)
 library(fgsea)
 library(BiocParallel)
 #tinytex::install_tinytex()
+library(tinytex)
 ```
 
 # Table of Contents  
@@ -81,34 +83,35 @@ West African Sleeping Sickness is a deadly disease contracted by the bite of an 
 
 Trypanosome surface proteins can directly interact with the host environment, allowing parasites to effectively establish and maintain infections(Savage 2015). During its infectious cycle, the parasite maintains several life stages throughout changing environments of insect and mammal. When living in the fly, the parasite's surface is covered with an invariant procylin, or proteins developed in the surface coating of *Trypanosoma brucei* in the Procyclic form(PF). However, upon living in the mammal, the parasite resides extracellularly in the bloodstream and becomes densely covered with highly immunogenic Variant Surface Glycoprotein (VSG). In this bloodstream form (BF), the parasite can vary its outer surface using approximately 2,500 distinct VSG genes. As a result, *Trypanosoma brucei* can evade human/mammal antibody immune response and remain virulent by constantly interchanging VSG genes.
 
-For BF in mammals, the role of histone acetyl-lysine recognizing bromodomain proteins, have shown control of stem cell fate, leading to the hypothesis that bromodomain proteins may maintain the BF cell fate in trypanosomes. Histone lysine acetylation is central to epigenetic control of gene transcription. Thus, bromodomain inhibition disrupts two major BF specific immune evasion mechanisms that trypanosomes harness to evade mammalian antibody immune response. Of these functions, monoallelic expression of VSGs are disrupted, and rapid internalization of antibodies bound to VSGs on the surface of the trypanosome is blocked. Through these results, bromodomain inhibition in BF trypanosomes reveals changes in the transcriptome similar to PF trypanosomes. Importantly, bromodomain inhibition leads to a decrease in virulence in a mouse model of infection, establishing these proteins as potential therapeutic drug targets for trypanosomiasis.
+For BF in mammals, the role of histone acetyl-lysine recognizing bromodomain proteins, in controlling of stem cell fate, lead to the hypothesis that bromodomain proteins may maintain the BF cell fate in trypanosomes. Histone lysine acetylation is central to epigenetic control of gene transcription. Thus, bromodomain inhibition disrupts two major BF specific immune evasion mechanisms that trypanosomes harness to evade mammalian antibody immune response. Of these functions, monoallelic expression of VSGs are disrupted, and rapid internalization of antibodies bound to VSGs on the surface of the trypanosome is blocked. Through these results, bromodomain inhibition in BF trypanosomes reveals changes in the transcriptome similar to PF trypanosomes. Importantly, bromodomain inhibition leads to a decrease in virulence in a mouse model of infection, establishing these proteins as potential therapeutic drug targets for trypanosomiasis.
 
-This summer 2019, we looked at the result of research studying the effects of bromodomain inhibition in PF trypanosomes. Building off of past research, and understanding bromodomain inhibition in BF leads to transcriptomic and epitope change towards PF, we measured gene expression in WT PF and bromodomain-inhibited PF over 2 week time course, Determined differentially expressed genes (DEGs) between these two conditions, and finally help predict the effect of bromodomain inhibition on gene expression in insect form through data analysis.
+This summer 2019, we looked at the result of research studying the effects of bromodomain inhibition in PF trypanosomes. Building off of past research that found bromodomain inhibition in BF leads to transcriptomic and epitope change towards PF, Professor Schulz and her lab measured gene expression in WT PF and bromodomain-inhibited PF over 2 week time course, determined differentially expressed genes (DEGs) between these two conditions in order to understand the effect of bromodomain inhibition on gene expression in insect form through data analysis.
 
 # 1.2 Goals   
 
-Building off of past research, and understanding bromodomain inhibition in BF leads to transcriptomic and epitope change towards PF, what is the result of inhibiting bromodomain in PF trypanosome? 
+Building off of past research, and showed bromodomain inhibition in BF leads to transcriptomic and epitope change towards PF, what is the result of inhibiting bromodomain in PF trypanosome? 
 
 # 2. Methods  
-To begin the analysis of Schulz data, we must understand the experiment's variables, conditions, and hypothesis. Schulz's data is a time course experiment with 10 samples with three repetitions, excluding sample time point at 3 hours -- three hours repetition 1 was removed because it was an outlier.  The data was then sent to be processed by RNA-seq, which is a way to measure gene expression in an organism.Also commonly known as High Throughput Sequencing, this process uses next-generation sequencing to reveal the presence and quantity of RNA in a biological sample at a given moment. The RNA is extracted and RNA reads (sequences of A, G, C, and U) are aligned to the organism's genome. The higher the number of reads, or inferred sequence of base pairs (or base pair probabilities) corresponding to all or part of a single DNA fragment, mapped to a certain gene the more that gene is expressed. 
+To begin the analysis of T.*brucei* data, we must understand the experiment's variables, conditions, and hypothesis. Schulz's data is a time course experiment with 10 samples with three replicates, excluding sample time point at 3 hours -- three hours repetition 1 was removed because it was an outlier.  The data was then sent to be processed by RNA-seq, which is a way to measure gene expression in an organism. Also commonly known as High Throughput Sequencing, this process uses next-generation sequencing to reveal the presence and quantity of RNA in a biological sample at a given moment. The RNA is extracted and RNA reads (sequences of A, G, C, and U) are aligned to the organism's genome. The higher the number of reads, or inferred sequence of base pairs (or base pair probabilities) corresponding to all or part of a single DNA fragment, mapped to a certain gene the more that gene is expressed (Ruairi , Mackenzie J. “RNA-Seq: Basics, Applications and Protocol.”).
 
 # 2.1 Normalization   
-In order to analyze raw read counts, we must normalize them to account for sequencing depth. Depth is commonly a term used for genome or exome sequencing and represents the number of reads covering each position(column sum). In RNA-seq, coverage pattern is very uneven due to differences in expression, so one must account for unequal samples through normalization. To obtain accurate results, we normalization methods. In order to ascertain the best normalization method for out data, our first step was comparing Differential Expression tools edgeR and DESeq2. 
+  In order to analyze raw read counts, we must normalize them to account for factors that prevent direct comparison of expression measures. Length, GC-content, and sequencing depth are big factors inLength and GC-content are major factors that affect the number of reads mapped to a gene. Only length and GC content are within-sample effects, meaning that they affect the comparison of read counts between different genes in a sample. Sequencing depth, which is the number of reads covering each position(column sum), on the other hand, is a between-sample effect that alters the comparison of read counts between the same gene in different samples.
+  In RNA-seq, coverage pattern is very uneven due to differences in expression, so one must account for unequal samples through normalization. In order to ascertain the best normalization method for out data, our first step was comparing Differential Expression tools edgeR and DESeq2. 
 
-# DESeq2  
+# `DESeq2` @DESeq2
 DESeq normalizes raw count data using the algorithm Relative Log Expression(RLE). It first takes the geometric mean of all sample values, or the raw counts for each gene in a particular sample. This creates the reference sample of the data set. Then, DESeq2 takes the median of the number of observed reads in condition k and replicate r  and divides this value by the reference sample. As the algorithm completes this for all genes, the resulting vector is the ‘size factor’ of the particular sample. Size factors represent how deeply the sample is sequenced, and the ratio of the size factors of two different samples is an approximation of the ratio of their sequencing depths. 
 
-# edgeR  
+# `edgeR` @edgeR
 edgeR normalizes raw counts using Trimmed Mean Method(TMM). TMM first prenomalizes by library size, by dividing the observed number of reads for gene g in condition k and replicate r by the total number of reads for condition k and replicate r. For TMM, the arbitrary reference sample is condition and replicate 1, however one can specify what reference sample to use.  
 For TMM, it takes the set of not trimmed genes with valid fold change and the absolute expression levels (cf. Robinson and Oshlack, 2010) and uses this value to calculate the relative scaling factor. Additionally, TMM scales this factor by multiplying it to one, thus giving a vector of normalization factor. These normalization factors are used as offset parameters in the statistical model for differential gene expression analysis. 
 
 
-The result of this comparison was that DESeq2 and edgeR gave very similar results, with a small amount of different DEGS. As a result, our choice between DESeq2 and edgeR was more arbitrary, as DESeq2’s algorithm was preferable to fast run time and simple easy input. However, to understand the main differences and similarities between these two specific methods, comparing DESeq2 size factors and edgeR normalization factors and creating a VennDiagram of DEG’s identified by each method allowed for a clearer understanding of each algorithm, as well as our data. 
+The result of this comparison was that DESeq2 and edgeR gave very similar results, with a small amount of different DEGS. As a result, our choice between DESeq2 and edgeR was more arbitrary, as DESeq2’s algorithm was preferable to fast run time and simple input. However, to understand the main differences and similarities between these two specific methods, comparing DESeq2 size factors and edgeR normalization factors and creating a VennDiagram of DEG’s identified by each method allowed for a clearer understanding of each algorithm, as well as our data. We then created a new data frame with information ofthe columns, or gene names.  
 
 ```{r,cache=TRUE}
 TBcounts <- read.table("18-5-23_Proc_ibet_TC_for_deseq.txt",header = TRUE) %>% dplyr ::select(-ib_3h_1) 
 TBcounts <- TBcounts %>% dplyr :: distinct(gene, .keep_all = TRUE) 
-#NORMALIZATION BY DESEQ2
+
 rownames(TBcounts) <- TBcounts$gene #renames the gene row
 TBcounts <- TBcounts %>% dplyr :: select(-"gene") #this gets rid of the name gene in table
 #creating new data frame for DESeq to analyze
@@ -125,9 +128,9 @@ tb_new <- tb_new %>% dplyr ::select(-rownames)
 
 # DESeq2 Normalization  
 
-The first step for DESeq2 normalization involves creating a count matrix with degin reps + stage. Then, the function DESeq() of that matrix calculates the normalized counts as well as size factors. 
-```{r, cache = TRUE}
-##dds stands for the DESeq Data Set
+The first step for DESeq2 normalization involves creating a count matrix with specified count data, column data, and design features. Here, we used reps + stage for the sample number(rep) and the time(stage) at which the sample was taken. Then, the function DESeq() of that matrix run the differential expression analysis, and from this output we can extract the normalized counts and size factors. 
+```{r, echo = FALSE, cache = TRUE}
+#dds stands for the DESeq Data Set
 ddsFullCountTable <- DESeqDataSetFromMatrix(countData = TBcounts,
                                             colData = tb_new, 
                                             design = ~ reps + stage)
@@ -141,17 +144,22 @@ norm_counts <- as.data.frame(counts(TBcounts_dds, normalized = TRUE)) %>%
  
  
 ```
+
+```{r}
+head(norm_counts)
+
+```
 #  edgeR Normalization  
 
 Similar to DESeq, we will need to create a new data frame detailing the samples, time, and repetitions. For this data set, stage = treatment and time, and rep = sample repetition. 
 
-For edgeR, the function calcNormFactors() calculates normalized counts, and return library size of each sample, normalization factor, and group of each sample. In this example, variable 'tb_normfact' represents the normalization factors that calcNormFactors() of Schulz raw counts outputs. 
+For edgeR, the function calcNormFactors() calculates normalized counts, and return library size of each sample, normalization factor, and group of each sample. In this example, variable 'tb_normfact' represents the normalization factors that calcNormFactors() of Schulz raw counts outputs. For edgeR, the function 'filterByExpr()' gets rid of genes that are not expressed, or with zero counts.
   
 
-```{r}
-#ECHO 
+```{r, echo = FALSE}
 #DE WITH EDGER
-#for easy data manipulation, creating DGE list from TBcounts and data table tb_new(with columns stage, reps)
+#for easy data manipulation, creating DGE list from 
+#TBcounts and data table tb_new(with columns stage, reps)
 tbcounts_dge <- DGEList(counts = TBcounts, norm.factors = rep(1,ncol(TBcounts)), group = tb_new$stage, remove.zeros = TRUE)
 
 #creating design matrix of reps and stage
@@ -173,19 +181,18 @@ tb_normfact <- tb_norm$samples$norm.factors
 #getting the norm counts
 tb_normCounts <- cpm(tbcounts_dge)
 ```
-The first comparison between methods edgeR and DESeq2 was normalization and size factors. In order to compare DESeq2's size factor and edgeR's normalization factor, we must multiply the normalization factor by  the library size for each sample.  In edgeR, the equivalent to the size factor is actually the effective library size. That is, the normalization factor captures sample-specific bias beyond differences in library size. In this graph, one can see that the multiplied normalization factors almost equal DESeq2's size factors. 
+The first comparison between methods edgeR and DESeq2 was normalization and size factors. In order to compare DESeq2's size factor and edgeR's normalization factor, we must multiply the normalization factor by the library size for each sample. In edgeR, the equivalent to the size factor is the effective library size(Cierian). That is, the normalization factor captures sample-specific bias beyond differences in library size. In this graph, one can see that the multiplied normalization factors  and DESeq2's size factors follow a clear linear trend, leading to the conclusion that these values are very similar. 
 
 ```{r, echo = FALSE}
 tb_norm_sf <- data.frame(tb_normfact* colSums(TBcounts))
 colnames(tb_norm_sf) <- "TMM.size.fact"
-size.DESeq2 <- TBcounts_dds$sizeFactor 
+size.DESeq2 <- TBcounts_dds$sizeFactor
 size.edgeR <- tb_norm_sf$TMM.size.fact
 plot(size.DESeq2, size.edgeR, main = "Size Factor DESeq & edgeR")
  
 ```
 
-The second comparison between algorithms DESeq2 and edgeR were the amount of differentially expressed genes at comparison time points 0-12 hours. In edgeR, the FDR was filtered with 0.01, and for edgeR, the padj was filtered at 0.01. This VennDiagram below shows not only the similarity between the algorithms, but also the ability for our team to choose between DESeq2 and edgeR with confidence. 
-
+The second comparison between algorithms DESeq2 and edgeR were the amount of differentially expressed genes at comparison time points 0-12 hours. In edgeR, the FDR was filtered with 0.01, and for edgeR, the padj was filtered at 0.01. For DESeq2, we will use the results function to contrast stages 0 to 12 hours.  
 ```{r, echo = FALSE}
 #COMPARING - DE ANALYSIS - FOR GSEA
 
@@ -193,10 +200,11 @@ The second comparison between algorithms DESeq2 and edgeR were the amount of dif
 TBcountsRes <- results( TBcounts_dds ,contrast = c("stage","ib_12h", "noo_ib"))
 #resSig_012 stands for the results of the significant genes expressed in comparison of noo_ib and ib_12h
 resSig_012 <- TBcountsRes[ which(TBcountsRes$padj < 0.01 ), ]
+
 ```
 
 ```{r}
-#ECHO
+
 #DE ANALYSIS - EDGER - getting the DE genes
 
 #comparing 6h to noo, under hypothesis that 6h-noo = 0 
@@ -207,18 +215,16 @@ con <- makeContrasts(stageib_6h-stagenoo_ib , levels= design)
 est_disp <- estimateDisp(tb_norm, design, robust=TRUE)
 fit <- glmQLFit(est_disp, design, robust=TRUE)
 qlf <- glmQLFTest(fit, contrast = con) 
-summary(decideTests(qlf)) #looks at the number of up and down regulated genes
-topTags(qlf) #looking at the top de genes
-
-#now want to look at all de genes from toptags
+ 
+#now want to look at all de genes from toptags which are the top de genes
 out <- topTags(qlf, n=Inf, adjust.method="BH")  
-keep <- out$table$FDR <= 0.01 #filtering genes with FDR 0.01
+keep <- out$table$FDR <= 0.01 #filtering genes with FDR 0.01 
 de_table <- out[keep,] #de_table for the table of DE genes
 
 ```
 
-
-```{r,echo = FALSE}
+As we can see in this VennDiagram below that both methods shows similarity between the algorithms of nomalizing raw counts. For our analysis we chose DESeq2 over edgeR due to earier coding and familiarity with the package.  
+```{r}
 #making venn diagram
 area1 <- length(rownames(resSig_012))    
 area2 <- length(rownames(de_table))  
@@ -229,13 +235,12 @@ draw.pairwise.venn(area1= area1, area2 = area2, cross.area = cross, category = c
 ```
 
 # 2.2 Differential Expression Analysis   
-  Based on the large amount of genes in Schulz’s data, using more than one method to identify DEGs must be used to provide accurate results for our analysis. Due to the large amount of differential expression algorithms, the choice were limited down to 3 - DESeq2, ImpulseDE2, and maSigPro.
+  Based on the large amount of genes in T.*brucei* data, using more than one method to identify DEGs must be used to provide accurate results for our analysis. Due to the large number of differential expression algorithms, we used three tools becuase we would better indentify real DEGs and resuce the number of false positives. The three methods we used were `DESeq2`, `ImpulseDE2`, and `maSigPro`. 
+  Differential expression analysis algorithms for time course datasets can be divided into methods that treat time points independently and methods that explicitly model the dependence between time points. Methods that utilize the former approach are mostly based on generalized linear models, with the sampling time point as a categorical variable that is then used as a predictor for the expression level (Fischer *et.al* 2018). These methods include software packages `DESeq2` and `edgeR`. For our analysis, as previously discussed, we will use `DESeq2` for the remainder of Normalization and Differential Expression analysis. 
   
-  Differential expression analysis algorithms for time course datasets can be divided into methods that treat time points independently and methods that explicitly model the dependence between time points. Methods that utilize the former approach are mostly based on generalized linear models, with the sampling time point as a categorical variable that is then used as a predictor for the expression level (Fischer *et.al* 2018). These methods include software packages DESeq2 and edgeR. For our analysis, as previously discussed, we will use DESeq2 for the remainder of Normalization and Differential Expression analysis. 
+  The methods that explicitly model the dependence between time points constrain the sequence of measured expression levels to a continuous function of time, thus capturing the dependence of expression levels between time points. Such continuous dependence on time has previously been captured with non-linear models based on a spline basis transform of the time coordinate such as `ImpulseDE2`. `ImpulseDE2` models the gene-wise expression trajectories over time with a descriptive single-pulse (impulse) function and employs a noise model specific to count data from multiple batches and combines it with a likelihood ratio test, leading to much faster and more accurate inference (Fischer *et.al* 2018). Due to `ImpulseDE2` popularity and accuracy cited in recent reports(Spies D. *et.al* 2017), we chose to use this model to identify T.*brucei* DEGs. 
   
-  The methods that use the latter approach constrain the sequence of measured expression levels to a continuous function of time, thus capturing the dependence of expression levels between time points. Such continuous dependence on time has previously been captured with non-linear models based on a spline basis transform of the time coordinate such as ImpulseDE2. ImpulseDE2 models the gene-wise expression trajectories over time with a descriptive single-pulse (impulse) function and employs a noise model specific to count data from multiple batches and combines it with a likelihood ratio test, leading to much faster and more accurate inference (Fischer *et.al* 2018). Due to ImpulseDE2 popularity and accuracy cited in recent reports(Spies D. *et.al* 2017), we chose to use this model to identify Schulz DEGs. 
-  
-  Along with ImpulseDE2 and DESeq2, we used Differential Expression package maSigPro. maSigPro follows a two step regression strategy to find genes with significant temporal expression changes and significant differences between experimental groups. The method defines a general regression model for the data where the experimental groups are identified by dummy variables. The procedure first adjusts this global model by the least-squared technique to identify differentially expressed genes and selects significant genes applying false discovery rate control procedures. Secondly, stepwise regression is applied as a variable selection strategy to study differences between experimental groups and to find statistically significant different profiles. The coefficients obtained in this second regression model will be useful to cluster together significant genes with similar expression patterns and to visualize the results (Conesa *et.al* 2017).
+  Another serial method we used was the Differential Expression package `maSigPro`. `maSigPro` follows a two step regression strategy to find genes with significant temporal expression changes and significant differences between experimental groups. The method defines a general regression model for the data where the experimental groups are identified by dummy variables. The procedure first adjusts this global model by the least-squared technique to identify differentially expressed genes and selects significant genes applying false discovery rate control procedures. Secondly, stepwise regression is applied as a variable selection strategy to study differences between experimental groups and to find statistically significant different profiles. The coefficients obtained in this second regression model will be useful to cluster together significant genes with similar expression patterns and to visualize the results (Conesa *et.al* 2017).
 
  Because we are more interested in earlier time points of Schulz's time course experiment due to the increased gene expression shown from 0-12 hours, our DEG analysis will compare time points 0 & 12 hours. 
  
@@ -252,9 +257,9 @@ TBcountsRes <- results( TBcounts_dds ,contrast = c("stage","ib_12h", "noo_ib"))
  
 ```
 
-In order to correct for multiple testing, DESeq2 uses Benjamini-Hochberg (BH) adjustment, which is a method that decreases the false discovery rate(FDR). Due to the fact that small p-values often happen by chance, the tool helps remove the possibility of falsely rejecting the try null hypothesis. For example, if one had a very low p-value(<.05), it would mean that there is only a 5% chance that you would get your observed result granted the null was true. Thus, with a p value of 0.05, it is highly unlikely that your null is incorrect. So, in order to eliminate the possibility of FDR, the BH adjustment adjusts for the probability of a FDR. For example, if one called all genes that are significant are those with a p value less than or equal to a gene’s p value threshold, the BH method calculates the fraction of false positives among those genes. These values, called the BH-adjusted p values, are given in the column padj of the results object.
+In order to correct for multiple testing, the package @DESeq2 uses Benjamini-Hochberg (BH) adjustment, which is a method that decreases the false discovery rate(FDR). Due to the fact that small p-values often happen by chance, the tool helps remove the possibility of falsely rejecting the true null hypothesis. For example, if one had a very low p-value(<.05), it would mean that there is only a 5% chance that you would get your observed result granted the null was true. Thus, with a p value of 0.05, it is unlikely that your null is correct. The BH adjustment adjusts for the probability of a FDR. For example, if one called all genes that are significant are those with a p value less than or equal to a gene’s p value threshold, the BH method calculates the fraction of false positives among those genes. In a test of 1000 genes with a p value cutoff of 0.05, one would expect 50 genes to be DE by random chance alone. The fraction of false positives among those genes, called the BH-adjusted p values, are given in the column padj of the results object.
 
-For our data, we considered a fraction of 1% false positives acceptable, due to the accuracy we need in the DE genes for Schulz dataset. We consider all genes with an adjusted p value below 1%=0.01 as significant.  
+For our data, we considered a fraction of 1% false positives acceptable, due to the accuracy we need in the DE genes for T.*brucei* dataset. We consider all genes with an adjusted p value below 1% = 0.01 as significant. We filtered those genes by using function which() and speficied in the TBcountsRes data set the padj values < 0.01. 
 
 ```{r}
 #resSig_012 stands for the results of the significant genes expressed in comparison of noo_ib and ib_12h
@@ -262,7 +267,8 @@ resSig_012 <- TBcountsRes[ which(TBcountsRes$padj < 0.01 ), ]
 resSig_012 <- resSig_012[complete.cases(resSig_012),]
 resSig_012$gene <- rownames(resSig_012)
 resSig_012$fcsign <- sign(resSig_012$log2FoldChange) #fcsign stands for the log2foldchange sign
-head(resSig_012)
+resSig_012_df <- data.frame(resSig_012)
+head(resSig_012,3)
 
 #creating negative and positive logfold change data sets
 resSig_log.pos <- resSig_012[which(resSig_012$fcsign != -1),]
@@ -274,7 +280,7 @@ For further analysis, we group the positive, and negative logfold2 changes. This
 # ImpulseDE2  
 For ImpulseDE2, we must create an integer count matrix (TBcounts_matrix) and a meta data table (impulse_design) to input directly to the ImpulseDE2 wrapper (runImpulseDE2). 
 
-```{r, cache= TRUE,include =  FALSE}
+```{r, echo = F,cache= TRUE }
 Time <- c(rep(0,3), rep(3,2), rep(6,3,), rep(12,3), rep(24,3), rep(48,3), rep(72,3), rep(168,3), rep(240,3), rep(336,3))
 
 impulse_design <- data.frame(Sample = colnames(TBcounts), Condition = rep("case", 29), Time = Time)
@@ -288,7 +294,7 @@ tryp_impulse <- ImpulseDE2 :: runImpulseDE2(TBcounts_matrix, impulse_design, boo
 
 # maSigPro   
  
-```{r,cache=TRUE,include =  FALSE}
+```{r,cache=TRUE, echo = FALSE}
 #################################################################################################################################
 #Serial expression tool: NEXT maSigPro
 #################################################################################################################################
@@ -314,15 +320,9 @@ maSigProGenes<-names(maSigProGenes)
 
 # Creating Venn Diagram  
 
-Completing each Differential Experssion algorithm, we found that there are 716 DEGs identified by DESeq2, maSigPro, and ImpulseDE2. Because of the large amount of DEG found for each method, we will take the intersection of each tool as our list of DEGs for Schulz 0-12 hour comparsion to not only get the most accurate DEGs, but also cut down on the amount used for analysis.
+Completing each Differential Experssion algorithm, we found that there are 716 DEGs identified by DESeq2, maSigPro, and ImpulseDE2. Because of the large amount of DEG found for each method, we will take the intersection of all tools as our list of DEGs for Schulz 0-12 hour comparsion to not only get the most accurate DEGs, but also cut down on the amount used for analysis.
 ```{r, echo = FALSE}
 #Creating VennDiagram 
-
-#Impluse and DESeq2
-area <- length(intersect(tryp_impulse$vecDEGenes,rownames(resSig_012)))
-grid.newpage()
-draw.pairwise.venn(area1= length(rownames(resSig_012)), area2 = length(tryp_impulse$vecDEGenes), cross.area = area, category = c("DESeq2 (0h-12h comparison)","ImpulseDE2 (serial analysis)"),lty = rep("blank",2),fill = c("light blue", "light green"))
-
 
 #three way comparison - Impulse, maSigPro, DESeq2
 area1 <- length(intersect(rownames(resSig_012),maSigProGenes))
@@ -337,35 +337,36 @@ grid.arrange(gTree(children=g), top="Schulz T.brucei Three Way Comparison of Dif
 ```
 
 
-# Creating DEG list from three way intersection - Impulse, maSigPro, DESeq2   
-Here, we will be saving our DE genes from maSigPro, impulse, and DESeq2.
-```{r}
-
-###################################################################################################################################
+```{r, echo = FALSE}
 #Generate Final DEGList
-###################################################################################################################################
-
-tryp_DEGs_all_3_way <-unique(c(intersect(rownames(resSig_012),maSigProGenes), intersect(tryp_impulse$vecDEGenes,rownames(resSig_012)), intersect(maSigProGenes, tryp_impulse$vecDEGenes)))
-write.csv(tryp_DEGs, "tryp_DEGs.csv")
-tryp_DEGs_3_way <- intersect(intersect(rownames(resSig_012),maSigProGenes),tryp_impulse$vecDEGenes)
+#Creating DEG list from three way intersection - Impulse, maSigPro, DESeq2   
+#Here, we will be saving our DE genes from maSigPro, impulse, and DESeq2. 
+#DEGs from the intersections of each method. 
+tryp_DEGs_3_way <-unique(c(intersect(rownames(resSig_012),maSigProGenes), intersect(tryp_impulse$vecDEGenes,rownames(resSig_012)), intersect(maSigProGenes, tryp_impulse$vecDEGenes)))
+write.csv(tryp_DEGs_3_way, "tryp_DEGs_3_way.csv")
 tryp_DEGs_3_way_df <- data.frame(tryp_DEGs_3_way) %>% `colnames<-`("gene")
+tryp_DEGs_3_way_sig_df <- right_join(resSig_012_df,tryp_DEGs_3_way_df,by  = "gene")
+
+#DEGs only from the intersection of the middle. 
+tryp_DEGs_all <- intersect(intersect(rownames(resSig_012),maSigProGenes),tryp_impulse$vecDEGenes)
+write.csv(tryp_DEGs_all, "tryp_DEGs_all.csv")
+tryp_DEGs_all_df <- data.frame(tryp_DEGs_all) %>% `colnames<-`("gene")
 #we need to have the log, padj, pvalue, and logfoldchange which is given by resSig012 from DESeq2
 #make data frame of resSig_012
 resSig_012_df <- data.frame(resSig_012)
-tryp_DEGs_3_way_sig_df <- right_join(resSig_012_df,tryp_DEGs_3_way_df,by  = "gene")
+tryp_DEGs_all_sig_df <- right_join(resSig_012_df,tryp_DEGs_all_df,by  = "gene")
+
 ```
 # 3 Clustering  
 
-In order to answer the biological questions of our data, we need to take statistical steps to gather information in order to prove or answer the hypothesis at hand. Clustering our data is an example of this method. Here we are taking the fuzzy cluster GO analysis results, and preparing them for GSEA pipeline. 
-(cluster code here)
-The two methods that we chose to cluster our data were Partitioning Around Medoids(PAM), and Fuzzy clustering. Choices for these are due to the efficiency of both algorithms, and time constraints of finding and running other methods. (Impulse)
-
+Due to the large number of DEGs in our data set, we need to cluster our data to gather important information based on the similarites within it. Clustering our data is an instrumental step in analyzing our results because it can reveal expression patterns, determine specific profiles within the expression data, and can answer the question of what exactly does our data tell us?  
+The two methods that we chose to cluster our data were Partitioning Around Medoids(PAM), and Fuzzy clustering. Choices for these are due to the efficiency of both algorithms, and time constraints of finding and running other methods.  
 # 3.1 PAM   
-PAM clustering, or *k-medoids* is a clustering algorithm similar to the *k-means* algorithm. Both k-means and k-medoids algorithms are partitional, or break the dataset into groups, and both attempt to minimize the distance between points labeled to be in a cluster, and a point designated as the center of that cluster. K-medoids uses data points as centers, and can be used with arbitrary distances. 
-K-medoids clusters the data set of *n* objects into *k* clusters, with the number of 6 *k* clusters for our data set.  
+PAM clustering, or *k-medoids* is a clustering algorithm similar to the *k-means* algorithm. Both *k-means* and *k-medoids* algorithms are partitional, or break the dataset into groups, and both attempt to minimize the distance between points labeled to be in a cluster, and a point designated as the center of that cluster. *k-medoids* uses data points as centers, and can be used with arbitrary distances. 
+*k-medoids* clusters the data set of *n* objects into *k* clusters and redistributes the clusters and centers until the distances to the centers are minimized. For our data set, we chose 6 *k* clusters, however this number is up for consideration and could be further research.
  
-
-```{r,include =  FALSE}
+Here, we will cluster the tryp_DEGs_3_way_sig_df, which is the DEGs identified by 2+ tools. In order to match the DEGs with the corresonding p values, logfold2change etc, we need to match our data frame with the norm_counts, which is the entire gene library.    
+```{r,echo = FALSE}
 
 ind <- match(norm_counts$gene,tryp_DEGs_3_way_sig_df$gene)
  
@@ -400,9 +401,9 @@ tb_DEGS <- norm_counts %>%
 #norm_counts <- norm_counts %>% dplyr :: select(-c(sig, padj, pval, log2FoldChange))
 
 ```
+Now, beginning our clustering, we will 
 
-
-```{r, cache=TRUE,include =  FALSE}
+```{r, cache=TRUE,echo = TRUE, results = 'hide'}
 k = 6
 
 dissimilarity_matrix <- 1 - cor(t(tb_DEGS[1:20,]),method = "pearson")
@@ -452,19 +453,23 @@ counts_gath_norm <- DESeq_cluster_counts %>%
                                                            ifelse(time == "3d", 72,
                                                                   ifelse(time == "7d", 168,
                                                                          ifelse(time == "10d", 240, 336))))))))))
-counts_gath_norm
+ 
 
 counts_sum_norm <- counts_gath_norm %>%
   group_by(gene, treat, time, cluster) %>%
   dplyr::summarise(avecount = mean(rawcount))
 counts_sum_norm_head <- counts_sum_norm %>%
   filter(time <= 12)
+```
 
+After creating the clusters, we need to save each cluster into a csv file for further analysis. Here, I only included the first cluster, but did the same for the rest which is not included in the knitted file. 
+```{r, cache=TRUE}
 cluster_lists <- c()
 cluster_lists[1] <- counts_sum_norm %>% filter(cluster == 1)
 list_1 <- paste(cluster_lists[[1]], sep = "")
 write.csv(list_1, file = "tryp_cluster_1.csv")
-
+```
+```{r, include = FALSE}
 cluster_lists[2] <- counts_sum_norm %>% filter(cluster == 2)
 list_2 <- paste(cluster_lists[[2]], sep = "")
 write.csv(list_2, file = "tryp_cluster_2.csv")
@@ -495,52 +500,63 @@ counts_sum_norm %>%
 
 Fuzzy clustering (also referred to as soft clustering or soft k-means) is a form of clustering in which each data point can belong to more than one cluster. Here, for Schulz's data, we will use the package Mfuzz to cluster the genes. The algorithm of fuzzy clustering assigns membership grades to each of the data points (tags). These membership grades indicate the degree to which data points belong to each cluster. Thus, points on the edge of a cluster, with lower membership grades, may be in the cluster to a lesser degree than points in the center of cluster.
 
-Although we already used PAM as a method of clustering, because there are numerous methods to cluster genes we chose to test another moethod(soft clustering on this data set). Reasons for choosing fuzzy clustering and package Mfuzz is that the regulation of genes is generally not in an ‘on-off’, but gradual manner. Soft clustering appears a good candidate for modeling this by assiging a gene i gradual degrees of membership μij to a cluster j. The membership values can vary continuously between zero and one. This feature enables soft clustering to provide more information about the structure of gene expression data.
+Although we already used PAM as a method of clustering, because there are numerous methods to cluster genes we chose to test another moethod(soft clustering on this data set). Reasons for choosing fuzzy clustering and package Mfuzz is that the regulation of genes is generally not in an ‘on-off’, but gradual manner. Also, expression profiles of the genes were noisy, and while being forced to be in a cluster by a method like *k-means* may not acutally represent the clusters well. For example, the *k-means* algorithm would put a dotted profile on a gene in a certain cluster that might not follow the general trend of the cluster, while fuzzy will tell us that it does not strongly adhere to the general trend in the cluster. Soft clustering appears a good candidate for modeling this by assiging a gene *i* gradual degrees of membership *μij* to a cluster *j*. The membership values can vary continuously between zero and one. This feature enables soft clustering to provide more information about the   gene expression clusters.
 
+Here, we will run fuzzy on the DEGs indentifies by 2+ tools. 
 
-```{r, echo = FALSE}
+```{r,echo = T, cache=TRUE}
 ####################################################################################################
-#Fuzzy clustering of DEGs (2+ methods)
+#DEG LIST: GENES ID'ED from the 3 different intersections of each tool 
+#RUN GO ANALYSIS in TriTrypDb for each of the cores (Cellular Component, Biological Process, & Mol Function)
 ####################################################################################################
-
+all3_DEGcounts<-tccount1[match(tryp_DEGs_3_way_df$gene, rownames(tccount1)),]
  
-#DEGcounts
-DEGcounts<-as.matrix(TBcounts[rownames(TBcounts) %in% tryp_DEGs_3_way_sig_df$gene,])
+sdvec<-c()
+for (i in 1:dim(all3_DEGcounts)[1]){
+  sdvec<-c(sdvec, sd(all3_DEGcounts[i,]))}
+all3_DEGcounts<-all3_DEGcounts[sdvec>0,]
+all3_DEGcounts<-all3_DEGcounts+0.1
+all3_DEGcounts<-as.matrix(all3_DEGcounts)
+all3l_cluster_data<-matrix(ncol=5,nrow=dim(all3_DEGcounts)[1])
+for (i in 1:dim(all3_DEGcounts)[1]){
+  all3l_cluster_data[i,]<-c(mean(all3_DEGcounts[i, 1:3]), mean(all3_DEGcounts[i, 4:2]), mean(all3_DEGcounts[i, 6:8]), mean(all3_DEGcounts[i, 9:11]), mean(all3_DEGcounts[i, 12:14]))}
+rownames(all3l_cluster_data)<-rownames(all3_DEGcounts)
+colnames(all3l_cluster_data)<-c(0,3,6,12,24)
+Set<-ExpressionSet(all3l_cluster_data)
+Set.s<-standardise(Set)
+all3_cl<-mfuzz(Set.s, c=6, m=mestimate(Set.s))
+all3_scaleddata<-t(scale(t(all3l_cluster_data)))
  
-###Too many clusters in all TPs. Let's only look at first 24 hours
-cluster_data<-matrix(ncol=5,nrow=dim(DEGcounts)[1])
-for (i in 1:dim(DEGcounts)[1]){
-  cluster_data[i,]<-c(mean(DEGcounts[i, 1:3]), mean(DEGcounts[i, 4:5]), mean(DEGcounts[i, 6:8]), mean(DEGcounts[i, 9:11]), mean(DEGcounts[i, 12:14]))}
-rownames(cluster_data)<-rownames(DEGcounts)
-colnames(cluster_data)<-c(0,3,6,12,24)
-Set<-ExpressionSet(cluster_data)
-Set.s<- Mfuzz::standardise(Set)
-cl<-mfuzz(Set.s, c=6, m=mestimate(Set.s))
-scaleddata<-t(scale(t(cluster_data)))
-#Gap stat Kmeans to estimate number of clusters... may take a few mins
-gap <- clusGap(scaleddata, kmeans, 20, B = 100, verbose = interactive())
-plot(gap, main = "Gap statistic")
-abline(v=which.max(gap$Tab[,3]), lty = 2)
 
-#plot clusters
+gap_all3 <- clusGap(all3_scaleddata, kmeans, 10, B = 100, verbose = interactive())
+plot(gap_all3, main = "Gap statistic for DEGs Identified by all 3 tools")
+abline(v=which.max(gap_all3$Tab[,3]), lty = 2)
+
 pdf("tryp_fuzzy_clusters.pdf", onefile = TRUE)
-mfuzz.plot(Set.s, cl, mfrow=c(2,3), time.labels = c(0,3,6,12,24), min.mem=0, new.window=FALSE)
+mfuzz.plot(Set.s, all3_cl, mfrow=c(1,3), time.labels = c(0,3,6,12,24), min.mem=0, new.window=FALSE)
 dev.off()
-
-cores<-acore(Set.s, cl, min.acore=0.8)
+#extract alpha-cores of 0.72
+cores<-acore(Set.s, all3_cl, min.acore=0.3)
 ```
 
-```{r}
-###Run GO Analysis on these clusters
-write.csv(cores[[1]]$NAME, "Cluster1_of_6_Tryp.csv")
-write.csv(cores[[2]]$NAME, "Cluster2_of_6_Tryp.csv")
-write.csv(cores[[3]]$NAME, "Cluster3_of_6_Tryp.csv")
-write.csv(cores[[4]]$NAME, "Cluster4_of_6_Tryp.csv")
-write.csv(cores[[5]]$NAME, "Cluster2_of_6_Tryp.csv")
-write.csv(cores[[6]]$NAME, "Cluster6_of_6_Tryp.csv")
+ 
+For Gene Ontology analysis completed in the future we will save each cluster as a csv file. 
+
+```{r, results = 'hide'}
+#Run GO Analysis on these clusters
+write.csv(cores[[1]]$NAME, "all3_Cluster1_of_6_Tryp.csv")
+write.csv(cores[[2]]$NAME, "all3_Cluster2_of_6_Tryp.csv")
+write.csv(cores[[3]]$NAME, "all3_Cluster3_of_6_Tryp.csv")
+write.csv(cores[[4]]$NAME, "all3_Cluster4_of_6_Tryp.csv")
+write.csv(cores[[5]]$NAME, "all3_Cluster2_of_6_Tryp.csv")
+write.csv(cores[[6]]$NAME, "all3_Cluster6_of_6_Tryp.csv")
 
 ```
-In these clusters, we can see that we set the cluster number to 6, and that each cluster here has slight differences. However, moving forward in this analysis Ethan and I got different results on the clustering of typanosoma data. This is a great cause of worry, as there should really only be one result of this clustering algorithm. Therefore, more analysis will be done in this section. 
+
+
+In these clusters of T-*brucei* data from 0-12h of 2+ tools, we can see that we set the cluster number to 6, and that each cluster here has slight differences. Each cluster is scaled by the standardize() function.  However, moving forward in this analysis Ethan and I got different results on the clustering of typanosoma data. This is a great cause of worry, as there should really only be one result of this clustering algorithm. Therefore, more analysis will be done in this section. 
+
+We will continue fuzzy clustering on DEGs identified by all three. Here, we will follow the same steps as the DEgs identified by 2+ tools. This is important to see the differences between the stricter DEG list and the less strict list to fully see the patterns of our data. 
 
 ```{r,cache=TRUE,include =  FALSE}
 
@@ -548,12 +564,10 @@ In these clusters, we can see that we set the cluster number to 6, and that each
 #STRICTER DEG LIST: GENES ID'ED BY ALL 3
 #RUN GO ANALYSIS in TriTrypDb for each of the cores (Cellular Component, Biological Process, & Mol Function)
 ####################################################################################################
-set1<-intersect(tryp_DEGs_3_way_sig_df$gene,maSigProGenes)
-set2<-intersect(tryp_impulse$vecDEGenes,tryp_DEGs_3_way_sig_df$gene)
-small_DEGs<-unique(c(intersect(set1, set2)))
+ 
 
 #Look at smaller subset (3-way intersection)
-small_DEGcounts<-tccount1[match(small_DEGs, rownames(tccount1)),]
+small_DEGcounts<-tccount1[match(tryp_DEGs_all_df$gene, rownames(tccount1)),]
 sdvec<-c()
 for (i in 1:dim(small_DEGcounts)[1]){
   sdvec<-c(sdvec, sd(small_DEGcounts[i,]))}
@@ -572,36 +586,40 @@ small_scaleddata<-t(scale(t(small_cluster_data)))
 
 gap_small <- clusGap(small_scaleddata, kmeans, 10, B = 100, verbose = interactive())
 plot(gap_small, main = "Gap statistic for DEGs Identified by all 3 tools")
-abline(v=which.max(gap$Tab[,3]), lty = 2)
+abline(v=which.max(gap_small$Tab[,3]), lty = 2)
 
 pdf("tryp_fuzzy_clusters.pdf", onefile = TRUE)
 mfuzz.plot(Set.s, small_cl, mfrow=c(1,3), time.labels = c(0,3,6,12,24), min.mem=0, new.window=FALSE)
 dev.off()
 #extract alpha-cores of 0.72
-cores<-acore(Set.s, cl, min.acore=0.3)
+cores<-acore(Set.s, small_cl, min.acore=0.3)
+ 
+write.csv(cores[[1]]$NAME, "Cluster1_of_6_Tryp_small.csv")
+write.csv(cores[[2]]$NAME, "Cluster2_of_6_Tryp_small.csv")
+write.csv(cores[[3]]$NAME, "Cluster3_of_6_Tryp_small.csv")
+write.csv(cores[[4]]$NAME, "Cluster4_of_6_Tryp_small.csv")
+write.csv(cores[[5]]$NAME, "Cluster5_of_6_Tryp_small.csv")
+write.csv(cores[[6]]$NAME, "Cluster6_of_6_Tryp_small.csv")
 ```
 
-```{r, echo = FALSE}
-
-```
 
 
-# 4. Comparing Data   
 
-In order to answer Schulz's question of bromodomain inhibition impact on trypanosome PF, we must compare our results to Savage 2015 data, or Differentiating data, which includes trypanosoma DE genes gathered from environmental based experiments in the Tsetse fly. The results of Savage 2015 data details the biological change in T.brucei gene transcription based on environmental conditions. By comparing our DE genes to Savage environment based DE genes, we can come to conclusions about what happens in gene expression for bromodomain inhibited PF.
+# 4. Comparing T.*brucei* with Differentiating Data   
+
+In order to answer the question of bromodomain inhibition impact on trypanosome PF, we must compare our results to @Savage data, or Differentiating data, which includes trypanosoma DE genes gathered from environmental based experiments in the Tsetse fly. This means that in this experiment, @Savage gathered samples of trypanosmoa from the midgut(MG), salivary gland(SA) and proventriculus(PV).  The results of @Savage data details the biological change in T.*brucei* gene transcription based on environmental conditions. By comparing our DE genes to Savage environment based DE genes, we can come to conclusions about what happens in gene expression for bromodomain inhibited PF.
 By comparing MG to SA, the resulting DE genes are those that best exemplify the gene expression change between BF and PF. These genes are very important in our understanding of the changes that Schulz samples undergo. For example, if there is a high amount of correlation between DE genes in MG to SA and 0h - 12h, we can hypothesize certain aspects of what happens in bromodomain inhibition in PF in relation to epitope changes. This might be a revert to the BF, or the bromodomain inhibited PF trypanosomes share similar like qualities of BF trypanosomes. 
 
 Thus, by completing DESeq and future biological analysis on Savage data, we can come to a more concrete conclusion of bromodomain function in trypanosoma. 
  
 Similar to analyzing our data, we must analyze 2015 Savage data, using the same pipeline: 
-  1. Run raw read counts
-  2. Filter/Quality Control
-  3. Run Differential Gene Expression Analysis using DESEq2.
-  
+  1. Run raw read counts  
+  2. Filter/Quality Control  
+  3. Run Differential Gene Expression Analysis using DESEq2  
 # 4.1 Savage Data  
 First, we must read in our data table. Variable 'savagecounts' represents this data table of Savage raw read counts. 
 Similar to our data, we must manipulate our savagecounts data table for DESeq2. 
-```{r, include = FALSE}
+```{r, echo = FALSE}
 #DESEQ ON SAVAGE DATA - THREE COMPARISON MGSA MGPV PVSA
 
 savagecounts <- read.table("18-5-24_dedup_Savage_deseq_counts.txt", header = TRUE)
@@ -624,18 +642,18 @@ savagecounts_dds <- DESeq(ddsFullCountTable )
 
 ```  
  
- As you can see in the above chunk, savage data was run through the same pipeline, creating a new data frame for DESeq2 with variables reps, which are the repetition of the samples, and stage, which now represents the location of where the trypanosome was sampled: Migut, Proventriculus, Salivary gland.
+ As you can see in the above chunk, savage data was run through the same pipeline, creating a new data frame for DESeq2 with variables reps, which are the repetition of the samples, and stage, whichrepresents the location of where the trypanosome was sampled: Midgut, Proventriculus, Salivary gland. We will not be using edgeR or other methods to normalize and run differential expression because of the consistency with normalization, and also due to timing contraints, and unnecessary analysis of Savage data. 
  
 # 4.2 Savage Methods  
 Here we are completing DESEq results on Savage data. We have an adjusted p value (padj) filter of < 0.01, a log2foldchange > 1.5. 
 The comparisons we completed are:
-1. MgSa (Midgut and Salivary Gland)
+1. MgSa (Midgut and Salivary Gland)  
 $~$
-2. MgPv (Migut and Proventriculus)
+2. MgPv (Migut and Proventriculus)  
 $~$
-3. PvSa (Proventriculus and Salivary Gland)
+3. PvSa (Proventriculus and Salivary Gland)  
 $~$
-  In the chunk below, we will comlete comparison MgSa. We will complete the same analysis on Schulz data on the comparisons MG/SA, MG/PV and PV/SA, but it will not be shown in the knitted document.
+  In the chunk below, we will comlete comparison MgSa. We will complete the same analysis pipline on the comparisons MG/SA, MG/PV and PV/SA, but it will not be shown in the knitted document.
   
 Here we extract results for the log2 of the fold change of MG and SA. 
  
@@ -648,11 +666,11 @@ savageRes_MgSa <- results( savagecounts_dds ,contrast = c("stage",  "MG","SA"))
 savageRes_MgSa
 ```
  
-For Schulz data, we also considered a fraction of 1% false positives acceptable, due to the accuracy we need in the DE genes for Savage to compare to our dataset. We consider all genes with an adjusted p value below 1%=0.01 as significant.  
+For T.*brucei* data, we also considered a fraction of 1% false positives acceptable, due to the accuracy we need in the DE genes for Savage to compare to our dataset. We consider all genes with an adjusted p value below 1%=0.01 as significant.  
 
-Similar to filtering the padj, we want to filter the logfold2change. If a gene has a high absolute value log2foldchange, it means the gene is highly expressed. In order to cut down the amount of DE genes, filtering of this parameter will select only the higly expressed genes for our analysis of Savage data against our own. The cutoff logfold2 value 1.5 was arbitrarly chosen based on needing ~200-500 DE genes for further analysis. 
+Similar to filtering the padj, we want to filter the logfold2change. If a gene has a high absolute value log2foldchange, it means the gene is highly expressed, and therefore most likely biologically significant. In order to cut down the amount of DE genes, filtering of this parameter will select only the higly expressed genes for our analysis of Savage data against our own. The cutoff logfold2 value 1.5 was arbitrarly chosen based on needing ~200-500 DE genes for further analysis. 
 
-MgSa represents the filtered padj and log2foldchange DE genes. 
+MgSa represents the filtered padj and log2foldchange DE genes between midgut and salivary gland. 
 ```{r}
 resSig <- savageRes_MgSa[ which(savageRes_MgSa$padj < 0.01 ), ]
 resSig <- resSig[which(abs(resSig$log2FoldChange) > 1.5),]
@@ -680,24 +698,273 @@ PvSa <- resSig
 ```
 
 
-# 5. Gene Ontology analysis   
-In order to assign biological meaning to our results, we must understand the biological background behind our DE genes. GO analysis, or Gene Ontology term enrichment, is a way to characterize genes through assigning them to cell, or organism specific pathways. More explicitly, the GO system of classification assigns these genes to a set of predefined pathways depending on their functional characteristics. For example, if a gene called FasR is categorized by the GO term 'receptor', it might be found to be involved in apoptosis and located on the plasma membrane. Thus, by being able to group our DE genes by biological function, we can come to a fuller conclusion of our data.
+# 5. Gene Ontology analysis  
 
-For GO on Schulz and savage data, we used a database https://tritrypdb.org/tritrypdb/, and completed GeneId search for our DE genes, which give additional information on the specific information on each gene. Then, after completing Geneid search, click on the tab "Analyze Results" and then you should see a option 'GO'. For our data, we included Cellular Component, Molecular Function, and Biological Process for GO enrichment. The downloaded tabs are in the folder labeled "GO_Terms"
+In order to assign biological meaning to our results, we must understand the biological background behind our DE genes. GO analysis, or Gene Ontology term enrichment, is a way to characterize genes through assigning them to specific pathways and determines if groups of genes are significantly over or under enriched in a pathway. More explicitly, the GO system of classification assigns these genes to a set of predefined pathways depending on their functional characteristics. For example, if a gene called FasR is categorized by the GO term 'receptor', it might be found to be involved in apoptosis and located on the plasma membrane. Thus, by being able to group our DE genes by biological function, we can come to a fuller conclusion of our data.
+
+For GO on T.*brucei* and Savage data, we used a database https://tritrypdb.org/tritrypdb/, and completed GeneId search for our DE genes, which give additional information on the specific information on each gene. Then, after completing Geneid search, click on the tab "Analyze Results" and then you should see a option 'GO'. For our data, we included Cellular Component, Molecular Function, and Biological Process for GO enrichment. The downloaded tabs are in the folder labeled "GO_Terms"
  
-https://en.wikipedia.org/wiki/Gene_Ontology_Term_Enrichment
 
-# 5.1 Schulz GO  
+# 5.1 T.*brucei* GO  
 
-For Schulz data, we used GO analysis on the PAM clusters, fuzzy clusters, and total DE gene list. As explained above, it was necccesary to include a deeper analysis on the clusters by providing biological tags on the genes.
+For T.*brucei* data, we used GO analysis on the PAM clusters, fuzzy clusters, and total DE gene list. As explained above, it was necccesary to include a deeper analysis on the clusters by providing biological tags on the genes. For fuzzy, we completed the same pipline for the DEGs 2+ methods and DEGs 3 methods. 
 
 CLusters: PAM and Fuzzy
 Here, will use the saved file from PAM clustering code(gene names saved as "tryp_cluster_1.csv" and ect.) and from fuzzy code("Cluster1_of_6_Tryp.csv" and ect.) 
-Then as descibed above, we will import the gene names to  https://tritrypdb.org/tritrypdb/ to create the GO components for each cluster.For fuzzy clusters, the GO tab is a data table of all clusters called "fuzzyclusters_GO.tab".
+Then as descibed above, we will import the gene names to  https://tritrypdb.org/tritrypdb/ to create the GO components for each cluster. 
  
 Here we are taking the fuzzy cluster GO analysis results, and preparing them for GSEA pipeline(which we will discuss int he nexrt section). 
 
-First step is to read in all the fuzzy clusters. Then, we will separate them into respective clusters, sorting the clusters into Biological Process and so forth. We will need to make each clustered group into a list for GSEA. 
+First step is to read in all the fuzzy clusters. Then, we will separate them into respective clusters, sorting the clusters into Biological Process and so forth. We will need to make each clustered group into a list for GSEA. Here is the cluster 1 of the DEG list of 2+ methods(Cluster1), and cluster 1 of all 3 methods(small_Cluster1). Only the first cluster will be included in the knit file, but the rest of the clusters will be included in the rmd file. For each DEG list, we saved a .tab file of all GO processes. For 3 tools, the file is small_fuzzyclusters_GO.tab, and for 2+ DEGs the file is fuzzyclusters_GO.tab. 
+
+```{r}
+#CLUSTER 1
+ 
+Cluster1_BioProcess<-read.table("GO_clusters/Cluster1_BiologicalProcess.tab", sep="\t", header=TRUE)
+Cluster1_BioProcess<-Cluster1_BioProcess %>% filter(Benjamini<0.05)
+Cluster1_BioProcess$Cluster<-rep(1, dim(Cluster1_BioProcess)[1])
+Cluster1_BioProcess$Type<-rep("Biological Process", dim(Cluster1_BioProcess)[1])
+ 
+Cluster1_CellularComponent<-read.table("GO_clusters/Cluster1_CellularComponent.tab", sep="\t", header=TRUE)
+Cluster1_CellularComponent<-Cluster1_CellularComponent %>% filter(Benjamini<0.05)
+Cluster1_CellularComponent$Cluster<-rep(1, dim(Cluster1_CellularComponent)[1])
+Cluster1_CellularComponent$Type<-rep("Cellular Component", dim(Cluster1_CellularComponent)[1])
+ 
+Cluster1_MolecularFunction<-read.table("GO_clusters/Cluster1_MolecularFunction.tab", sep="\t", header=TRUE)
+Cluster1_MolecularFunction<-Cluster1_MolecularFunction %>% filter(Benjamini<0.05)
+Cluster1_MolecularFunction$Cluster<-rep(1, dim(Cluster1_MolecularFunction)[1])
+Cluster1_MolecularFunction$Type<-rep("Molecular Function", dim(Cluster1_MolecularFunction)[1])
+Cluster1_GO<-rbind(Cluster1_BioProcess, Cluster1_CellularComponent, Cluster1_MolecularFunction)
+
+```
+
+```{r, include = FALSE}
+
+
+#CLUSTER 2
+ 
+Cluster2_BioProcess<-read.table("GO_clusters/Cluster2_BiologicalProcess.tab", sep="\t", header=TRUE)
+Cluster2_BioProcess<-Cluster2_BioProcess %>% filter(Benjamini<0.05)
+Cluster2_BioProcess$Cluster<-rep(2, dim(Cluster2_BioProcess)[1])
+Cluster2_BioProcess$Type<-rep("Biological Process", dim(Cluster2_BioProcess)[1])
+ 
+Cluster2_CellularComponent<-read.table("GO_clusters/Cluster2_CellularComponent.tab", sep="\t", header=TRUE)
+Cluster2_CellularComponent<-Cluster2_CellularComponent %>% filter(Benjamini<0.05)
+Cluster2_CellularComponent$Cluster<-rep(2, dim(Cluster2_CellularComponent)[1])
+Cluster2_CellularComponent$Type<-rep("Cellular Component", dim(Cluster2_CellularComponent)[1])
+ 
+Cluster2_MolecularFunction<-read.table("GO_clusters/Cluster2_MolecularFunction.tab", sep="\t", header=TRUE)
+Cluster2_MolecularFunction<-Cluster2_MolecularFunction %>% filter(Benjamini<0.05)
+Cluster2_MolecularFunction$Cluster<-rep(2, dim(Cluster2_MolecularFunction)[1])
+Cluster2_MolecularFunction$Type<-rep("Molecular Function", dim(Cluster2_MolecularFunction)[1])
+Cluster2_GO<-rbind(Cluster2_BioProcess, Cluster2_CellularComponent, Cluster2_MolecularFunction)
+
+#CLUSTER 3
+ 
+Cluster3_BioProcess<-read.table("GO_clusters/Cluster3_BiologicalProcess.tab", sep="\t", header=TRUE)
+Cluster3_BioProcess<-Cluster3_BioProcess %>% filter(Benjamini<0.05)
+Cluster3_BioProcess$Cluster<-rep(3, dim(Cluster3_BioProcess)[1])
+Cluster3_BioProcess$Type<-rep("Biological Process", dim(Cluster3_BioProcess)[1])
+ 
+Cluster3_CellularComponent<-read.table("GO_clusters/Cluster3_CellularComponent.tab", sep="\t", header=TRUE)
+Cluster3_CellularComponent<-Cluster3_CellularComponent %>% filter(Benjamini<0.05)
+Cluster3_CellularComponent$Cluster<-rep(3, dim(Cluster3_CellularComponent)[1])
+Cluster3_CellularComponent$Type<-rep("Cellular Component", dim(Cluster3_CellularComponent)[1])
+ 
+Cluster3_MolecularFunction<-read.table("GO_clusters/Cluster3_MolecularFunction.tab", sep="\t", header=TRUE)
+Cluster3_MolecularFunction<-Cluster3_MolecularFunction %>% filter(Benjamini<0.05)
+Cluster3_MolecularFunction$Cluster<-rep(3, dim(Cluster3_MolecularFunction)[1])
+Cluster3_MolecularFunction$Type<-rep("Molecular Function", dim(Cluster3_MolecularFunction)[1])
+Cluster3_GO<-rbind(Cluster3_BioProcess, Cluster3_CellularComponent, Cluster3_MolecularFunction)
+
+#CLUSTER 4
+ 
+Cluster4_BioProcess<-read.table("GO_clusters/Cluster4_BiologicalProcess.tab", sep="\t", header=TRUE)
+Cluster4_BioProcess<-Cluster4_BioProcess %>% filter(Benjamini<0.05)
+Cluster4_BioProcess$Cluster<-rep(4, dim(Cluster4_BioProcess)[1])
+Cluster4_BioProcess$Type<-rep("Biological Process", dim(Cluster4_BioProcess)[1])
+ 
+ Cluster4_CellularComponent<-read.table("GO_clusters/Cluster4_CellularComponent.tab", sep="\t", header=TRUE)
+ Cluster4_CellularComponent<- Cluster4_CellularComponent %>% filter(Benjamini<0.05)
+ Cluster4_CellularComponent$Cluster<-rep(4, dim(Cluster4_CellularComponent)[1])
+ Cluster4_CellularComponent$Type<-rep("Cellular Component", dim(Cluster4_CellularComponent)[1])
+ 
+Cluster4_MolecularFunction<-read.table("GO_clusters/Cluster4_MolecularFunction.tab", sep="\t", header=TRUE)
+Cluster4_MolecularFunction<-Cluster4_MolecularFunction %>% filter(Benjamini<0.05)
+Cluster4_MolecularFunction$Cluster<-rep(4, dim(Cluster4_MolecularFunction)[1])
+Cluster4_MolecularFunction$Type<-rep("Molecular Function", dim(Cluster4_MolecularFunction)[1])
+Cluster4_GO<-rbind(Cluster4_BioProcess, Cluster4_CellularComponent, Cluster4_MolecularFunction)
+
+#CLUSTER 5
+ 
+Cluster5_BioProcess<-read.table("GO_clusters/Cluster5_BiologicalProcess.tab", sep="\t", header=TRUE)
+Cluster5_BioProcess<-Cluster5_BioProcess %>% filter(Benjamini<0.05)
+Cluster5_BioProcess$Cluster<-rep(5, dim(Cluster5_BioProcess)[1])
+Cluster5_BioProcess$Type<-rep("Biological Process", dim(Cluster5_BioProcess)[1])
+ 
+Cluster5_CellularComponent<-read.table("GO_clusters/Cluster5_CellularComponent.tab", sep="\t", header=TRUE)
+Cluster5_CellularComponent<-Cluster5_CellularComponent %>% filter(Benjamini<0.05)
+Cluster5_CellularComponent$Cluster<-rep(5, dim(Cluster5_CellularComponent)[1])
+Cluster5_CellularComponent$Type<-rep("Cellular Component", dim(Cluster5_CellularComponent)[1])
+ 
+Cluster5_MolecularFunction<-read.table("GO_clusters/Cluster5_MolecularFunction.tab", sep="\t", header=TRUE)
+Cluster5_MolecularFunction<-Cluster5_MolecularFunction %>% filter(Benjamini<0.05)
+Cluster5_MolecularFunction$Cluster<-rep(5, dim(Cluster5_MolecularFunction)[1])
+Cluster5_MolecularFunction$Type<-rep("Molecular Function", dim(Cluster5_MolecularFunction)[1])
+Cluster5_GO<-rbind(Cluster5_BioProcess, Cluster5_CellularComponent, Cluster5_MolecularFunction)
+
+#CLUSTER 6
+ 
+Cluster6_BioProcess<-read.table("GO_clusters/Cluster6_BiologicalProcess.tab", sep="\t", header=TRUE)
+Cluster6_BioProcess<-Cluster6_BioProcess %>% filter(Benjamini<0.05)
+Cluster6_BioProcess$Cluster<-rep(6, dim(Cluster6_BioProcess)[1])
+Cluster6_BioProcess$Type<-rep("Biological Process", dim(Cluster6_BioProcess)[1])
+ 
+Cluster6_CellularComponent<-read.table("GO_clusters/Cluster6_CellularComponent.tab", sep="\t", header=TRUE)
+Cluster6_CellularComponent<-Cluster6_CellularComponent %>% filter(Benjamini<0.05)
+Cluster6_CellularComponent$Cluster<-rep(6, dim(Cluster6_CellularComponent)[1])
+Cluster6_CellularComponent$Type<-rep("Cellular Component", dim(Cluster6_CellularComponent)[1])
+ 
+Cluster6_MolecularFunction<-read.table("GO_clusters/Cluster6_MolecularFunction.tab", sep="\t", header=TRUE)
+Cluster6_MolecularFunction<-Cluster6_MolecularFunction %>% filter(Benjamini<0.05)
+Cluster6_MolecularFunction$Cluster<-rep(6, dim(Cluster6_MolecularFunction)[1])
+Cluster6_MolecularFunction$Type<-rep("Molecular Function", dim(Cluster6_MolecularFunction)[1])
+Cluster6_GO<-rbind(Cluster6_BioProcess, Cluster6_CellularComponent, Cluster6_MolecularFunction)
+
+GO<-list(Cluster1_GO, Cluster2_GO, Cluster3_GO, Cluster4_GO, Cluster5_GO, Cluster6_GO)
+names(GO)<-c("Cluster1", "Cluster2", "Cluster3", "Cluster4", "Cluster5", "Cluster6")
+
+GO_table<-rbind(GO[[1]], GO[[2]], GO[[3]], GO[[4]], GO[[5]], GO[[6]])
+write.table(GO_table, "fuzzyclusters_GO.tab")
+
+
+
+
+
+```
+
+
+```{r}
+#CLUSTER 1
+ 
+small_Cluster1_BioProcess<-read.table("small_Cluster1_BiologicalProcess.tab", sep="\t", header=TRUE)
+small_Cluster1_BioProcess<-small_Cluster1_BioProcess %>% filter(Benjamini<0.05)
+small_Cluster1_BioProcess$Cluster<-rep(1, dim(small_Cluster1_BioProcess)[1])
+small_Cluster1_BioProcess$Type<-rep("Biological Process", dim(small_Cluster1_BioProcess)[1])
+ 
+small_Cluster1_CellularComponent<-read.table("small_Cluster1_CellularComponent.tab", sep="\t", header=TRUE)
+small_Cluster1_CellularComponent<-small_Cluster1_CellularComponent %>% filter(Benjamini<0.05)
+small_Cluster1_CellularComponent$Cluster<-rep(1, dim(small_Cluster1_CellularComponent)[1])
+small_Cluster1_CellularComponent$Type<-rep("Cellular Component", dim(small_Cluster1_CellularComponent)[1])
+ 
+small_Cluster1_MolecularFunction<-read.table("small_Cluster1_MolecularFunction.tab", sep="\t", header=TRUE)
+small_Cluster1_MolecularFunction<-small_Cluster1_MolecularFunction %>% filter(Benjamini<0.05)
+small_Cluster1_MolecularFunction$Cluster<-rep(1, dim(small_Cluster1_MolecularFunction)[1])
+small_Cluster1_MolecularFunction$Type<-rep("Molecular Function", dim(small_Cluster1_MolecularFunction)[1])
+small_Cluster1_GO<-rbind(small_Cluster1_BioProcess, small_Cluster1_CellularComponent, small_Cluster1_MolecularFunction)
+```
+```{r, include = FALSE}
+#CLUSTER 2
+ 
+small_Cluster2_BioProcess<-read.table("small_Cluster2_BiologicalProcess.tab", sep="\t", header=TRUE)
+#small_Cluster2_BioProcess<-small_Cluster2_BioProcess %>% filter(Benjamini<0.05)
+small_Cluster2_BioProcess$Cluster<-rep(2, dim(small_Cluster2_BioProcess)[1])
+small_Cluster2_BioProcess$Type<-rep("Biological Process", dim(small_Cluster2_BioProcess)[1])
+ 
+small_Cluster2_CellularComponent<-read.table("small_Cluster2_CellularComponent.tab", sep="\t", header=TRUE)
+#small_Cluster2_CellularComponent<-small_Cluster2_CellularComponent %>% filter(Benjamini<0.05)
+small_Cluster2_CellularComponent$Cluster<-rep(2, dim(small_Cluster2_CellularComponent)[1])
+small_Cluster2_CellularComponent$Type<-rep("Cellular Component", dim(small_Cluster2_CellularComponent)[1])
+ 
+small_Cluster2_MolecularFunction<-read.table("small_Cluster2_MolecularFunction.tab", sep="\t", header=TRUE)
+small_Cluster2_MolecularFunction<-small_Cluster2_MolecularFunction %>% filter(Benjamini<0.05)
+small_Cluster2_MolecularFunction$Cluster<-rep(2, dim(small_Cluster2_MolecularFunction)[1])
+small_Cluster2_MolecularFunction$Type<-rep("Molecular Function", dim(small_Cluster2_MolecularFunction)[1])
+small_Cluster2_GO<-rbind(small_Cluster2_BioProcess, small_Cluster2_CellularComponent, small_Cluster2_MolecularFunction)
+
+#CLUSTER 3
+ 
+small_Cluster3_BioProcess<-read.table("small_Cluster3_BiologicalProcess.tab", sep="\t", header=TRUE)
+#small_Cluster3_BioProcess<-small_Cluster3_BioProcess %>% filter(Benjamini<0.05)
+small_Cluster3_BioProcess$Cluster<-rep(3, dim(small_Cluster3_BioProcess)[1])
+small_Cluster3_BioProcess$Type<-rep("Biological Process", dim(small_Cluster3_BioProcess)[1])
+ 
+small_Cluster3_CellularComponent<-read.table("small_Cluster3_CellularComponent.tab", sep="\t", header=TRUE)
+#small_Cluster3_CellularComponent<-small_Cluster3_CellularComponent %>% filter(Benjamini<0.05)
+small_Cluster3_CellularComponent$Cluster<-rep(3, dim(small_Cluster3_CellularComponent)[1])
+small_Cluster3_CellularComponent$Type<-rep("Cellular Component", dim(small_Cluster3_CellularComponent)[1])
+ 
+small_Cluster3_MolecularFunction<-read.table("small_Cluster3_MolecularFunction.tab", sep="\t", header=TRUE)
+#small_Cluster3_MolecularFunction<-small_Cluster3_MolecularFunction %>% filter(Benjamini<0.05)
+small_Cluster3_MolecularFunction$Cluster<-rep(3, dim(small_Cluster3_MolecularFunction)[1])
+small_Cluster3_MolecularFunction$Type<-rep("Molecular Function", dim(small_Cluster3_MolecularFunction)[1])
+small_Cluster3_GO<-rbind(small_Cluster3_BioProcess,small_Cluster3_CellularComponent, small_Cluster3_MolecularFunction)
+
+#CLUSTER 4
+ 
+small_Cluster4_BioProcess<-read.table("small_Cluster4_BiologicalProcess.tab", sep="\t", header=TRUE)
+#small_Cluster4_BioProcess<-small_Cluster4_BioProcess %>% filter(Benjamini<0.05)
+small_Cluster4_BioProcess$Cluster<-rep(4, dim(small_Cluster4_BioProcess)[1])
+small_Cluster4_BioProcess$Type<-rep("Biological Process", dim(small_Cluster4_BioProcess)[1])
+ 
+small_Cluster4_CellularComponent<-read.table("small_Cluster4_CellularComponent.tab", sep="\t", header=TRUE)
+#small_Cluster4_CellularComponent<-small_Cluster4_CellularComponent %>% filter(Benjamini<0.05)
+small_Cluster4_CellularComponent$Cluster<-rep(4, dim(small_Cluster4_CellularComponent)[1])
+small_Cluster4_CellularComponent$Type<-rep("Cellular Component", dim(small_Cluster4_CellularComponent)[1])
+ 
+small_Cluster4_MolecularFunction<-read.table("small_Cluster4_MolecularFunction.tab", sep="\t", header=TRUE)
+#small_Cluster4_MolecularFunction<-small_Cluster4_MolecularFunction %>% filter(Benjamini<0.05)
+small_Cluster4_MolecularFunction$Cluster<-rep(4, dim(small_Cluster4_MolecularFunction)[1])
+small_Cluster4_MolecularFunction$Type<-rep("Molecular Function", dim(small_Cluster4_MolecularFunction)[1])
+small_Cluster4_GO<-rbind(small_Cluster4_BioProcess, small_Cluster4_CellularComponent, small_Cluster4_MolecularFunction)
+
+#CLUSTER 5
+ 
+small_Cluster5_BioProcess<-read.table("small_Cluster5_BiologicalProcess.tab", sep="\t", header=TRUE)
+#small_Cluster5_BioProcess<-small_Cluster5_BioProcess %>% filter(Benjamini<0.05)
+small_Cluster5_BioProcess$Cluster<-rep(5, dim(small_Cluster5_BioProcess)[1])
+small_Cluster5_BioProcess$Type<-rep("Biological Process", dim(small_Cluster5_BioProcess)[1])
+ 
+small_Cluster5_CellularComponent<-read.table("small_Cluster5_CellularComponent.tab", sep="\t", header=TRUE)
+#small_Cluster5_CellularComponent<-small_Cluster5_CellularComponent %>% filter(Benjamini<0.05)
+small_Cluster5_CellularComponent$Cluster<-rep(5, dim(small_Cluster5_CellularComponent)[1])
+small_Cluster5_CellularComponent$Type<-rep("Cellular Component", dim(small_Cluster5_CellularComponent)[1])
+ 
+small_Cluster5_MolecularFunction<-read.table("small_Cluster5_MolecularFunction.tab", sep="\t", header=TRUE)
+#small_Cluster5_MolecularFunction<-small_Cluster5_MolecularFunction %>% filter(Benjamini<0.05)
+small_Cluster5_MolecularFunction$Cluster<-rep(5, dim(small_Cluster5_MolecularFunction)[1])
+small_Cluster5_MolecularFunction$Type<-rep("Molecular Function", dim(small_Cluster5_MolecularFunction)[1])
+small_Cluster5_GO<-rbind(small_Cluster5_BioProcess, small_Cluster5_CellularComponent, small_Cluster5_MolecularFunction)
+
+#CLUSTER 6
+ 
+small_Cluster6_BioProcess<-read.table("small_Cluster6_BiologicalProcess.tab", sep="\t", header=TRUE)
+#small_Cluster6_BioProcess<-small_Cluster6_BioProcess %>% filter(Benjamini<0.05)
+small_Cluster6_BioProcess$Cluster<-rep(6, dim(small_Cluster6_BioProcess)[1])
+small_Cluster6_BioProcess$Type<-rep("Biological Process", dim(small_Cluster6_BioProcess)[1])
+ 
+small_Cluster6_CellularComponent<-read.table("small_Cluster6_CellularComponent.tab", sep="\t", header=TRUE)
+#small_Cluster6_CellularComponent<-small_Cluster6_CellularComponent %>% filter(Benjamini<0.05)
+small_Cluster6_CellularComponent$Cluster<-rep(6, dim(small_Cluster6_CellularComponent)[1])
+small_Cluster6_CellularComponent$Type<-rep("Cellular Component", dim(small_Cluster6_CellularComponent)[1])
+ 
+small_Cluster6_MolecularFunction<-read.table("small_Cluster6_MolecularFunction.tab", sep="\t", header=TRUE)
+#small_Cluster6_MolecularFunction<-small_Cluster6_MolecularFunction %>% filter(Benjamini<0.05)
+small_Cluster6_MolecularFunction$Cluster<-rep(6, dim(small_Cluster6_MolecularFunction)[1])
+small_Cluster6_MolecularFunction$Type<-rep("Molecular Function", dim(small_Cluster6_MolecularFunction)[1])
+small_Cluster6_GO<-rbind(small_Cluster6_BioProcess, small_Cluster6_CellularComponent, small_Cluster6_MolecularFunction)
+
+small_GO<-list(small_Cluster1_GO, small_Cluster2_GO, small_Cluster3_GO, small_Cluster4_GO, small_Cluster5_GO, small_Cluster6_GO)
+names(small_GO)<-c("Cluster1", "Cluster2", "Cluster3", "Cluster4", "Cluster5", "Cluster6")
+
+small_GO_table<-rbind(small_GO[[1]], small_GO[[2]], small_GO[[3]], small_GO[[4]], small_GO[[5]], small_GO[[6]])
+write.table(small_GO_table, "small_fuzzyclusters_GO.tab")
+
+
+
+```
+
+Now, we will need to read in the file with all the GO terms of the clusters. 
 ```{r}  
 #Reading in huge file with all GO terms of clusters 
 fuzzyClust <- read.table("fuzzyclusters_GO.tab") %>% dplyr :: select(Name, Result.gene.list, Cluster,Type)
@@ -713,7 +980,6 @@ clust1_bio$`microtubule-based movement`
 We can see that in clust1_bio, the GO terms are labeled in the list as *microtubule-based movement* for example, and returns the list of genes from that specific cluster that are involved with that GO term. 
 
 It is not included in the knitted file, but this process was completed for rest of the 6 fuzzy clusters and PAM clusters which used same method for GO. 
-
  
  
 ```{r, echo= FALSE, include =  FALSE}
@@ -808,14 +1074,14 @@ tryp_cluster_6 <- read_csv("tryp_cluster_6.csv")
 Here, we must upload the files into the trypanosome database, by taking all the rownames of the DESeq2 results analysis. What that means is, is that we are taking the names of all the DEGs found by DESeq2 and uploading them to a database for GO. Then, after writing the file, the quotations and 'x' must be deleted in order to run Geneid analysis in the database. 
 This is comparison MG/SA, other comparisons MG/PV and PV/SA are not shown in the kintted file but completed. 
 
-```{r}
+```{r, echo = FALSE}
 ###here we need to perform GO on these genes. Upload to tryp database under New search : metabolic pathways, and enter this txt file. Then, make sure to get is downloaded as a csv.
   #GO/PATHWAY ANALYSIS
  file_to_write<-paste(rownames(MgSa), collapse="\t")
 write.table(file_to_write, file="MgSa_gene") #look up in file directory, then delete quotation marks as well as the first rows that are not genes
 ```
 
-```{r, echo = FALSE,include =  FALSE}
+```{r,  include =  FALSE}
 #creating file for GO/PATHWAY ANALYSIS
 file_to_write<-paste(rownames(MgPv), collapse="\t")
 write.table(file_to_write, file="MgPv_gene")
@@ -828,19 +1094,19 @@ write.table(file_to_write, file="PvSa_gene")
 
 # 6. Gene Set Enrichment Analysis  
 
-Gene Set Enrichment Analysis interperts gene expression data by focusing on gene sets, or sets of genes that share common traits and or biological function. This algorithm uses categorical or continuous phenotype data, such as an experiment testing ‘treatment’ vs ‘untreated’. The goal of GSEA is to determine if a gene set S is randomly distributed or found at the top or bottom of a ranked gene list L. 
+Gene Set Enrichment Analysis interprets gene expression data by focusing on gene sets, or sets of genes that share common traits and or biological function. This algorithm uses categorical or continuous phenotype data, such as an experiment testing ‘treatment’ vs ‘untreated’. The goal of GSEA is to determine if a gene set S is randomly distributed or found at the top or bottom of a ranked gene list L. 
 
 For our analysis, we want to 
-Take Savage DE genes comparisons and enrich them in Schulz data
-Take DE genes from Schulz clusters/data and enrich them in Savage data
-Take GO terms from Savage data and enrich them in Schulz data
-Take GO terms from Schulz clusters and enrich them in Savage data
+1. Take Savage DE genes comparisons and enrich them in Schulz data  
+2. Take DE genes from Schulz clusters/data and enrich them in Savage data  
+3. Take GO terms from Savage data and enrich them in Schulz data  
+4. Take GO terms from Schulz clusters and enrich them in Savage data  
 
-We used fgsea(), or fast gene set enrichment analysis. 
+We used fgsea package, and function fgsea(), or fast gene set enrichment analysis. 
 
 In order to prepare our results for GSEA pipline, we must manipulate GO data tables into pathways (list), and ranks (vector). 
 
-# 6.1 GSEA: Savage  
+# 6.1 Gene Set Enrichment Analysis on Savage data 
 
 Here we have the loaded GO analysis  of Savage data set. This set includes GO Biological Process, Molecular Function, and Cellular Component. 
 
@@ -960,18 +1226,16 @@ To measure the enrichment of Savage DE genes in Schulz clusters, we need to crea
 
 
 A. Making ranked metric list for GSEA: 
-We want to complete these tasks for GSEA. First,we will be creating ranks for Savage data.
-  1. Ranks for Savage data (three ranks = MgSa, MgPv, PvSa)
-  2. Ranks for Schulz data (Three ranks = negative logfold, positive logfold, total)
-
-
+We want to complete these tasks for GSEA. First,we will be creating ranks for Savage data.  
+  1. Ranks for Savage data (three ranks = MgSa, MgPv, PvSa)  
+  2. Ranks for Schulz data (Three ranks = negative logfold, positive logfold, total)  
 
 To begin creating the ranked list, the results data table for all Savage comparisons will be row bound and differentiated by column 'comparison' to speed up coding and process. 
 
 ```{r}
 #######MAKING RANKED METRIC LIST FOR SAVAGE DATA########
 
-#making big data set 'allcomp' with all comparisons to make code easier. Splitting after by 'comparison' 
+#making big data set 'allcomp' with all comparisons to make code easier. Splitting by 'comparison' 
 MGSA_df <- data.frame(Gene = rownames(MgSa), pvalue = MgSa$pvalue, padj = MgSa$padj, comparison = "MgSa",log2FoldChange= MgSa$log2FoldChange)
 MGPV_df <- data.frame(Gene = rownames(MgPv), pvalue = MgPv$pvalue, padj = MgPv$padj, comparison = "MgPv", log2FoldChange= MgPv$log2FoldChange)
 PVSA_df <- data.frame(Gene = rownames(PvSa), pvalue = PvSa$pvalue, padj = PvSa$padj, comparison = "PvSa",log2FoldChange= PvSa$log2FoldChange)
@@ -1003,13 +1267,13 @@ head(ranks_MgSa)
 
 ```{r, echo = FALSE,include =  FALSE}
   #MgPv
-gseaDat_MgPv <- filter(gsea_MgPv_df, !is.na(Gene))
+gseaDat_MgPv <- filter(gsea_MgPv_df, !is.na(Gene)) 
 gseaDat_MgPv <- gseaDat_MgPv %>% filter(metric != c(Inf, -Inf))
 ranks_MgPv <- gsea_MgPv_df$metric
 names(ranks_MgPv) <- gseaDat_MgPv$Gene
 ranks_MgPv <- sort(ranks_MgPv)
 #PvSa
-gseaDat_PvSa <- filter(gsea_PvSa_df, !is.na(Gene))
+gseaDat_PvSa <- filter(gsea_PvSa_df, !is.na(Gene) )
 gseaDat_PvSa <- gseaDat_PvSa %>% filter(metric != c(Inf, -Inf))
 ranks_PvSa <- gsea_PvSa_df$metric
 names(ranks_PvSa) <- gseaDat_PvSa$Gene
@@ -1017,10 +1281,10 @@ ranks_PvSa <- sort(ranks_PvSa)
 
 ```
 
-B. Making metric rank for Schulz data
-Similar to savage, we will create a ranked list of DEGs for Schulz data. We will be using the 0-12 time comparison, and separate the negative, positive, and total logfold2change.  
+B. Making metric rank for T.*brucei* data  
+Similar to the Savage data, we will create a ranked list of DEGs for T.*brucei* data. We will be using the 0-12h time comparison, and use resSig_012 which was created by running DESeq2 results(). This data frame has the p values, logfold2change, and padj that we will use to create this ranked list. We will separate the negative, positive, and total logfold2change to analyize the different expression patterns of genes. 
 
-Here, we will take resSig_012, which represents the log2 of the fold change of treated 12h and untreated 0h, ib_12h / noo_ib, and create ranking metric -log10(pvalue) * abs(logfold2change). Because there are values of -+ Infinity for our metric, we needed to remove them for future analysis. 
+Here, we will take resSig_012, ib_12h / noo_ib, and create ranking metric -log10(pvalue) * abs(logfold2change). Because there are values of -+ \infinity for our metric, we needed to remove them for future analysis. 
 
 This process was completed for positive and negative log fold, but is not shown in the knitted document.
 
@@ -1040,8 +1304,7 @@ gsea_schulz <-resSig_012[,c("Gene", "metric")]
 #Creating data frame from gsea_schulz for gsea
 gsea_schulz_df <- data.frame(gsea_schulz)
 rownames(gsea_schulz_df) <- NULL
-gsea_schulz_df <- gsea_schulz_df[which(gsea_schulz_df$metric != -Inf),] #removing metric where = -Inf
-gsea_schulz_df <- gsea_schulz_df[which(gsea_schulz_df$metric != Inf),]
+gsea_schulz_df <- gsea_schulz_df %>% filter(metric != "Inf",metric != "Inf") 
 gsea_schulz_df[1:10,] 
 #creating stats and pathways for gsea
 gseaDat_schulz <- filter(gsea_schulz_df, !is.na(Gene))
@@ -1065,8 +1328,8 @@ gsea_schulz_log.pos <-resSig_log.pos[,c("Gene", "metric")]
   #creating data frame
 gsea_schulz_df_log.pos <- data.frame(gsea_schulz_log.pos)
 rownames(gsea_schulz_df_log.pos) <- NULL
-gsea_schulz_df_log.pos <- gsea_schulz_df_log.pos[which(gsea_schulz_df_log.pos$metric != -Inf),] #removing metric where = -Inf
-gsea_schulz_df_log.pos <- gsea_schulz_df_log.pos[which(gsea_schulz_df_log.pos$metric != Inf),]
+gsea_schulz_df_log.pos <- gsea_schulz_df_log.pos %>% filter(metric != "Inf",metric != "Inf") 
+
 gsea_schulz_df_log.pos[1:10,]
 
   #creating ranks for fgsea
@@ -1088,8 +1351,8 @@ gsea_schulz_log.neg <-resSig_log.neg[,c("Gene", "metric")]
   #creating data frame
 gsea_schulz_df_log.neg <- data.frame(gsea_schulz_log.neg)
 rownames(gsea_schulz_df_log.neg) <- NULL
-gsea_schulz_df_log.neg <- gsea_schulz_df_log.neg[which(gsea_schulz_df_log.neg$metric != -Inf),] #removing metric   where = -Inf
-gsea_schulz_df_log.neg <- gsea_schulz_df_log.neg[which(gsea_schulz_df_log.neg$metric != Inf),]
+gsea_schulz_df_log.neg <- gsea_schulz_df_log.neg %>% filter(metric != "Inf",metric != "Inf") 
+
 gsea_schulz_df_log.neg[1:10,]
   #creating ranks for fgsea
 gseaDat_schulz_log.neg <- filter(gsea_schulz_df_log.neg, !is.na(Gene))
@@ -1100,7 +1363,7 @@ head(ranks_log.neg)
 
 ```
 
-Now, we will complete GSEA on Savage DE genes that are enriched in Schulz DE genes 0-12 hours. 
+Now, we will complete GSEA on Savage DE genes that are enriched in Schulz DE genes 0-12 hours. We first need to make a list of all the gene names of the DEG found from the MgSa etc comparisons. 
 
 ```{r}
 
@@ -1120,15 +1383,23 @@ sav_all_list$MgPv <- MgPv_list
 sav_all_list$PvSa <- PvSa_list
 ```
 
+For the function fgsea(), the function takes the argument *stats*, which is a named vector of gene-level stats, and the names should be the same as in 'pathways'. Here, *stats* are the ranks we created for each DEG set. The second argument is nperm, which Number of permutations that the function will run through. The higher the permutations the more accurate the results will be, so we chose to have permutations set to 1000. The third argument is minSize, which is the minimal size of a gene set to test. All pathways below the threshold are excluded. Here we will need to specify at least 1 since we are comparing a whole set of MgSa, MgPv, and PvSa to T.*brucei* data. 
+
 ```{r}
 #FGSEA on SAV DE GENES (NO GO)
 
 fgseaRes_all <- fgsea(pathways = as.list(sav_all_list), stats = ranks, minSize = 1,  nperm = 1000)
 fgseaRes_all
+```
 
+We can see here that our p values are very small, signaling very significant results. We will need to conduct further analysis on the biological significance of these results, however it is interesting to see the statistical significance of our results. 
+
+In order to visualize the GSEA results, we will create a GSEA enrichment plot, which takes in the pathways, of gene set to plot, and the stats, which are the ranks of a DEG list. Here, we will plot the pathway of MgSa, with the ranks of T.*brucei* data. Here we need to specify from sav_all_list$MgSa becuase we want to look at the particular set MgSa. 
+```{r}
 plotEnrichment(pathway = sav_all_list$MgSa,
                stats  = ranks ) + labs(title ="MgSa")
 ```
+On this graph, we can see that the gene lines on the bottom are the ranked list of the T.*brucei* data. The enrichment score is based on the MgSa GO terms and how they are overrepresented at the extremes(top or bottom) of the entire ranked T.*brucei* list.  In this graph, we can see that many of the genes in the MgSa GO terms are 
 
 ```{r, include =  FALSE}
 fgseaRes_all_pos <- fgsea(pathways = as.list(sav_all_list), stats = ranks_log.pos, minSize = 1,  nperm = 1000)
@@ -1176,7 +1447,7 @@ plotEnrichment(pathway = sav_all_list$PvSa,
 
 Here, we have GO analysis results from three comparisons of savage data, MgSa, MgPv, and PvSa. We will test these pathways on our data, separated into negative and positive log fold change, and ranked by the metric -log(pvalue)*abs(logfold2change). We will perform fgsea on each pathway, for positive, and negative ranked DE genes from our time point 0 to 12hours. 
 
-```{r, echo = FALSE,include =  FALSE}
+```{r, echo = FALSE }
  ########################FGSEA -- SAV GO DATA ENRICHED IN OUR DATA################################
  
 #In order to complete GSEA, we must create pathways, or gene lists that help us determine if that particular gene set is enriched in a gene expression data set. 
@@ -1200,31 +1471,39 @@ fgsea_all_neg[[i]] = fgsea(pathways = as.list(all_list[[i]]), stats = ranks_log.
 }
 names(fgsea_all_neg) <- names(all_list)
 names(fgsea_all_pos) <- names(all_list)
- 
+```
+This data table shown below shows pathway MgSaGOlist_bio enriched in the negalitve log fold change DEG ranked list of T.*brucei* data. We can see the pathway transmembrane transport, transport, localization and establishment of localization all have the same padj. 
+```{r}
+fgsea_all_neg[1]
+```
+Here, we have GSEA plot of MgSa Biological Process GO term and genes enriched in Schulz negative log DEGs. The enrichment score for transport is 0.8868227. We can see the most enriched pathway is transport. In this instance, we will further discuss which plots and which analysis to include in GSEA to best answer the biological questions of our data set. 
+```{r}
+plotEnrichment(all_list$MgSa_bio[[head(fgsea_all_neg$MgSa_bio[order(pval), ], 1)$pathway]],
+               ranks_log.neg) + labs(title=head(fgsea_all_neg$MgSa_bio[order(pval), ], 1)$pathway)
+
 ```
 
-Here, we have GSEA of PvSa Biological Process GO term and genes enriched in Schulz positive log DEGs. 
-```{r}
+
+
+```{r, include = FALSE}
  
-#fgsea_all_pos[3]
+
 plotEnrichment(all_list$MgSa_mole[[head(fgsea_all_pos$MgSa_mole[order(pval), ], 1)$pathway]],
                ranks_log.pos) + labs(title=head(fgsea_all_pos$MgSa_mole[order(pval), ], 1)$pathway)
-```
-
-Here, MgSa Cellular Component GO terms and genes enriched in Schulz negative log DEGs.
-```{r}
+ 
+#Here, MgSa Cellular Component GO terms and genes enriched in Schulz negative log DEGs.
+ 
 #fgsea_all_neg[4]
-plotEnrichment(all_list$MgSa_cell[[head(fgsea_all_pos$MgSa_cell[order(pval), ], 1)$pathway]],
-               ranks_log.pos) + labs(title=head(fgsea_all_pos$MgSa_cell[order(pval), ], 1)$pathway)
-```
-Here, MgPv Cellular Component GO DEGs enriched in Schuls negative log DEGs
-```{r}
+
+ 
+#Here, MgPv Cellular Component GO DEGs enriched in Schuls negative log DEGs
+ 
 #fgsea_all_neg[5]
 plotEnrichment(all_list$MgPv_cell[[head(fgsea_all_neg$MgPv_cell[order(pval), ], 1)$pathway]],
                ranks_log.neg) + labs(title=head(fgsea_all_neg$MgPv_cell[order(pval), ], 1)$pathway)
-```
-Here, PvSa Cellular Component DEGs enriched in Schulz negative log DEGs
-```{r}
+ 
+#Here, PvSa Cellular Component DEGs enriched in Schulz negative log DEGs
+ 
 #fgsea_all_neg[6]
 plotEnrichment(all_list$PvSa_cell[[head(fgsea_all_neg$PvSa_cell[order(pval), ], 1)$pathway]],
                ranks_log.neg) + labs(title=head(fgsea_all_neg$PvSa_cell[order(pval), ], 1)$pathway)
@@ -1302,17 +1581,11 @@ plotEnrichment(all_list$PvSa_mole[[head(fgsea_all_neg$PvSa_mole[order(pval), ], 
 
 # 7 Conclusion   
 
-Through this analysis of Schulz's data set of Trypanosoma Brucei, there was much done and much more to be done. In analyzing the clusters:
+Through this analysis of Schulz's data set of Trypanosoma Brucei, we identified the best normalization method, identified DEGs by using Differential Expression tools that used independent and dependent time modeling, and clustered those DEGs using 2 different algorithms. Then, we compared the time course T.*brucei* data to Savage environmental/location based data. Using Fuzzy clustering, we ran Gene Ontology analysis on each cluster, as well as DEGs from Savage data and T.*brucei* data. From this we determined which DEGs were overrepresented in T.*brucei* data using Gene Set Enrichment Analysis and plotting the results from the GSEA. Of these plotted, there will be more analysis on which clusters will be biologically significant. 
 
-GO analysis of Fuzzy clusters in bromodomain-inhibited T. brucei suggest a developmental transition away from PF and towards BF
-○ Motility: Cluster 1 GO terms indicate upregulation of motility related genes. T. brucei movement through host tissues is essential for development & pathogenesis, particularly in migrating through the tissues of the insect host (Dimitrova et al. 2017).
-○ Glycosome & hexokinase activity: Cluster 3 GO terms indicate upregulation of glycolic and glycosomal genes. The bloodstream is a glucose-rich environment; in BF, glycolysis is confined to the glycosome and is the sole source of ATP (Michels et al. 2006).
-○ Stress Granule: Cluster 6 GO terms indicate downregulation in genes involved in the cytoplasmic stress granules. These granules are RNA-protein complexes formed during Carbon-starvation in the insect intestinal tract (PF).
-● GSEA on Savage DEG GO terms on Schulz 0-12 hours DEGs show enrichment in membrane and transport function indicating an upregulation of cell surface protein genes in T.brucei PF.
-○ This increased expression of surface proteins suggests a potential BF epitope change, as T.brucei PF does not exhibit antigenic variation in cell surface genes.
-● Bromodomain proteins appear responsible for maintenance of both PF and BF fates
-
-To continue this project, we would need to continue to identify and assign biological meaning to DEGs, and look more into GO analysis. Furthermore, we will need to look into clusering algorithms and make sure that each person will get the same result when using the function, and that the biologist will agree and be able to interpert our results. We will mainly be looking at fuzzy clustering algorithm, and identify either mistakes, or better ways to cluster the DEGs. 
+In analyzing our results, we can see that GO analysis of Fuzzy clusters in bromodomain-inhibited T. brucei suggest a possible  developmental change. We can see this where Cluster 1 GO terms indicate upregulation of motility related genes. T.*brucei* movement through host tissues is essential for development & pathogenesis, particularly in migrating through the tissues of the insect host (Dimitrova et al. 2017).
+ We can also see in the GSEA on Savage DEG GO terms on Schulz 0-12 hours DEGs show enrichment in membrane and transport function in T.*brucei* PF. 
+To continue this project, we would need to continue to identify and assign biological meaning to DEGs, and look more into GO analysis. Furthermore, we will need to look into clusering algorithms and make sure that each person will get the same result when using the function, and that the biologist will agree and be able to interpert our results. We will mainly be looking at fuzzy clustering algorithm, and identify either mistakes, or better ways to cluster the DEGs.
 
  
 # Citations  
@@ -1322,8 +1595,12 @@ Fischer, et al. “Impulse Model-Based Differential Expression Analysis of Time 
  Conesa, Ana, and Nueda Mar ́ıa  J. “MaSigPro User’s Guide.” Bioconductor.org, 4 Sept. 2017, www.bioconductor.org/packages/release/bioc/vignettes/maSigPro/inst/doc/maSigProUsersGuide.pdf.
 
 
+Ruairi , Mackenzie J. “RNA-Seq: Basics, Applications and Protocol.” Genomics Research from Technology Networks, 6 Apr. 2018, www.technologynetworks.com/genomics/articles/rna-seq-basics-applications-and-protocol-299461.
 
+Love, Michael, et al. Beginner’s Guide to Using the DESeq2 Package. 13 May 2014, bioc.ism.ac.jp/packages/2.14/bioc/vignettes/DESeq2/inst/doc/beginner.pdf.
 
+Schulz, Danae, et al. “Bromodomain Proteins Contribute to Maintenance of Bloodstream Form Stage Identity in the African Trypanosome.” PLoS Biology, Public Library of Science, 8 Dec. 2015
 
+www.ncbi.nlm.nih.gov/pubmed/26646171.
 
 
