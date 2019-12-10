@@ -17,23 +17,23 @@ Affiliation: ^1^Department of Mathematics, Pomona College ^2^Department of Mathe
 ## Introduction
   E. coli possesses a general stress response to a variety of environmental stresses (Battesti *et al.* 2011, Hengge 2011) ranging from osmotic shock to nutrient starvation. A key transcription factor coordinating this response is RpoS, which regulates one quarter of the bacteria's genome (Fong *et al.* 2017). Simple interpretations of transcriptional networks often invoke an analogy of an on/off switch, in which the presence of a stimulus turns some genes on and other genes off. However, these simple interpretations don't adequately describe the complex, dyanmic processes underlying many transcriptional responses to stimuli. Currently, there exists a limited understanding regarding the dynamic nature of transcriptional responses, and the well-annotated, heavily-studied genome of E. coli presents an excellent model to study these intricate regulatory circuits.
   
-  The RpoS regulon is not a static, 'switch-like' network; rather, the RpoS regulon is a highly complex regulatory circuit influenced by several factors including the duration/degree of stress (Lange and Hengge-Aronis 1994), processes like transcription, translation, and mRNA degradation (Lange and Hengge-Aronis 1994), other proteins (Pratt and Silhavy 1998), competition between transcription factors for RNA polymerase (Farewell *et al.* 1998), and even strain type (Hryckowian *et al.* 2014, Chiang *et al.* 2011). Wong and colleagues previously showed that several genes' expression increases linearly with Rpos concentration: these were dubbed 'linear' genes. However, several genes didn't follow this linear trend. Several genes were transcribed *more* than anticipated under the linear hypothesis at low RpoS concentrations: these were called 'sensitive' genes. Other genes were transcribed *less* than anticipated under the linear hypothesis at low RpoS concentrations: these were dubbed 'insensitive' genes (Figure 1) (Wong *et al.* 2017). Wong and colleagues hypothesized that sensitivity to Rpos could be a mechanism to control the **timing** of genes involved in the general stress response.
+  The RpoS regulon is not a static, 'switch-like' network; rather, the RpoS regulon is a highly complex regulatory circuit influenced by several factors including the duration/degree of stress (Lange and Hengge-Aronis 1994), processes like transcription, translation, and mRNA degradation (Lange and Hengge-Aronis 1994), other proteins (Pratt and Silhavy 1998), competition between transcription factors for RNA polymerase (Farewell *et al.* 1998), and even strain type (Hryckowian *et al.* 2014, Chiang *et al.* 2011). Wong and colleagues previously showed that several genes' expression increases linearly with Rpos concentration: these were dubbed 'linear' genes. However, several genes didn't follow this linear trend. Several genes were transcribed *more* than anticipated under the linear hypothesis at low RpoS concentrations: these were called 'sensitive' genes. Other genes were transcribed *less* than anticipated under the linear hypothesis at low RpoS concentrations: these were dubbed 'insensitive' genes (*Figure 1*) (Wong *et al.* 2017). Wong and colleagues hypothesized that sensitivity to Rpos could be a mechanism to control the **timing** of genes involved in the general stress response.
   
   ![(A) osmY: a linear gene (B) astA: a sensitive gene, (C) gadC: an insenstive gene. Figure obtained from Wong *et al.* 2017](./Images/Steobel_figure_sens_insens_linear.png)
   
-  We aimed to investigate this hypothesis using an extended time course RNA-seq dataset and an *in silico* tool, ImpulseDE2. ImpulseDE2 is a serial Time Course (TC) Differential Expression tool which fits impulse/sigmoidal models to expression trajectories and compares these dynamics models to constant/reduced models to determine differential expression over time or between time courses. The key advantage of ImpulseDE2 is that its models are parametrized by *biologically meaningful* parameters (ex. onset time), allowing researchers to leverage the parameter values to directly address biological questions (Figure 2).
+  We aimed to investigate this hypothesis using an extended time course RNA-seq dataset and an *in silico* tool, ImpulseDE2. ImpulseDE2 is a serial Time Course (TC) Differential Expression tool which fits impulse/sigmoidal models to expression trajectories and compares these dynamics models to constant/reduced models to determine differential expression over time or between time courses. The key advantage of ImpulseDE2 is that its models are parametrized by *biologically meaningful* parameters (ex. onset time), allowing researchers to leverage the parameter values to directly address biological questions (*Figure 2*).
   
   The impulse model is parametrized by 6 parameters: $h_0$ describes the initial/baseline amplitude (expression), $h_1$ describes the peak amplitude, $h_2$ describes the steady state amplitude, $t_1$ describes the time of the first transition (where the rise/fall is maximal), $t_2$ describes the time of the second transition, $\beta$ is the slope of both transitions. Not that the sigmoid model is just a simplification of the impulse model, where there is only one transition.
   
   ![Sigmoid model for expression trajectories, parametrized by initial expression level (h0), onset time (t), onset slope (beta), and peak expression level (h1)](./Images/Sig Model.png)
   
   The sigmoid model has the following parametric form:
-  $f_{\theta}(x)=\frac{1}{h_1} \cdot s(x, t_1, h_0, \beta)$
-  $s(x, t, h, \beta)=h+(h_1-h)S(\beta, t)$
-  $S(\beta, t)=\frac{1}{1+e^{-\beta(x-t)}}$
-  The impulse model sophisticates the sigmoid model by multiplying $f_{\theta}(x)$ by $s(x, t_2, h_2, -\beta)$.
+  $$f_{\theta}(x)=\frac{1}{h_1} \cdot s(x, t_1, h_0, \beta)$$
+  $$s(x, t, h, \beta)=h+(h_1-h)S(\beta, t)$$
+  $$S(\beta, t)=\frac{1}{1+e^{-\beta(x-t)}}$$
+  The impulse model sophisticates the sigmoid model by multiplying $f_{\theta}(x)$ by $$s(x, t_2, h_2, -\beta)$$
    
-  We applied ImpulseDE2 to a TC RNA-Seq dataset generated by the Steobel lab. Two strains of *E. coli* - a WT strain and another strain, designated delta_RpoS, with the *rpos* gene knocked out - were subjected to a 150 minute cell starvation time course that stimulated RpoS production and changes in expression for many genes (Figure 3). A thoughtful pipeline employing best-performing time course differential expression methods ('DESeq2', 'NEXT maSigPro', and 'ImpulseDE2') was run on the dataset to identify differentially expressed genes. The onset time (`t`) parameter fitted by ImpulseDE2 was extracted and visualized for monotonically differentially expressed genes. Simulations were conducted to better understand and visualize the effects of dispersion, number of time points, and outliers on all sigmoidal parameters, including this 't' parameter. A Wilcox Rank Sum Test was applied to the timing parameters of sensitive and insensitive genes to test the hypothesis that different sensitivity to RpoS coordinates the timing of gene expression in response to stress.
+  We applied ImpulseDE2 to a TC RNA-Seq dataset generated by the Steobel lab. Two strains of *E. coli* - a WT strain and another strain, designated delta_RpoS, with the *rpos* gene knocked out - were subjected to a 150 minute cell starvation time course that stimulated RpoS production and changes in expression for many genes (*Figure 3*). A thoughtful pipeline employing best-performing time course differential expression methods ('DESeq2', 'NEXT maSigPro', and 'ImpulseDE2') was run on the dataset to identify differentially expressed genes. The onset time (`t`) parameter fitted by ImpulseDE2 was extracted and visualized for monotonically differentially expressed genes. Simulations were conducted to better understand and visualize the effects of dispersion, number of time points, and outliers on all sigmoidal parameters, including this 't' parameter. A Wilcox Rank Sum Test was applied to the timing parameters of sensitive and insensitive genes to test the hypothesis that different sensitivity to RpoS coordinates the timing of gene expression in response to stress.
 
 ```{r Rpos Kinetics 1, cache=TRUE, eval=T, echo=F, warning=FALSE, message=FALSE, results='hide', fig.keep='none'}
 #visualize RpoS kinetics, load ggplot and read in data
@@ -215,7 +215,7 @@ head(ecounts)
 \setcounter{figure}{3}
   ![Shiny App image illustrating the monotonic expression profiles for DEGs](./Images/annie_shiny.jpg)
   
-  Genes that were identified as significantly differentially expressed at a Benjamini-Hochberg corrected p value (Benjamini-Hochberg, 1995) of less than 0.01 by ImpulseDE2 and at least one additional tool were included in our DEG list. 1007 genes were labeled as DE and were subjected to further analysis (Figure 4).
+  Genes that were identified as significantly differentially expressed at a Benjamini-Hochberg corrected p value (Benjamini-Hochberg, 1995) of less than 0.01 by ImpulseDE2 and at least one additional tool were included in our DEG list. 1007 genes were labeled as DE and were subjected to further analysis (*Figure 4*).
   
 ```{r DE Tools, cache=TRUE, eval=TRUE, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE, results='hide', fig.keep='all'}
 ####################################################################################################################
@@ -288,12 +288,15 @@ draw.triple.venn(area1= length(res), area2 = length(maSigProGenes), area3= lengt
 #Generate final DEG list: 912 genes
 ###################################################################################################################
 ecoli_DEGs<-union(intersect(impulse_ecoli$vecDEGenes, maSigProGenes), intersect(impulse_ecoli$vecDEGenes, res))
+
+#write.csv(ecoli_DEGs, "ecoli_DEGs.csv")
+#ecoli_DEGs<-read.csv("ecoli_DEGs.csv")
 ```
 
-Figure 4: Venn diagram illustrating numbers and intsersections of DEGs identified by each differential expression tool. DEGs were identified as genes identified by ImpulseDE2 and at least one other tool (912 total).
+*Figure 4: Venn diagram illustrating numbers and intsersections of DEGs identified by each differential expression tool. DEGs were identified as genes identified by ImpulseDE2 and at least one other tool (912 total).*
 
 ### Simulations for Assessment of Sigmoidal Model Parameters
-Simulations were conducted to understand the effects of dispersion, number of time points, and outliers on the sigmoid model's parameters. The simulation structure took in mean read counts estimated from the fit of a sigmoidal model to a real *E. coli* gene. The sigmoid model fit to the real gene was considered to be **truth** for our simulation. Simulated read count data were generated around the true means using 'rnbinom(n,size,mu)' in the R package 'stats', where 'n' was the number of samples at that parctiular TP, 'size' was the ImpulseDE2-estimated dispersion parameter for that gene, and 'mu' was the 'true' mean expression at that TP. Thus, an appropriate level of NB noise was added to the 'true' sigmoid profile. This process was iterated 100 times, generating data for 100 simulated gene expression trajectories.
+Simulations were conducted to understand the effects of dispersion, number of time points, and outliers on the sigmoid model's parameters. The simulation structure took in mean read counts estimated from the fit of a sigmoidal model to a real *E. coli* gene. The sigmoid model fit to the real gene was considered to be **truth** for our simulation. Simulated read count data were generated around the true means using 'rnbinom(n,size,mu)' in the R package 'stats', where 'n' was the number of samples at that parctiular TP, 'size' was the ImpulseDE2-estimated dispersion parameter for that gene, and 'mu' was the true mean expression at that TP. Thus, an appropriate level of NB noise was added to the 'true' sigmoid profile. This process was iterated 100 times, generating data for 100 simulated gene expression trajectories.
 Then, sigmoidal models were fit to the simulated trajectories using ImpulseDE2, and the distribution of simulated parameters were compared to the initial parameter values. Thus, simulated sigmoid trajectories were generated from a 'null trajectory', and the stability and variability of the simulated parameters could be assessed to learn more about this model's application through the ImpulseDE2 package. 
 
 ## Results
@@ -301,9 +304,9 @@ Then, sigmoidal models were fit to the simulated trajectories using ImpulseDE2, 
 
 For genes identfied as differentially expressed by our pipeline, onset timing parameters were extracted and plotted in a density histogram. Differentially expressed genes were divided into three groups according to their trajectories: monotonic, transient, and unknown trajectories (this determination is made by ImpulseDE2 by testing null vs alternative models). Monotonic DEGs were the most abundant (685), followed by unknown (188), followed by transient (39). Monotonic expression trajectories were described using the *sigmoid model* parametrized by four parameters. Transient trajectories were described using the *impulse model*, an extension of the sigmoid model that describes the on/off dyanmics by taking the scaled product of two sigmoid functions.
 
-The distribution of t params for monotonic DEGs obtained from sigmoid models were plotted. Around 92% of the monotonic DEGs have onset times between 55 and 75 minutes, suggesting that the vast majority of monotonic DEGs turn on at around the same time.
+The distribution of t params for monotonic DEGs obtained from sigmoid models were plotted. Around 92% of the monotonic DEGs have onset times between 55 and 75 minutes (*Figure 5*), suggesting that the vast majority of monotonic DEGs turn on at around the same time.
 
-Interestingly, the vast majority of onset time params for genes identified as *transiently* differentially expressed fell around the 14 minute mark.
+Interestingly, the vast majority of onset time params for genes identified as *transiently* differentially expressed fell around the 14 minute mark (*Figure 6*).
 
 ```{r Visualizing t params: mono, impulse, sens, insens, cache=TRUE, warning=FALSE, eval=T, echo=FALSE, results='hide', fig.keep='all'}
 #########
@@ -336,12 +339,10 @@ rownames(transparamsdf)<-transDE
 ggplot(transparamsdf, aes(x=t1))+geom_histogram(color="blue", fill="cyan", alpha=0.5, binwidth=0.5)+ xlim(0,100)+ggtitle("Distribution of 39 impulse t1 params of transient E. coli DEGs")
 ```
 
-Figure 5: Density histogram of counts of sigmoid onset time (t) parameters of 686 montonic E. coli DEGs. Thus, onset time expression for monotonic DEGs appears highly concomitant (55-75 mins).
-
-Figure 6: Histogram of counts of impulse onset time (t_1) parameters of 29 transient E. coli DEGs. Here, onset time expression also appears highly concomitant (14 mins)
+*Figure 5: Density histogram of counts of sigmoid onset time (t) parameters of 686 montonic E. coli DEGs. Thus, onset time expression for monotonic DEGs appears highly concomitant (55-75 mins).*
 
 ```{r Plotting Other and Transient DEGs, eval=F, echo=F}
-#overlay plots for all transient DEGs
+#faceted plots for all transient DEGs
 plot_trajectories<-matrix(nrow=151, ncol=dim(transparamsdf)[1])
 rownames(plot_trajectories)<-seq(0,150,1)
 colnames(plot_trajectories)<-rownames(transparamsdf)
@@ -359,13 +360,14 @@ DEother$Gene[DEother$Gene %in% sensitive$geneName]
 DEother$Gene[DEother$Gene %in% insensitive$geneName]
 DEother$Gene[DEother$Gene %in% linear$geneName]
 
+#plot other genes
 set.seed(13)
 WT_counts<-normecounts[,grepl("JH01", colnames(normecounts))]
 other_genes<-c("ybeM", sample(DEother$Gene[DEother$sigmoidTOconst_padj<0.01], 11))
 plot_list<-list()
 for (i in 1:length(other_genes)){
   index=match(other_genes[i], rownames(WT_counts))
-  tmpdf<-as.data.frame(cbind(times[1:18], t(WT_counts[index,])))
+  tmpdf<-as.data.frame(cbind(rep(c(0,30,60,90,120,150), 3), t(WT_counts[index,])))
   rownames(tmpdf)<-NULL
   colnames(tmpdf)<-c("time", "exp")
   plot_list[[i]]<-ggplot(tmpdf, aes(x=time, y=exp))+ggtitle(as.character(other_genes[i]))+geom_point()+geom_smooth()}
@@ -373,20 +375,169 @@ do.call(grid.arrange, c(plot_list[1:6], ncol=2, nrow=3))
 do.call(grid.arrange, c(plot_list[7:12], ncol=2, nrow=3))
 ```
 
-### *Simulations*
+*Figure 6: Histogram of counts of impulse onset time (t_1) parameters of 29 transient E. coli DEGs. Here, onset time expression also appears highly concomitant (14 mins)*
+
+## *Simulations*
 
 To better understand the effects of dispersion, number of time points, and outliers on the sigmoid model's biologically-meaningful parameters, simulations were conducted based off a sigmoid profile fit to a real *E. coli* DEGs. We chose to primarily focus on a single E. coli DEG, the insenstive gene gadB. Focusing on a single gene would allow us to gain insights into how noise, number of time points, and outliers impact the stability of the model by eliminating differences between geens. We chose gadB due to its high differential expression, clear expression profile, and high interest by Dan Stoebel.  In the following plots of simulated sigmoid trajectories, the vertical dark-blue lines represent the *initial onset time* (t) parameter used to generate all the simulated sigmoid functions. The vertical magenta line represents the median *simulated onset time* parameter.
 
 ### Effect of Dispersion on Sigmoid Parameters
 
-The simulation pipeline was conducted under three conditions: 
-1. With the *a priori* DESeq2-shrunk dispersion parameter estimate supplied to the rnbinom() function.
-2. With a 100-fold *increase* in the dispersion parameter estimate (i.e. a 100-fold reduction in the noise caused by dispersion) supplied to rnbinom().
-3. 100-fold *decrease* in the dispersion parameter estimate (i.e. a 100-fold increase in the noise caused by dispersion) supplied to rnbinom().
+The ascertain the effect of dispersion-based noise on the sigmoid parameters (onset time parameter (t), slope parameter (beta), and peak-initial value (h1-h0)), a simulation pipeline was constructed. This pipeline generated sigmoid profiles based off the initial 'true' profile using the rnbinom() function, which generated simulated read counts that sigmoid profiles could be fit to using ImpulseDE2. To assess the impact of dispersion noise, the *a priori* DESeq2-shrunk dispersion parameter estimate was multiplied by 15 different factors between 0.01 and 100, simulating the effect of a 100-fold decrease and a 100-fold increase in noise. Then these altered dispersion parameters were supplied to rnbinom(), simulated read counts were generated, and the stability and variability of the parameters were assessed.
 
-With unchanged dispersion, beta, t, h0, and h1 all appeared highly reproducible, as the initial parameter values (denoted by vertical red, blue, and green lines) were relatively central to the distributions of simulated values; computed quantiles of the initial parameter values (red, green, blue lines) in the distribution of simulated values are included on the plot (Figure 7). All expression trajectories were highly correlated (R^2>0.94) with the initial trajectory, and the simulated t-params showed low variability with an IQR of 2.11 minutes.The difference between the initial t param and median simulated t param was 0.64 mins, suggestive of stability of the t parameter.
+In addition, plots of all the simulated trajectories were overlaid with a plot of the initial trajectory at different levels of noise. 
 
-```{r Normal Dispersion Sim, cache=T, eval=TRUE, echo=FALSE, message=FALSE, results='hide', fig.keep='all'}
+The slope parameter (beta) parameter was the least stable of the parameters assayed, as its scaled root mean squared error was the highest of any parameter examined, and a small change in dispersion resulted in a rapid increase in error, suggesting that beta is extremely sensitive to dispersion noise (*Figure 7*). 
+
+The peak-initial expression parameter (h1-h0) was also not stable (*Figure 7*). While this parameter displayed an intermediate scaled root mean squared error, as the dispersion increased, the error increased in a monotonic fashion, suggestive that h1-h0 parameter, while relatively stable at low dispersions, is quite sensitive to high dispersions.
+
+At all dispersions surveyed between 0.02 (1/100 fold reduction in noise) and 1130 (500 fold increase in noise), the onset time (t) parameter had the lowest scaled root mean squared error of the 3 variables assayed (*Figure 7*), suggesting that the t parameter was more stable than other parameters. In addition, the t parameter's error plateued as the dispersion level increased, suggesting that the t parameter is robust to high dispersions.
+
+```{r Noise Assessment, cache=TRUE, warning=FALSE, eval=T, echo=FALSE, results='hide', fig.keep='all'}
+set.seed(10)
+
+noise_assessment<-function(gene="gadB", disp_factors, n_sim_profiles=100){
+  #times
+  times<-rep(c(0,30,60,90,120,150),6)
+  #design for sigmoid simulation through ImpulseDE2
+  sigmoid_design<-data.frame(Sample=colnames(ecolidds)[grep("JH01", colnames(ecolidds))], Condition=c(rep("case",18)), Time=rep(c(0,30,60,90,120,150),3))
+  #create final matrix to put params into
+  params_mat<-matrix(ncol=length(disp_factors), nrow=3)
+  #find initial param values
+  geneparams<-monoparamsdf[match(gene, rownames(monoparamsdf)),]
+  ###extract means at each TP, scale by size factor
+  size_facs<-sizeFactors(ecolidds)[grep("JH01", names(sizeFactors(ecolidds)))]
+  means<-sigmoid_function(as.numeric(geneparams[1]), as.numeric(geneparams[2]), as.numeric(geneparams[3]), as.numeric(geneparams[4]), unique(times))
+  #index to find initial dispersion for gene
+  disp_index=match(gene, names(impulse_ecoli@vecDispersions))
+  disp<-as.numeric(impulse_ecoli@vecDispersions[disp_index])
+  repmeans<-c(rep(means, 3))
+  for (j in 1:length(disp_factors)){
+    #generate simulated read count data for 100 trajectories w/ proper NB noise, add one to each count to ensure no rows of all zero counts
+    differentially_expressed<-matrix(ncol=18, nrow=n_sim_profiles)
+    for (i in 1:18){
+      expressions<-c()
+      expressions<-c(expressions, rnbinom(n=n_sim_profiles, mu=repmeans[i], size=disp/disp_factors[j])+1)
+      differentially_expressed[,i]<-round(expressions*as.numeric(size_facs[i]))
+      }
+    differentially_expressed<-as.matrix(differentially_expressed)
+    colnames(differentially_expressed)<-colnames(ecolidds)[grep("JH01", colnames(ecolidds))]
+    rownames(differentially_expressed)<-paste(rep("gene", n_sim_profiles), seq(1, n_sim_profiles))
+    #set manual dispersions
+    dispersions<-rep(disp, n_sim_profiles)
+    names(dispersions)<-paste(rep("gene", n_sim_profiles), seq(1,n_sim_profiles))
+    #fit impulse models
+    sim_sigmoid<-ImpulseDE2::runImpulseDE2(differentially_expressed, sigmoid_design, boolCaseCtrl=FALSE, vecConfounders=NULL, boolIdentifyTransients=TRUE, scaNProc=12, scaQThres = 0.01, vecDispersionsExternal = dispersions, vecSizeFactorsExternal = size_facs, boolVerbose=FALSE)
+  #extract simulated params
+  sim_params_to_plot<-matrix(ncol=4, nrow=n_sim_profiles)
+  for (i in 1:n_sim_profiles){
+    sim_params_to_plot[i,]<-as.vector(sim_sigmoid@lsModelFits[["case"]][[rownames(sim_sigmoid$dfImpulseDE2Results, n_sim_profiles)[i]]][["lsSigmoidFit"]][["vecSigmoidParam"]])}
+  colnames(sim_params_to_plot)<-c("beta", "h0", "h1", "t")
+  sim_params_to_plot<-as.data.frame(sim_params_to_plot)
+  params_mat[1,j]<-sqrt(mean((geneparams$beta-sim_params_to_plot$beta)^2))/geneparams$beta
+  params_mat[2,j]<-sqrt(mean((geneparams$t-sim_params_to_plot$t)^2))/geneparams$t
+  params_mat[3,j]<-sqrt(mean(((geneparams$h1-geneparams$h0)-(sim_params_to_plot$h1-sim_params_to_plot$h0))^2))/(geneparams$h1-geneparams$h0)
+}
+
+error_as_function_of_noise<-as.data.frame(t(params_mat))
+colnames(error_as_function_of_noise)<-c("Beta", "t", "h1-h0")
+error_as_function_of_noise$dispersion<-disp*disp_factors
+error_df<-melt(error_as_function_of_noise, id.vars="dispersion")
+colnames(error_df)<-c("Dispersion", "param_type", "Scaled_RME")
+
+ggplot(error_df)+geom_line(aes(x=Dispersion, y=log(Scaled_RME), group=param_type, color=param_type))+geom_point(aes(x=Dispersion, y=log(Scaled_RME), group=param_type, color=param_type))+facet_wrap(~param_type)+theme_bw()+ggtitle("Effect of Increased Dispersion Noise on Log scaled RME of Sigmoid Parameters")+labs(subtitle=paste(n_sim_profiles, "simulated profiles", " "))
+}
+
+noise_assessment("gadB", disp_factors=c((1/100), (1/10), 1, 20, 40, 60, 80, 100, 150, 200, 250, 300, 350, 400, 500), n_sim_profiles=100)
+```
+
+*Figure 7: Log scaled RM Error of the Beta, t, and h1-h0 sigmoid parameters as a function of dispersion noise (number of simulated profiles=100). Onset time (t param) shows lowest scaled error around the 'true', initial parameter value, and the error levels off at high dispersion values.*
+
+```{r Plot Trajectories with Noise, cache=T, eval=T, echo=FALSE, message=FALSE, results='hide', fig.keep='all'}
+set.seed(11)
+plot_sim_trajectories<-function(gene="gadB", disp_noise_factor=1, n_sim_profiles=100){
+  times<-rep(c(0,30,60,90,120,150),6)
+
+  #design for sigmoid simulation through ImpulseDE2
+  sigmoid_design<-data.frame(Sample=colnames(ecolidds)[grep("JH01", colnames(ecolidds))], Condition=c(rep("case",18)), Time=rep(c(0,30,60,90,120,150),3))
+  geneparams<-monoparamsdf[match(gene, rownames(monoparamsdf)),]
+
+  ###extract means at each TP, scale by size factor
+  size_facs<-sizeFactors(ecolidds)[grep("JH01", names(sizeFactors(ecolidds)))]
+  means<-sigmoid_function(as.numeric(geneparams[1]), as.numeric(geneparams[2]), as.numeric(geneparams[3]), as.numeric(geneparams[4]), unique(times))
+  repmeans<-c(rep(means, 3))
+
+#index to find dispersion for gadB
+  disp_index=match(gene, names(impulse_ecoli@vecDispersions))
+  disp<-as.numeric(impulse_ecoli@vecDispersions[disp_index])
+
+  #generate simulated read count data for 100 trajectories w/ proper NB noise
+  differentially_expressed<-matrix(ncol=18, nrow=n_sim_profiles)
+  for (i in 1:18){
+    expressions<-c()
+    #pseudo-counts (+1) to ensure that nonzero
+    expressions<-c(expressions, rnbinom(n=n_sim_profiles, mu=repmeans[i], size=disp/disp_noise_factor)+1)
+    differentially_expressed[,i]<-round(expressions*as.numeric(size_facs[i]))
+  }
+  differentially_expressed<-as.matrix(differentially_expressed)
+  colnames(differentially_expressed)<-colnames(ecolidds)[grep("JH01", colnames(ecolidds))]
+  rownames(differentially_expressed)<-paste(rep("gene", n_sim_profiles), seq(1,n_sim_profiles))
+  
+  #set manual dispersions
+  dispersions<-rep(disp, n_sim_profiles)
+  names(dispersions)<-paste(rep("gene", n_sim_profiles), seq(1,n_sim_profiles))
+  
+  #fit impulse models
+  sim_sigmoid<-ImpulseDE2::runImpulseDE2(differentially_expressed, sigmoid_design, boolCaseCtrl=FALSE, vecConfounders=NULL, boolIdentifyTransients=TRUE, scaNProc=12, scaQThres = 0.01, vecDispersionsExternal = dispersions, vecSizeFactorsExternal = size_facs, boolVerbose=FALSE)
+
+  #extract simulated params
+  sim_params_to_plot<-matrix(ncol=4, nrow=n_sim_profiles)
+  for (i in 1:n_sim_profiles){
+    sim_params_to_plot[i,]<-as.vector(sim_sigmoid@lsModelFits[["case"]][[rownames(sim_sigmoid$dfImpulseDE2Results, n_sim_profiles)[i]]][["lsSigmoidFit"]][["vecSigmoidParam"]])}
+  colnames(sim_params_to_plot)<-c("beta", "h0", "h1", "t")
+  sim_params_to_plot<-as.data.frame(sim_params_to_plot)
+
+#plot all expression trajectories on the same plot
+plot_trajectories<-matrix(nrow=6, ncol=n_sim_profiles+1)
+rownames(plot_trajectories)<-unique(times)
+colnames(plot_trajectories)<-c("init", paste(rep("gene", n_sim_profiles), seq(1,n_sim_profiles)))
+plot_trajectories[,1]<-means
+for (i in 1:n_sim_profiles){
+  tmpsim<-sim_params_to_plot[i,]
+  plot_trajectories[,i+1]<-sigmoid_function(tmpsim$beta, tmpsim$h0, tmpsim$h1, tmpsim$t, unique(times))
+}
+
+#compute correlations
+scores<-rep(cor(plot_trajectories, method="spearman")[,1], each=6)
+
+counts_to_plot<-ecounts[match(gene, rownames(ecounts)),grep("JH01", colnames(ecounts))]*size_facs
+counts_to_plot<-rbind(counts_to_plot, differentially_expressed)
+counts_to_plot<-as.data.frame(t(counts_to_plot))
+counts_to_plot$time<-times[1:18]
+
+df <- melt(counts_to_plot ,  id.vars = 'time', variable.name = 'series')
+
+plot_trajectories<-as.data.frame(plot_trajectories)
+plot_trajectories$time<-unique(times)
+plot_trajectories <- melt(plot_trajectories ,  id.vars = 'time', variable.name = 'series')
+plot_trajectories$score<-scores
+
+e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient2(low = "yellow", mid="orange", high = "red", name="Score", breaks=waiver(), limits=c(-1, 1), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(gene, ": Plots of all simulated expression trajectories", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=monoparamsdf[gene,]$t, linetype="dashed", color="darkblue", size=0.5)+geom_vline(xintercept=mean(sim_params_to_plot$t), linetype="dashed", color="magenta")+labs(subtitle=paste("Disp:", round(disp*disp_noise_factor,2), ", SD(t params):" , round(sd(sim_params_to_plot$t), 2), sep= " "))
+print(e)
+}
+
+a<-plot_sim_trajectories(disp_noise_factor = 1)
+b<-plot_sim_trajectories(disp_noise_factor = 100)
+c<-plot_sim_trajectories(disp_noise_factor = (1/100))
+```
+
+```{r Grid Trajectories with Noise, cache=T, eval=F, echo=FALSE, message=FALSE, results='hide', fig.keep='all'}
+print(grid.arrange(a, b, c, ncol=2, nrow=2))
+```
+
+*Figure 8: Top Left: 'True' sigmoid trajectory (black) and 100 simulated sigmoid trajectories (color indicates spearman correlation to true trajectory) with DESeq2-derived dispersion estimate (normal dispersion). Dark blue dashed line indicates the 'true' t parameter and the dashed magenta line indicates the mean simulated t parameter. The standard deviation of simulated t parameters is included in plot subtitle. Top Right: 'True' sigmoid trajectory (black) and 100 simulated sigmoid trajectories with dispersion noise increased 100-fold. Increased dispersion noise caused high variability in the shapes of the profiles, but the mean simulated t parameter did not shift from the 'true' value. The SD of the t parameters also increased in response to increase in noise. Bottom Left: 'True' sigmoid trajectory (black) and 100 simulated sigmoid trajectories with dispersion noise decreased 100-fold. Decreased dispersion noise reduced variability in shapes of the profiles, and SD of the t parameters decreased.*
+
+```{r Normal Dispersion Sim, cache=T, eval=F, echo=FALSE, message=FALSE, results='hide', fig.keep='all'}
 ##############################################################################################################
 #Simulate Sigmoid/Impulse E. Coli Data to better understand parameter confidence & upholster timing conclusions
 ##############################################################################################################
@@ -403,6 +554,7 @@ sigmoid_design<-data.frame(Sample=colnames(ecolidds)[grep("JH01", colnames(ecoli
 ###Ex. select one gene (gadB), extract impulse fit, and generate 100 simulated trajectories based off that one gene. Then plot all the trajectories and data on same plot. Plot distributions of sigmoid params for simulated data as well. May take a couple mins
 set.seed(10)
 genes<-c('gadB')
+
 for (k in 1:length(genes)){
 geneparams<-monoparamsdf[match(genes[k], rownames(monoparamsdf)),]
 
@@ -475,22 +627,13 @@ plot_trajectories$time<-unique(times)
 plot_trajectories <- melt(plot_trajectories ,  id.vars = 'time', variable.name = 'series')
 plot_trajectories$score<-scores
 
-e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient2(low = "yellow", mid="orange", high = "red", name="Score", breaks=waiver(), limits=c(-1, 1), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(genes[k], ": Plots of all simulated expression trajectories", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)+geom_vline(xintercept=median(sim_params_to_plot$t), linetype="dashed", color="magenta")+labs(subtitle=paste("Disp:", round(disp,2), sep=" "))
+e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient2(low = "yellow", mid="orange", high = "red", name="Score", breaks=waiver(), limits=c(-1, 1), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(genes[k], ": Plots of all simulated expression trajectories", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)+geom_vline(xintercept=mean(sim_params_to_plot$t), linetype="dashed", color="magenta")+labs(subtitle=paste("Disp:", round(disp,2), sep=" "))
 print(grid.arrange(b, c, d, ncol=1))
 print(e)
 }
-summary(sim_params_to_plot)
-paste("IQR:", round(IQR(sim_params_to_plot$t),2), sep=" ")
-paste("Difference between init t and median t:", round(abs(as.numeric(geneparams[4])-median(sim_params_to_plot$t)), 2), sep=" ")
 ```
 
-Figure 7: Above: distribution of simulated sigmoid parameters compared to 'true' sigmoid params. Below: plots of 'true' (black) and simulated (colored) sigmoid profiles and their simulated data points. Simulated profiles are colored based on correlation to 'true' profile. Initial/'true' t param (dotted blue line) and median simulated t param (dotted magenta line) are also plotted.
-
-Increasing the dispersion-based noise lead to profound variability in the resulting simulated trajectories (Figure 8). The slope parameter (beta) was most affected by the additional noise. This distribution of simulated betas was not centered around the initial value. A substantial right skew suggestive of high variabilities in the simulated slope parameters. Amplitude parameters h0 and h1 were also affected by the dispersion-based noise, as the distribution of their difference (h1-h0) shifted considerably left from the initial value (over 30,000 units). 
-
-However, the effect of dispersion-based noise was minimal in the onset time (t) parameter; the distribution of simulated onset times did not profoundly shift or widen. The variability of the simulated t parameter remained quite low: IQR=2.34 (an 10.9% increase from the standard dispersion simulation). The stability of the t parameter was also illustrated by a small difference between initial t and median simulated t: 0.85 (32.8% increase from standard dispersion simulation). Thus, t appears to be the parameter most robust to dispersion-based noise in the sigmoidal model, an encouraging finding for RNA-seq experiments with few replicates hoping to address timing-related questions.
-
-```{r More noise, cache=T, eval=T, echo=FALSE, warning=FALSE, message=FALSE, results='hide', fig.keep='all'}
+```{r More noise, cache=T, eval=F, echo=FALSE, warning=FALSE, message=FALSE, results='hide', fig.keep='all'}
 ###########
 #Dispersion parameter decreased 100-fold
 ###########
@@ -569,18 +712,26 @@ plot_trajectories$time<-unique(times)
 plot_trajectories <- melt(plot_trajectories ,  id.vars = 'time', variable.name = 'series')
 plot_trajectories$score<-scores
 
-e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient2(low = "yellow", mid="orange", high = "red", name="Score", breaks=waiver(), limits=c(-1, 1), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(genes[k], ": Plots of all simulated expression trajectories", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)+geom_vline(xintercept=median(sim_params_to_plot$t), linetype="dashed", color="magenta")+labs(subtitle=paste("Disp:", round(disp,2), sep=" "))
+e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient2(low = "yellow", mid="orange", high = "red", name="Score", breaks=waiver(), limits=c(-1, 1), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(genes[k], ": Plots of all simulated expression trajectories", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)+geom_vline(xintercept=mean(sim_params_to_plot$t), linetype="dashed", color="magenta")+labs(subtitle=paste("Disp:", round(disp,2), sep=" "))
 print(grid.arrange(b, c, d, ncol=1))
 print(e)
 }
 summary(sim_params_to_plot)
 paste("IQR:", round(IQR(sim_params_to_plot$t),2), sep=" ")
 paste("Difference between init t and median t:", round(abs(as.numeric(geneparams[4])-median(sim_params_to_plot$t)), 2), sep=" ")
+
+#Scaled Sum Squared Errors
+beta_error<-sum((geneparams$beta-sim_params_to_plot$beta)^2)/geneparams$beta
+scaled_errors[1,2]<-beta_error
+#t
+t_error<-sum((geneparams$t-sim_params_to_plot$t)^2)
+scaled_errors[2,2]<-t_error
+#h1-h0
+h1_h0_error<-sum(((geneparams$h1-geneparams$h0)-(sim_params_to_plot$h1-sim_params_to_plot$h0))^2)/(geneparams$h1-geneparams$h0)
+scaled_errors[3,2]<-h1_h0_error
 ```
 
-Figure 8: Above: distribution of simulated sigmoid parameters compared to 'true' sigmoid params with dispersion noise increased 100-fold. Below: plots of 'true' (black) and simulated (colored) sigmoid profiles and their simulated data points when dispersion is increased 100-fold. Simulated profiles are colored based on correlation to 'true' profile. Initial/'true' t param (dotted blue line) and median simulated t param (dotted magenta line) are also plotted. t parameters remain relatively robust to the increase in noise, even when the simulated trajectories deviate from the 'true' trajectory.
-
-```{r less noise, cache=T, eval=FALSE, echo=FALSE, warning=FALSE, message=FALSE, results='hide', fig.keep='all'}
+```{r less noise, cache=T, eval=F, echo=FALSE, warning=FALSE, message=FALSE, results='hide', fig.keep='all'}
 ##########
 #Dispersion parameter decreased 100-fold
 ##########
@@ -661,112 +812,194 @@ plot_trajectories$time<-unique(times)
 plot_trajectories <- melt(plot_trajectories ,  id.vars = 'time', variable.name = 'series')
 plot_trajectories$score<-scores
 
-e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient2(low = "yellow", mid="orange", high = "red", name="Score", breaks=waiver(), limits=c(-1, 1), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(genes[k], ": Plots of all simulated expression trajectories", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)+geom_vline(xintercept=median(sim_params_to_plot$t), linetype="dashed", color="magenta")+labs(subtitle=paste("Disp:", round(disp,2), sep=" "))
+e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient2(low = "yellow", mid="orange", high = "red", name="Score", breaks=waiver(), limits=c(-1, 1), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(genes[k], ": Plots of all simulated expression trajectories", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)+geom_vline(xintercept=mean(sim_params_to_plot$t), linetype="dashed", color="magenta")+labs(subtitle=paste("Disp:", round(disp,2), sep=" "))
 print(grid.arrange(b, c, d, ncol=1))
 print(e)
 plot(seq(0,150,1), log(sigmoid_function(b=as.numeric(geneparams[1]), h_0=as.numeric(geneparams[2]), h_1=as.numeric(geneparams[3]), t_1=as.numeric(geneparams[4]), t=seq(0,150,1))), type="l", col="red")
 lines(seq(0,150,1), log(sigmoid_function(b=sim_params_to_plot[3,1], h_0=sim_params_to_plot[3,2], h_1=sim_params_to_plot[3,3], t_1=sim_params_to_plot[3,4], seq(0,150,1))))
 }
+
+#Scaled Sum Squared Errors
+beta_error<-sum((geneparams$beta-sim_params_to_plot$beta)^2)/geneparams$beta
+scaled_errors[1,3]<-beta_error
+#t
+t_error<-sum((geneparams$t-sim_params_to_plot$t)^2)
+scaled_errors[2,3]<-t_error
+#h1-h0
+h1_h0_error<-sum(((geneparams$h1-geneparams$h0)-(sim_params_to_plot$h1-sim_params_to_plot$h0))^2)/(geneparams$h1-geneparams$h0)
+scaled_errors[3,3]<-h1_h0_error
 ```
 
-### Effect of more TPs on Sigmoid Parameters
 
-One of the main advantages of the sigmoid model is that it is a parametric function, so expression levels can be attained at unknown time points. gadB's sigmoid model was used to calculate read counts at 15 time points (TPs): 0, 15, 30, 45, 55, 60, 65, 70, 75, 80, 85, 90, 120, 135, and 150 minutes, simulating data collection at additional time points. These time points were chosen because they predominantly focused at the time at which gadB expression spiked (between 60 and 90 mins). Simulated data at these 15 time points were generated with the DESeq2-estimated dispersion parameter supplied to 'rnbinom()' and sigmoid models were fit to these simulated data. As anticipated, the increase in number of time points afforded better resolution in the onset time (t) and slope (beta) parameters: the width of these distributions of simulated values shrunk and were both centered around the initial values. 
+Visualizing the shapes of the simulated profiles in relation to the 'true', initial profile confirmed these observations (*Figure 8*). When dispersion noise was incresased 100-fold, the shapes of the profiles were drastically changed and many no longer strongly correlated with the initial trajectory (*Figure 8*). However, the mean onset time (t) paremeter did not shift appreciably from the initial value. Decreasing the dispersion noise caused the simulated profiles to more closely track the initial 'true' profile.
 
-To illustrate, the addition of more TPs resulted in a difference between initial onset time and median simulated onset time of 0.22 mins (65.6% reduction compared to the standard simulation). The t-param IQR was also greatly reduced compared to the standard simulation (71.1% reduction). The addition of more time points also eliminated outlier simulated t parameters, as the range of simulated t params was around 4 minutes. This simulation affirms the importance of increasing number of time points in obtaining better timing resolution of gene expression trajectories. According to the distribution of monotonic onset time parameters below, around 92% of the DEGs have onset times between 55 and 75 minutes. Thus, concentrating RNA extractions at TPs between 55 and 75 minutes could yield more resolution in identifying timing-related events in *E. coli* cell starvation.
 
-```{r More TPs, cache=T, eval=TRUE, echo=FALSE, warning=FALSE, message=FALSE, results='hide', fig.keep='all'}
+### Effect of Number of Time Points (TPs) on Sigmoid Parameters
+
+One of the main advantages of the sigmoid model is that it is a parametric function, so expression levels can be attained at unknown time points. gadB's sigmoid model was used to calculate read counts for experiments with 6, 12, 18, and 24 time points equally spaced between 0 and 150 minutes. Simulated data at these time points were generated with the DESeq2-estimated dispersion parameter supplied to 'rnbinom()' and sigmoid models were fit to these simulated data. 
+
+Increasing the number of time points led to a reduction in scaled error for all parameters assayed (*Figure 9*). As in previous simulations, the onset time (t) parameter had the lowest log scaled error of all parameters assayed. The error of the t parameter did not decrease monotonically, and the decrease was marginal compared to other parameters. The h1_h0 parameter displayed a monotonic reduction in error as the number of time points decreased, but the reduction was not drastic. However, increasing the number of time points lead to a great reduction in the error associated with the slope (beta) parameter, evidenced by the downward spike in log scaled error.  
+
+```{r TP Assessment and Plot, cache=T, eval=TRUE, echo=FALSE, warning=FALSE, message=FALSE, results='hide', fig.keep='all'}
 
 #############################################################################################
 #Examine effect of more time points
 #############################################################################################
 
+###Error as function of Number of TPs
 #build new design and new times
-Times<-rep(c(0,15,30,45,55,60,65,70,75,80,85,90,120,135,150), 3)
-design_more_TPs<-data.frame(Sample=c("JH01_A01","JH01_A02", "JH01_A03", "JH01_A04", "JH01_A05", "JH01_A06", "JH01_A07", "JH01_A08", "JH01_A09", "JH01_A010","JH01_A011","JH01_A012", "JH01_A013", "JH01_A014", "JH01_A015", "JH01_B01","JH01_B02","JH01_B03","JH01_B04","JH01_B05","JH01_B06","JH01_B07","JH01_B08","JH01_B09","JH01_B10","JH01_B11","JH01_B12","JH01_B13","JH01_B14","JH01_B15","JH01_C01","JH01_C02","JH01_C03","JH01_C04","JH01_C05","JH01_C06","JH01_C07","JH01_C08","JH01_C09","JH01_C010","JH01_C11","JH01_C12","JH01_C13","JH01_C14","JH01_C15" ), Condition=rep("case",45), Time=Times)
-
 set.seed(11)
-genes<-c("gadB")
-for (k in 1:length(genes)){
-  geneparams<-monoparamsdf[match(genes[k], rownames(monoparamsdf)),]
-  ###extract means at each TP, scale by size factor
-  means<-sigmoid_function(as.numeric(geneparams[1]), as.numeric(geneparams[2]), as.numeric(geneparams[3]), as.numeric(geneparams[4]), unique(Times))
+time_assessment<-function(gene="gadB", n_time_pts=c(6,12,18,24), n_sim_profiles=100){
+  params_mat<-matrix(ncol=length(n_time_pts), nrow=3)
+  for (k in 1:length(n_time_pts)){
+    times=seq(0,150,by=(150/(n_time_pts[k]-1)))
+    Times=rep(times, 3)
+    design_more_TPs<-data.frame(Sample=c(paste("JH01_A", formatC(1:length(times), width=2, flag="0"), sep=""), paste("JH01_B", formatC(1:length(times), width=2, flag="0"), sep=""), paste("JH01_C", formatC(1:length(times), width=2, flag="0"), sep="")), Condition=rep("case", 3*length(times)), Time=Times)
+    geneparams<-monoparamsdf[match(gene, rownames(monoparamsdf)),]
+    means<-sigmoid_function(as.numeric(geneparams[1]), as.numeric(geneparams[2]), as.numeric(geneparams[3]), as.numeric(geneparams[4]), unique(Times))
   repmeans<-rep(means, 3)
   #let's generate some random sizeFactors ensuring no negative/0 size factors
-  size_facs<-rnorm(45, mean=mean(sizeFactors(ecolidds)[grep("JH01", names(sizeFactors(ecolidds)))]), sd=sd(sizeFactors(ecolidds)[grep("JH01", names(sizeFactors(ecolidds)))]))
+  size_facs<-rnorm(3*length(times), mean=mean(sizeFactors(ecolidds)[grep("JH01", names(sizeFactors(ecolidds)))]), sd=sd(sizeFactors(ecolidds)[grep("JH01", names(sizeFactors(ecolidds)))]))
   for (i in 1:length(size_facs)){
   if (size_facs[i]<0.5) {size_facs[i]=min(sizeFactors(ecolidds)[grep("JH01", names(sizeFactors(ecolidds)))])}}
   names(size_facs)<-design_more_TPs$Sample
   
-#index to find dispersion for gadB
-disp_index=match(genes[k], names(impulse_ecoli@vecDispersions))
-disp<-as.numeric(impulse_ecoli@vecDispersions[disp_index])
+  #index to find dispersion for gadB
+  disp_index=match(gene, names(impulse_ecoli@vecDispersions))
+  disp<-as.numeric(impulse_ecoli@vecDispersions[disp_index])
 
-#generate simulated read count data for 100 trajectories w/ proper NB noise
-differentially_expressed<-matrix(ncol=45, nrow=100)
-for (i in 1:45){
+  #generate simulated read count data for 100 trajectories w/ proper NB noise
+  differentially_expressed<-matrix(ncol=(3*length(times)), nrow=n_sim_profiles)
+  for (i in 1:(3*length(times))){
   expressions<-c()
-  expressions<-c(expressions, rnbinom(n=100, mu=repmeans[i], size=disp))
+  expressions<-c(expressions, rnbinom(n=n_sim_profiles, mu=repmeans[i], size=disp))
   differentially_expressed[,i]<-round(expressions*as.numeric(size_facs[i]))
-}
+  }
   differentially_expressed<-as.matrix(differentially_expressed)
   colnames(differentially_expressed)<-names(size_facs)
-  rownames(differentially_expressed)<-paste(rep("gene", 100), seq(1,100))
+  rownames(differentially_expressed)<-paste(rep("gene", n_sim_profiles), seq(1,n_sim_profiles))
   colnames(differentially_expressed)<-design_more_TPs$Sample
-  rownames(differentially_expressed)<-paste(rep("gene", 100), seq(1,100))
+  rownames(differentially_expressed)<-paste(rep("gene", n_sim_profiles), seq(1,n_sim_profiles))
 
   #set manual dispersions
-  dispersions<-rep(disp, 100)
-  names(dispersions)<-paste(rep("gene", 100), seq(1,100))
+  dispersions<-rep(disp, n_sim_profiles)
+  names(dispersions)<-paste(rep("gene", n_sim_profiles), seq(1,n_sim_profiles))
   
   #fit impulse models
   sim_plus<-ImpulseDE2::runImpulseDE2(differentially_expressed, design_more_TPs, boolCaseCtrl=FALSE, boolIdentifyTransients=TRUE, vecConfounders=NULL, scaNProc=12, scaQThres = 0.01, vecDispersionsExternal = dispersions, vecSizeFactorsExternal = size_facs, boolVerbose=FALSE)
 
   #extract simulated params
-  sim_params_to_plot<-matrix(ncol=4, nrow=100)
-  for (i in 1:100){
-    sim_params_to_plot[i,]<-sim_plus@lsModelFits[["case"]][[rownames(sim_plus$dfImpulseDE2Results, 100)[i]]][["lsSigmoidFit"]][["vecSigmoidParam"]]}
+  sim_params_to_plot<-matrix(ncol=4, nrow=n_sim_profiles+1)
+  sim_params_to_plot[1,]<-c(geneparams$beta, geneparams$h0, geneparams$h1, geneparams$t)
+  for (i in 1:n_sim_profiles){
+    sim_params_to_plot[i+1,]<-sim_plus@lsModelFits[["case"]][[rownames(sim_plus$dfImpulseDE2Results, n_sim_profiles)[i]]][["lsSigmoidFit"]][["vecSigmoidParam"]]}
+  colnames(sim_params_to_plot)<-c("beta", "h0", "h1", "t")
+  sim_params_to_plot<-as.data.frame(sim_params_to_plot)
+  params_mat[1,k]<-sqrt(mean((geneparams$beta-sim_params_to_plot$beta)^2))/geneparams$beta
+  params_mat[2,k]<-sqrt(mean((geneparams$t-sim_params_to_plot$t)^2))/geneparams$t
+  params_mat[3,k]<-sqrt(mean(((geneparams$h1-geneparams$h0)-(sim_params_to_plot$h1-sim_params_to_plot$h0))^2))/(geneparams$h1-geneparams$h0)
+  }
+error_as_function_of_n_TPs<-as.data.frame(t(params_mat))
+colnames(error_as_function_of_n_TPs)<-c("Beta", "t", "h1-h0")
+error_as_function_of_n_TPs$n_TPs<-n_time_pts
+error_df<-melt(error_as_function_of_n_TPs, id.vars="n_TPs")
+colnames(error_df)<-c("n_TPs", "param_type", "Scaled_RME")
+
+ggplot(error_df)+geom_line(aes(x=n_TPs, y=log(Scaled_RME), group=param_type, color=param_type))+geom_point(aes(x=n_TPs, y=log(Scaled_RME), group=param_type, color=param_type))+facet_wrap(~param_type)+theme_bw()+ggtitle("Effect of Number of TPs on Log scaled RME of Sigmoid Parameters")+labs(subtitle=paste(n_sim_profiles, "simulated profiles", " "))
+}
+
+time_assessment()
+
+
+###Plot trajectories with varying # TPs
+
+time_plot<-function(gene="gadB", times=c(0,30,60,90,120,150), n_sim_profiles=100){
+  Times<-rep(times, 3)
+  design_more_TPs<-data.frame(Sample=c(paste("JH01_A", formatC(1:length(times), width=2, flag="0"), sep=""), paste("JH01_B", formatC(1:length(times), width=2, flag="0"), sep=""), paste("JH01_C", formatC(1:length(times), width=2, flag="0"), sep="")), Condition=rep("case", 3*length(times)), Time=Times)
+  geneparams<-monoparamsdf[match(gene, rownames(monoparamsdf)),]
+  ###extract means at each TP, scale by size factor
+  means<-sigmoid_function(as.numeric(geneparams[1]), as.numeric(geneparams[2]), as.numeric(geneparams[3]), as.numeric(geneparams[4]), unique(Times))
+  repmeans<-rep(means, 3)
+  #let's generate some random sizeFactors ensuring no negative/0 size factors
+  size_facs<-rnorm(3*length(times), mean=mean(sizeFactors(ecolidds)[grep("JH01", names(sizeFactors(ecolidds)))]), sd=sd(sizeFactors(ecolidds)[grep("JH01", names(sizeFactors(ecolidds)))]))
+  for (i in 1:length(size_facs)){
+  if (size_facs[i]<0.5) {size_facs[i]=min(sizeFactors(ecolidds)[grep("JH01", names(sizeFactors(ecolidds)))])}}
+  names(size_facs)<-design_more_TPs$Sample
+  
+  #index to find dispersion for gadB
+  disp_index=match(gene, names(impulse_ecoli@vecDispersions))
+  disp<-as.numeric(impulse_ecoli@vecDispersions[disp_index])
+
+#generate simulated read count data for 100 trajectories w/ proper NB noise
+  differentially_expressed<-matrix(ncol=(3*length(times)), nrow=n_sim_profiles)
+  for (i in 1:(3*length(times))){
+    expressions<-c()
+    expressions<-c(expressions, rnbinom(n=n_sim_profiles, mu=repmeans[i], size=disp))
+    differentially_expressed[,i]<-round(expressions*as.numeric(size_facs[i]))
+  }
+  differentially_expressed<-as.matrix(differentially_expressed)
+  colnames(differentially_expressed)<-names(size_facs)
+  rownames(differentially_expressed)<-paste(rep("gene", n_sim_profiles), seq(1,n_sim_profiles))
+  colnames(differentially_expressed)<-design_more_TPs$Sample
+  rownames(differentially_expressed)<-paste(rep("gene", n_sim_profiles), seq(1,n_sim_profiles))
+
+    #set manual dispersions
+    dispersions<-rep(disp, n_sim_profiles)
+    names(dispersions)<-paste(rep("gene", n_sim_profiles), seq(1,n_sim_profiles))
+  
+    #fit impulse models
+    sim_plus<-ImpulseDE2::runImpulseDE2(differentially_expressed, design_more_TPs, boolCaseCtrl=FALSE, boolIdentifyTransients=TRUE, vecConfounders=NULL, scaNProc=12, scaQThres = 0.01, vecDispersionsExternal = dispersions, vecSizeFactorsExternal = size_facs, boolVerbose=FALSE)
+
+  #extract simulated params
+  sim_params_to_plot<-matrix(ncol=4, nrow=n_sim_profiles+1)
+  sim_params_to_plot[1,]<-c(geneparams$beta, geneparams$h0, geneparams$h1, geneparams$t)
+  for (i in 1:n_sim_profiles){
+    sim_params_to_plot[i+1,]<-sim_plus@lsModelFits[["case"]][[rownames(sim_plus$dfImpulseDE2Results, n_sim_profiles)[i]]][["lsSigmoidFit"]][["vecSigmoidParam"]]}
   colnames(sim_params_to_plot)<-c("beta", "h0", "h1", "t")
   sim_params_to_plot<-as.data.frame(sim_params_to_plot)
   
-  betadens<-ecdf(sim_params_to_plot$beta)
-  tdens<-ecdf(sim_params_to_plot$t)
-  peakdens<-dens<-ecdf(sim_params_to_plot$h1-sim_params_to_plot$h0)
 
-b<-ggplot(sim_params_to_plot, aes(x=beta, y=..density..))+geom_density()+geom_vline(xintercept=geneparams$beta, color="red", show.legend = TRUE)+ggtitle(paste("Param Dist. of 100 E coli genes simulated from", genes[k], "w/ disp.=", round(disp/100, 2), sep=" "))+labs(subtitle=paste("Params: beta", round(as.numeric(geneparams[1]), digits=2), ",", names(geneparams[2]), round(as.numeric(geneparams[2]), digits=2), ",", names(geneparams[3]), round(as.numeric(geneparams[3]), digits=2), ",", names(geneparams[4]), round(as.numeric(geneparams[4]), digits=2)))+theme(plot.title = element_text(size = 9, face = "bold"), plot.subtitle = element_text(size = 7, face = "italic"))+xlim(round(range(monoparamsdf$beta)))+annotate(geom="text", -Inf, Inf, hjust=-3, vjust=0.99, label=paste(betadens(as.numeric(geneparams[1])), "quantile", sep = " "), color="red", size=3)
-c<-ggplot(sim_params_to_plot, aes(x=t, y=..density..))+geom_density()+geom_vline(xintercept=geneparams$t, color="blue")+xlim(round(range(monoparamsdf$t)))+annotate(geom="text", -Inf, Inf, hjust=-3, vjust=0.99, label=paste(tdens(as.numeric(geneparams[4])), "quantile", sep = " "), color="blue", size=3)
-d<-ggplot(sim_params_to_plot, aes(x=h1-h0, y=..density..))+geom_density()+geom_vline(xintercept=geneparams$h1-geneparams$h0, color="green")+xlim(-80000, 80000)+annotate(geom="text", -Inf, Inf, hjust=-3, vjust=0.99, label=paste(peakdens(as.numeric(geneparams[3])-as.numeric(geneparams[2])), "quantile", sep = " "), color="darkgreen", size=3)  
-
-plot_trajectories<-matrix(nrow=15, ncol=101)
-rownames(plot_trajectories)<-unique(Times)
-colnames(plot_trajectories)<-c("init", paste(rep("gene", 100), seq(1,100)))
+plot_trajectories<-matrix(nrow=length(times), ncol=n_sim_profiles+1)
+rownames(plot_trajectories)<-times
+colnames(plot_trajectories)<-c("init", paste(rep("gene", n_sim_profiles), seq(1,n_sim_profiles)))
 plot_trajectories[,1]<-means
-for (i in 1:100){
-  tmpsim<-sim_params_to_plot[i,]
+for (i in 1:n_sim_profiles){
+  tmpsim<-sim_params_to_plot[i+1,]
   plot_trajectories[,i+1]<-sigmoid_function(tmpsim$beta, tmpsim$h0, tmpsim$h1, tmpsim$t, unique(Times))
 }
 
-scores<-rep(cor(plot_trajectories, method="spearman")[,1], each=15)
+scores<-rep(cor(plot_trajectories, method="spearman")[,1], each=length(times))
 
-counts_to_plot<-repmeans*size_facs
-counts_to_plot<-rbind(counts_to_plot, differentially_expressed)
+counts<-repmeans*size_facs
+counts_to_plot<-rbind(counts, differentially_expressed)
 counts_to_plot<-as.data.frame(t(counts_to_plot))
-counts_to_plot$time<-Times[1:45]
+counts_to_plot$time<-Times
 
 df <- melt(counts_to_plot ,  id.vars = 'time', variable.name = 'series')
 
 plot_trajectories<-as.data.frame(plot_trajectories)
-plot_trajectories$time<-unique(Times)
+plot_trajectories
+plot_trajectories$time<-times
 plot_trajectories <- melt(plot_trajectories ,  id.vars = 'time', variable.name = 'series')
 plot_trajectories$score<-scores
 
-e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient2(low = "yellow", mid="orange", high = "red", name="Score", breaks=waiver(), limits=c(-1, 1), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(genes[k], ": Plots of all simulated expression trajectories", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)+geom_vline(xintercept=median(sim_params_to_plot$t), linetype="dashed", color="magenta")+labs(subtitle=paste("Disp:", round(disp,2), sep=" "))
-print(grid.arrange(b, c, d, ncol=1))
+e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient2(low = "yellow", mid="orange", high = "red", name="Score", breaks=waiver(), limits=c(-1, 1), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(gene, ": Plots of all simulated expression trajectories", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=monoparamsdf[gene,]$t, linetype="dashed", color="darkblue", size=0.5)+geom_vline(xintercept=mean(sim_params_to_plot$t), linetype="dashed", color="magenta")+labs(subtitle=paste("Number of TPs:", length(times),",", "SD(t params):", round(sd(sim_params_to_plot$t),2), sep=" "))
 print(e)
 }
-summary(sim_params_to_plot)
-paste("IQR:", round(IQR(sim_params_to_plot$t),2), sep=" ")
-paste("Difference between init t and median t:", round(abs(as.numeric(geneparams[4])-median(sim_params_to_plot$t)), 2), sep=" ")
+
+#6 TPs
+time_plot(times=seq(0,150,by=150/5))
+#12 TPs
+time_plot(times=seq(0,150,by=150/11))
+#18 TPs
+time_plot(times=seq(0,150,by=150/17))
+#24 TPs
+time_plot(times=seq(0,150,by=150/23))
+```
+
+```{r grid TP plot, cache=T, eval=F, echo=FALSE, warning=FALSE, message=FALSE, results='hide', fig.keep='all'}
+grid.arrange(time_plot(times=seq(0,150,by=150/5)), time_plot(times=seq(0,150,by=150/11)), time_plot(times=seq(0,150,by=150/17)), time_plot(times=seq(0,150,by=150/23)), ncol=2, nrow=2)
+
 ```
 
 ```{r mono t params, cache=T, eval=FALSE, echo=FALSE, warning=FALSE, message=FALSE, results='hide', fig.keep='all'}
@@ -774,64 +1007,76 @@ paste("Difference between init t and median t:", round(abs(as.numeric(geneparams
 ggplot(monoparamsdf, aes(x=t))+geom_density(color="blue", fill="cyan")+ xlim(50,75)+ggtitle("Distribution of sigmoid t params of 740 monotonic E. coli DEGs")
 ```
 
-Figure 9: Above: distribution of simulated sigmoid parameters compared to 'true' sigmoid params with additional time points. Below: plots of 'true' (black) and simulated (colored) sigmoid profiles and their simulated data points with additional time points. Simulated profiles are colored based on correlation to 'true' profile. Initial/'true' t param (dotted blue line) and median simulated t param (dotted magenta line) are also plotted. Simulated trajectories more closely track the 'true' profile when these additional TPs, particularly around the spike in expression, are included.
+*Figure 9: Above: distribution of simulated sigmoid parameters compared to 'true' sigmoid params with additional time points. Below: plots of 'true' (black) and simulated (colored) sigmoid profiles and their simulated data points with additional time points. Simulated profiles are colored based on correlation to 'true' profile. Initial/'true' t param (dotted blue line) and mean simulated t param (dotted magenta line) are also plotted. Simulated trajectories more closely track the 'true' profile when these additional TPs, particularly around the spike in expression, are included.*
+
+Visualizing the shapes of the simulated profiles in relation to the 'true' initial profile supported these observations (*Figure 9*). Increasing the number of time points did not appreciably change the timing of expression induction, evidenced by the minimal reduction in t parameter error. However, increasing the number of time points did reduce the variability of initial expression levels and peak expression levels, evidenced by tighter clustering around the initial profile. Additionally, the read count data is still quite noisy, preventing the h1-h0 parameters from achieving very low error even with more time points. However, increasing the number of time points caused the simulated trajectories to more closely track the initial trajectory during the spike in expression, illustrating the decreased error of the beta parameter.
 
 ### Effect of outliers on Sigmoid Parameters
 
-To ascertain the effect of ouliers on the sigmoid parameters, 90 simulated gene trajectories were divided into 6 groups based on the TP at which the outlier would be generated (ex. Group 1 would have an outlier at the 0 min TP, Group 2 woud have an outlier at the 30 min TP, etc). For the 15 genes in each group, the normalized read count for one replicate corresponding to the group's time point was multipled by a factor of 10. Sigmoid models were fit and variability was assessed.
+To ascertain the effect of ouliers on the sigmoid parameters, one replicate was randomly selected and various factors between 1/10 and 10 were multiplied to the simulated read counts of that replicate, simulating the effect of an outlying replicate. The log scaled root mean squared error rate was plotted as a function of these outlier factors (*Figure 10*). The h1-h0 parameter peformed the most poorly to outliers, as the log scaled error increased linearly with the steepest slope. The beta parameter did not fare much better, as it had the highest errors of any parameter assayed at all outlier_factors; error steadily increased as outlier factors increased. However, the onset time (t param) demonstrated strong outlier robustness as it showed the lowest error rates and showed a plateau in error rate at higher outlier_factors. 
 
-The IQR for the onset-time parameter in the simulation with outliers was only marginally inflated compared to the standard simulation: IQR with outliers was 2.32 (10.0% increase compared to the standard simulation). And rather unexpectedly, the difference between initial t and median simulated t params actually decreased with the addition of outliers: 0.29 (54.7% decrease from standard simulation). Thus, sigmoid onset time params appear quite robust to outliers, another boon for biologists aiming to apply sigmoids to modeling noisy gene expression data.
+These findings were confirmed in plots of simulated expression trajectories at the largest outlier (10) factor tested (*Figure 10*). Introducing an outlier in the dataset caused the initial (h0) and especially the peak expression levels (h1) to shift away from the initial 'true' profile. However, despite the outlier, all simulated profiles show very similar expression timing. The mean simulated t parameter and 'true' t parameter are nearly identical, suggesting strong outlier robustness of the onset time parameter.
 
-```{r Outlier Sim, cache=T, eval=TRUE, echo=FALSE, warning=FALSE, message=FALSE, results='hide', fig.keep='all'}
+```{r Outlier Sim, cache=T, eval=TRUE, echo=FALSE, warning=FALSE, message=FALSE, results='hide', fig.keep='all', fig.fullwidth=TRUE}
 ###################
 #gadB simulation (OUTLIERS) 
 ###################
-#times
-times<-rep(c(0,30,60,90,120,150),6)
 
-#design for sigmoid simulation through ImpulseDE2
-sigmoid_design<-data.frame(Sample=colnames(ecolidds)[grep("JH01", colnames(ecolidds))], Condition=c(rep("case",18)), Time=rep(c(0,30,60,90,120,150),3))
-
-###Ex. select one gene (gadB), extract impulse fit, and generate 100 simulated trajectories based off that one gene. Then plot all the trajectories and data on same plot. Plot distributions of sigmoid params for simulated data as well. May take a couple mins
-set.seed(10)
-genes<-c('gadB')
-for (k in 1:length(genes)){
-geneparams<-monoparamsdf[match(genes[k], rownames(monoparamsdf)),]
-
-###extract means at each TP, scale by size factor
-size_facs<-sizeFactors(ecolidds)[grep("JH01", names(sizeFactors(ecolidds)))]
-means<-sigmoid_function(as.numeric(geneparams[1]), as.numeric(geneparams[2]), as.numeric(geneparams[3]), as.numeric(geneparams[4]), unique(times))
-repmeans<-c(rep(means, 3))
-
-#index to find dispersion for gadB
-disp_index=match(genes[k], names(impulse_ecoli@vecDispersions))
-disp<-as.numeric(impulse_ecoli@vecDispersions[disp_index])
-
-#generate simulated read count data for 100 trajectories w/ proper NB noise
-differentially_expressed<-matrix(ncol=18, nrow=100)
-for (i in 1:18){
-  expressions<-c()
-  expressions<-c(expressions, rnbinom(n=100, mu=repmeans[i], size=disp))
-  differentially_expressed[,i]<-round(expressions*as.numeric(size_facs[i]))
-}
-  #insert outliers at all TPs
-  differentially_expressed[1:15,1]<-differentially_expressed[1:15,1]*10
-  differentially_expressed[16:30,2]<-differentially_expressed[16:30,2]*10
-  differentially_expressed[31:45,3]<-differentially_expressed[31:45,3]*10
-  differentially_expressed[46:60,4]<-differentially_expressed[46:60,4]*10
-  differentially_expressed[61:75,5]<-differentially_expressed[61:75,5]*10
-  differentially_expressed[76:90,6]<-differentially_expressed[76:90,6]*10
-  differentially_expressed<-as.matrix(differentially_expressed)
-  colnames(differentially_expressed)<-colnames(ecolidds)[grep("JH01", colnames(ecolidds))]
-  rownames(differentially_expressed)<-paste(rep("gene", 100), seq(1,100))
+outlier_sim_plot<-function(gene="gadB", outlier_factors=c(1/10, 1/2, 1, 2, 5, 10), seed=1, n_sim_profiles=100){
+  set.seed(seed)
+  #final error df for plotting
+  params_mat<-matrix(ncol=length(outlier_factors), nrow=3)
   
+  
+  times=c(0,30,60,90,120,150)
+  sigmoid_design<-data.frame(Sample=colnames(ecolidds)[grep("JH01", colnames(ecolidds))], Condition=c(rep("case",18)), Time=rep(c(0,30,60,90,120,150),3))
+  geneparams<-monoparamsdf[match(gene, rownames(monoparamsdf)),]
+  
+  ###extract means at each TP, scale by size factor
+  size_facs<-sizeFactors(ecolidds)[grep("JH01", names(sizeFactors(ecolidds)))]
+
+  means<-sigmoid_function(as.numeric(geneparams[1]), as.numeric(geneparams[2]), as.numeric(geneparams[3]), as.numeric(geneparams[4]), unique(times))
+
+  #get dispersions
+  disp_index=match(gene, names(impulse_ecoli@vecDispersions))
+  disp<-as.numeric(impulse_ecoli@vecDispersions[disp_index])
+  
+  repmeans<-rep(means, 3)
+  index=sample(1:3, 1)
+  not_index<-setdiff(1:3, index)
+  for (k in 1:length(outlier_factors)){
+  #generate simulated read count data for 100 trajectories w/ proper NB noise
+  
+  differentially_expressed<-matrix(ncol=(3*length(times)), nrow=n_sim_profiles)
+  for (i in 1:(3*length(times))){
+      expressions<-c()
+      expressions<-c(expressions, rnbinom(n=n_sim_profiles, mu=repmeans[i], size=disp))
+      differentially_expressed[,i]<-round(expressions*as.numeric(size_facs[i]))
+  }
+  differentially_expressed<-as.matrix(differentially_expressed)
+  colnames(differentially_expressed)<-names(size_facs)
+  rownames(differentially_expressed)<-paste(rep("gene", n_sim_profiles), seq(1,n_sim_profiles))
+  colnames(differentially_expressed)<-sigmoid_design$Sample
+  rownames(differentially_expressed)<-paste(rep("gene", n_sim_profiles), seq(1,n_sim_profiles))
+  
+  ### Generate outlier
+  if (index==1){
+    differentially_expressed[,1:6]<-round(differentially_expressed[,1:6]*outlier_factors[k])
+  }
+  if (index==2){
+    differentially_expressed[,7:12]<-round(differentially_expressed[,7:12]*outlier_factors[k])
+  }
+  if (index==3){
+    differentially_expressed[,13:18]<-round(differentially_expressed[,13:18]*outlier_factors[k])
+  }
+
   #set manual dispersions
   dispersions<-rep(disp, 100)
   names(dispersions)<-paste(rep("gene", 100), seq(1,100))
   
   #fit impulse models
   sim_sigmoid<-ImpulseDE2::runImpulseDE2(differentially_expressed, sigmoid_design, boolCaseCtrl=FALSE, vecConfounders=NULL, boolIdentifyTransients=TRUE, scaNProc=12, scaQThres = 0.01, vecDispersionsExternal = dispersions, vecSizeFactorsExternal = size_facs, boolVerbose=FALSE)
-
+  
   #extract simulated params
   sim_params_to_plot<-matrix(ncol=4, nrow=100)
   for (i in 1:100){
@@ -839,61 +1084,61 @@ for (i in 1:18){
   colnames(sim_params_to_plot)<-c("beta", "h0", "h1", "t")
   sim_params_to_plot<-as.data.frame(sim_params_to_plot)
 
-  #create empirical cdfs of simulated param values to compare initial values to
-  betadens<-ecdf(sim_params_to_plot$beta)
-  tdens<-ecdf(sim_params_to_plot$t)
-  peakdens<-dens<-ecdf(sim_params_to_plot$h1-sim_params_to_plot$h0)
+  params_mat[1,k]<-sqrt(mean((geneparams$beta-sim_params_to_plot$beta)^2))/geneparams$beta
+  params_mat[2,k]<-sqrt(mean((geneparams$t-sim_params_to_plot$t)^2))/geneparams$t
+  params_mat[3,k]<-sqrt(mean(((geneparams$h1-geneparams$h0)-(sim_params_to_plot$h1-sim_params_to_plot$h0))^2))/(geneparams$h1-geneparams$h0)
   
-  
-#plot distributions of params
-b<-ggplot(sim_params_to_plot, aes(x=beta, y=..density..))+geom_density()+geom_vline(xintercept=geneparams$beta, color="red", show.legend = TRUE)+ggtitle(paste("Param Dist. of 100 E coli genes simulated from", genes[k], "w/ disp.=", round(disp, 2), sep=" "))+labs(subtitle=paste("Params: beta", round(as.numeric(geneparams[1]), digits=2), ",", names(geneparams[2]), round(as.numeric(geneparams[2]), digits=2), ",", names(geneparams[3]), round(as.numeric(geneparams[3]), digits=2), ",", names(geneparams[4]), round(as.numeric(geneparams[4]), digits=2)))+theme(plot.title = element_text(size = 9, face = "bold"), plot.subtitle = element_text(size = 7, face = "italic"))+xlim(round(range(monoparamsdf$beta)))+annotate(geom="text", -Inf, Inf, hjust=-3, vjust=0.99, label=paste(betadens(as.numeric(geneparams[1])), "quantile", sep = " "), color="red", size=3)
-c<-ggplot(sim_params_to_plot, aes(x=t, y=..density..))+geom_density()+geom_vline(xintercept=geneparams$t, color="blue")+xlim(round(range(monoparamsdf$t)))+annotate(geom="text", -Inf, Inf, hjust=-3, vjust=0.99, label=paste(tdens(as.numeric(geneparams[4])), "quantile", sep = " "), color="blue", size=3)
-d<-ggplot(sim_params_to_plot, aes(x=h1-h0, y=..density..))+geom_density()+geom_vline(xintercept=geneparams$h1-geneparams$h0, color="green")+xlim(-80000, 80000)+annotate(geom="text", -Inf, Inf, hjust=-3, vjust=0.99, label=paste(peakdens(as.numeric(geneparams[3])-as.numeric(geneparams[2])), "quantile", sep = " "), color="darkgreen", size=3)
+  }
+  #obtain errors in data frame
+  error_as_function_of_outlier<-as.data.frame(t(params_mat))
+  colnames(error_as_function_of_outlier)<-c("Beta", "t", "h1-h0")
+  error_as_function_of_outlier$outlierfactor<-outlier_factors
+  error_df<-melt(error_as_function_of_outlier, id.vars="outlierfactor")
+  colnames(error_df)<-c("Outlier_factor", "param_type", "Scaled_RME")
 
-#plot all expression trajectories on the same plot
-plot_trajectories<-matrix(nrow=6, ncol=101)
-rownames(plot_trajectories)<-unique(times)
-colnames(plot_trajectories)<-c("init", paste(rep("gene", 100), seq(1,100)))
-plot_trajectories[,1]<-means
-for (i in 1:100){
-  tmpsim<-sim_params_to_plot[i,]
-  plot_trajectories[,i+1]<-sigmoid_function(tmpsim$beta, tmpsim$h0, tmpsim$h1, tmpsim$t, unique(times))
-}
+  #plot error rates as function of outlier_factor
+f<-ggplot(error_df)+geom_line(aes(x=Outlier_factor, y=log(Scaled_RME), group=param_type, color=param_type))+geom_point(aes(x=Outlier_factor, y=log(Scaled_RME), group=param_type, color=param_type))+facet_wrap(~param_type)+theme_bw()+ggtitle("Effect of Outliers on Log scaled RME of Sigmoid Parameters")+labs(subtitle=paste(n_sim_profiles, "simulated profiles", " "))
 
-scores<-rep(cor(plot_trajectories, method="spearman")[,1], each=6)
+  #plot high outlier_factor trajectories
+  plot_trajectories<-matrix(nrow=6, ncol=n_sim_profiles+1)
+  rownames(plot_trajectories)<-unique(times)
+  colnames(plot_trajectories)<-c("init", paste(rep("gene", n_sim_profiles), seq(1,n_sim_profiles)))
+  plot_trajectories[,1]<-means
+  for (i in 1:n_sim_profiles){
+    tmpsim<-sim_params_to_plot[i,]
+    plot_trajectories[,i+1]<-sigmoid_function(tmpsim$beta, tmpsim$h0, tmpsim$h1, tmpsim$t, unique(times))
+  }
 
-counts_to_plot<-ecounts[match(genes[k], rownames(ecounts)),grep("JH01", colnames(ecounts))]*size_facs
-counts_to_plot<-rbind(counts_to_plot, differentially_expressed)
-counts_to_plot<-as.data.frame(t(counts_to_plot))
-counts_to_plot$time<-times[1:18]
+  #compute correlations
+  scores<-rep(cor(plot_trajectories, method="spearman")[,1], each=6)
 
-df <- melt(counts_to_plot ,  id.vars = 'time', variable.name = 'series')
+  counts_to_plot<-ecounts[match(gene, rownames(ecounts)),grep("JH01", colnames(ecounts))]*size_facs
+  counts_to_plot<-rbind(counts_to_plot, differentially_expressed)
+  counts_to_plot<-as.data.frame(t(counts_to_plot))
+  counts_to_plot$time<-times[1:18]
 
-plot_trajectories<-as.data.frame(plot_trajectories)
-plot_trajectories$time<-unique(times)
-plot_trajectories <- melt(plot_trajectories ,  id.vars = 'time', variable.name = 'series')
-plot_trajectories$score<-scores
+  df <- melt(counts_to_plot ,  id.vars = 'time', variable.name = 'series')
 
-e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient2(low = "yellow", mid="orange", high = "red", name="Score", breaks=waiver(), limits=c(-1, 1), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(genes[k], ": Plots of all simulated expression trajectories", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)+geom_vline(xintercept=median(sim_params_to_plot$t), linetype="dashed", color="magenta")+labs(subtitle=paste("Disp:", round(disp,2), sep=" "))
-print(grid.arrange(b, c, d, ncol=1))
+  plot_trajectories<-as.data.frame(plot_trajectories)
+  plot_trajectories$time<-unique(times)
+  plot_trajectories <- melt(plot_trajectories ,  id.vars = 'time', variable.name = 'series')
+  plot_trajectories$score<-scores
+
+  e<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient2(low = "yellow", mid="orange", high = "red", name="Score", breaks=waiver(), limits=c(-1, 1), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(gene, ": Plots of all simulated expression trajectories", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=monoparamsdf[gene,]$t, linetype="dashed", color="darkblue", size=0.5)+geom_vline(xintercept=mean(sim_params_to_plot$t), linetype="dashed", color="magenta")+labs(subtitle=paste("Outlier factor:", tail(outlier_factors, 1), ", SD(t params):" , round(sd(sim_params_to_plot$t), 2), sep= " "))
+print(f)
 print(e)
 }
-summary(sim_params_to_plot)
-paste("IQR:", round(IQR(sim_params_to_plot$t),2), sep=" ")
-paste("Difference between init t and median t:", round(abs(as.numeric(geneparams[4])-median(sim_params_to_plot$t)), 2), sep=" ")
+
+outlier_sim_plot()
 ```
 
-Figure 10: Above: distribution of simulated sigmoid parameters compared to 'true' sigmoid params with additional time points. Below: plots of 'true' (black) and simulated (colored) sigmoid profiles and their simulated data points with additional time points. Simulated profiles are colored based on correlation to 'true' profile. Initial/'true' t param (dotted blue line) and median simulated t param (dotted magenta line) are also plotted. Simulated trajectories more closely track the 'true' profile when these additional TPs, particularly around the spike in expression, are included.
+*Figure 10: Above: effect of different outlier factors on sigmoid parameters, demonstrating t-parameter's particular robustness to outliers. Below: simulated profiles are colored based on correlation to 'true' profile. Initial/'true' t param (dotted blue line) and mean simulated t param (dotted magenta line) are also plotted. Simulated models perform poorly on reproducing initial and peak expression levels (h0 and h1) when outliers are introduced, while t-parameter remains stable.*
 
 ### The Sigmoid Model is Descriptive of Many Monotonic DEGs
 
-All previous simulations were done with gadB as the reference gene. This was done because the sigmoid model was descriptive of gadB's expression profile, and gadB was a highly differentially expressed gene that was of interest to Prof Stoebel. As shown below, the sigmoid model is descriptive of many monotonic DEGs (Figure 11 & 12). A random sample of 12 monotonic DEGs were selected and their expression profiles, along with their 100 simulated expression profiles were plotted. Onset time parameters between simulated and real trajectories were nearly identical across all simulations.
+All previous simulations were done with gadB as the reference gene. This was done because the sigmoid model was descriptive of gadB's expression profile, and gadB was a highly differentially expressed gene that was of interest to Prof Stoebel. As shown below, the sigmoid model is descriptive of many monotonic DEGs (*Figure 11*). A random sample of 6 monotonic DEGs were selected and their expression profiles, along with their 100 simulated expression profiles were plotted. Onset time parameters between simulated and real trajectories were quite close to one another across all simulations.
 
-\setcounter{figure}{11}
-![Sigmoid function is descriptive of monotonic DEGs](./Images/sigmoid_descriptive_1.png)
-![Sigmoid function is descriptive of monotonic DEGs](./Images/sigmoid_descriptive_2.png)
-
-```{r Several Genes, cache=T, eval=FALSE, echo=FALSE, warning=FALSE, message=FALSE, results='hide', fig.keep='all'}
+```{r Several Genes, cache=T, eval=TRUE, echo=FALSE, warning=FALSE, message=FALSE, results='hide', fig.keep='all', fig.fullwidth=TRUE}
 ###################
 #Simulate Several Genes
 ###################
@@ -911,8 +1156,8 @@ times<-rep(c(0,30,60,90,120,150),6)
 sigmoid_design<-data.frame(Sample=colnames(ecolidds)[grep("JH01", colnames(ecolidds))], Condition=c(rep("case",18)), Time=rep(c(0,30,60,90,120,150),3))
 
 ###Ex. select one gene (gadB), extract impulse fit, and generate 100 simulated trajectories based off that one gene. Then plot all the trajectories and data on same plot. Plot distributions of sigmoid params for simulated data as well. May take a couple mins
-set.seed(10)
-genes<-sample(rownames(monoparamsdf), 12)
+set.seed(11)
+genes<-sample(rownames(monoparamsdf), 6)
 list_summary<-list()
 plot_list<-list()
 par(mfrow=c(2,3))
@@ -978,19 +1223,18 @@ plot_trajectories <- reshape2::melt(plot_trajectories ,  id.vars = 'time', varia
 plot_trajectories$score<-scores
 
 list_summary[k]<-summary(sim_params_to_plot)
-plot_list[[k]]<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient2(low = "yellow", mid="orange", high = "red", name="Score", breaks=waiver(), limits=c(-1, 1), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(genes[k], ": Plots of all expression trajectories (init in black)", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)+geom_vline(xintercept=median(sim_params_to_plot$t), linetype="dashed", color="magenta")+labs(subtitle=paste("Disp:", round(disp,2), sep=" "))
+plot_list[[k]]<-ggplot(plot_trajectories[plot_trajectories$series!="init",], aes(x=time,y=log2(value),group=series)) + theme(legend.position ="none") + geom_line(aes(color=score), alpha=0.5, size=0.5)+ scale_color_gradient2(low = "yellow", mid="orange", high = "red", name="Score", breaks=waiver(), limits=c(-1, 1), position="right", space="Lab", guide="colourbar", aesthetics = "colour")+geom_line(data=plot_trajectories[plot_trajectories$series=="init",], aes(x=time, y=log2(value)),size=1, alpha=1)+theme_bw()+ggtitle(paste(genes[k], ": Plots of all expression trajectories (init in black)", sep=" ")) + geom_jitter(data=df, aes(x=time, y=log2(value)), alpha=0.3, color="gray47",size=0.5)+scale_x_continuous("time", breaks=c(0,30,60,90,120,150), labels=c(0,30,60,90,120,150))+geom_vline(xintercept=monoparamsdf[genes[k],]$t, linetype="dashed", color="darkblue", size=0.5)+geom_vline(xintercept=mean(sim_params_to_plot$t), linetype="dashed", color="magenta")+labs(subtitle=paste("Disp:", round(disp,2), sep=" "))
 }
 args_list<-list(2,3)
 names(args_list)<-c(ncol, nrow)
 do.call(grid.arrange, c(plot_list[1:6], ncol=2, nrow=3))
-do.call(grid.arrange, c(plot_list[7:12], ncol=2, nrow=3))
 ```
 
 ### *Sigmoid parameters of Sensitive and Insensitive Genes*
 
 After learning more abour the sigmoid model through simulations, we applied the sigmoid model and in particular, its onset time (t) parameter, to address whether sensitive genes turn on significantly earlier in the cell starvation time course than insensitive genes. 
 
-As shown below, the distributin of onset times for 87 sensitive and 15 insensitive monotonic DEGs overlap (Figure 13). Unexpectedly, a number of sensitive genes have onset times later than the large, single peak: 8 sensitive genes turned on later than 75 minutes (prpE, treA, ydcV, ydgD, astB, yeaG, crr, and cysQ).
+As shown below, the distribution of onset times for 87 sensitive and 15 insensitive monotonic DEGs overlap (*Figure 12*). Unexpectedly, a number of sensitive genes have onset times later than the large, single peak: 8 sensitive genes turned on later than 75 minutes (prpE, treA, ydcV, ydgD, astB, yeaG, crr, and cysQ).
 
 Wilcox-rank sum tests with unequal variance and significance of 0.05 were conducted on the onset times for sensitive and insensitive genes to ascertain whether there was a significant difference between the onset times of these two groups. Considering all onset times for the 102 total genes, the true location was nearly significantly different from 0 (p=0.05275), suggesting that sensitive genes may turn on significantly earlier than insensitive genes.
 
@@ -1085,11 +1329,11 @@ insens_peak<-density(insensitivedf$t)$x[which.max(density(insensitivedf$t)$y)]
 #extract potentially misclassified sensitive genes
 as.character(sensvec[sensitivedf$t>75])
 ```
-Figure 13: Distribution of onset time params for sensitive and insensitive DEGs.
+*Figure 12: Distribution of onset time params for sensitive and insensitive DEGs.*
 
 Using the R package TopGO, sensitive and insensitive genes were enriched for Gene Ontology (GO) terms (at Kolmorgorov-Smirnoff p value<0.05). These GO terms were added to plots of sensitive and insensitive sigmoidal/impulse trajectories faceted by RpoS sensitivity. Sensitive genes were enriched in Membrane, Response to Abiotic Stimuli, and Transporter Terms while insensitive Genes were enriched in Cytoplasmic and Metabolic Processes. The vast majority of genes in both groups appeared monotonically upregulated, however, a number of insensitive genes appeared to achieve higher peak levels of expression than sensitive genes.
 
-```{r Overlay Trajectories and Relative mRNA plot, cache=TRUE, warning=FALSE, eval=FALSE, echo=FALSE, message=FALSE, results='hide', fig.keep='none'}
+```{r Overlay Trajectories and Relative mRNA plot, cache=TRUE, warning=FALSE, eval=TRUE, echo=FALSE, message=FALSE, results='hide', fig.keep='none'}
 #####################
 #Overlay trajectories of all sensitive and insensitive genes
 #####################
@@ -1270,7 +1514,7 @@ print(b)
 overlay_sigmoids(seq(30, 150, 1), median=FALSE)
 overlay_sigmoids(seq(50, 150, 1), median=TRUE)
 ```
-Figure 14: Above: Relative mRNA plots of all sensitive and insensitive DEGs. Below: Relative mRNA plots of median sensitive and insensitive DEGs.
+*Figure 13: Above: Relative mRNA plots of all sensitive and insensitive DEGs. Below: Relative mRNA plots of median sensitive and insensitive DEGs.*
 
 Analysis performed by Wong *et al.* 2017 on data from Conway *et. al* 2014, scaled expression of insenstive, sensitive, and linear genes relative to their expressions at the final time points, and IQR's of scaled expressions were plotted at various time points. This graphic showed the relative expression of sensitive genes being induced much earlier than insensitive ones. Adapting this analysis, we generated plots of relative expression levels for median sigmoidal trajectories for sensitive and insensitive genes. Shown above are the sigmoid-determined expression levels scaled by expression at the 150 minute TP. The plot illustrates that the relative transcription of sensitive genes begins earlier than in insensitive genes during cell starvation. 
 
@@ -1544,7 +1788,7 @@ In summary, E. coli posesses general stress response to a variety of environment
 
 The transcriptomic remodeling of WT and RpoS-knockout bacterial strains were measured during a 150 minute cell starvation time course RNA-Seq experiment. Differentially expressed genes were identified using a thoughtfully-constructed pipeline of TC differential expression tools (Spies *et al.* 2019). Sigmoidal models were fit to DEGs using ImpulseDE2. The robustness to dispersion-based noise, outliers, and number of TPs were asssessed using simulations, and the onset time (t) parameter was found to be stable to high dispersions and outliers. What's more, increasing the number of time points (particularly around the spike in transcription witnessed between 55 and 75 minutes) increased the confidence in the t parameter, which will inform the design of future timing-oriented RNA-seq studies aiming to study *E. coli* responses to cell starvation.
 
-Density plots of onset times for insensitive and sensitive DEGs revealed that while sensitive genes peak onset time occurs earlier than the insensitive group, several sensitive genes turn on much later (Figure 13). A Wilcoxon Rank Sum test identified a nearly significant difference between the onset times of these two groups (p=0.05). Visualization of median sigmoidal curves for each group also suggested that sensitive genes turn on earlier than insensitive genes during cell starvation, analysis consistent with work done by Wong *et al.* on another dataset (Wong *et. al* 2017). What's more, sensitive genes were found to be enriched for membrane and membrane transport GO terms, while insensitive genes were enriched in cytosolic, response to abiotic stimulus, and metabolic terms.
+Density plots of onset times for insensitive and sensitive DEGs revealed that while sensitive genes peak onset time occurs earlier than the insensitive group, several sensitive genes turn on much later (*Figure 12*). A Wilcoxon Rank Sum test identified a nearly significant difference between the onset times of these two groups (p=0.05). Visualization of median sigmoidal curves for each group also suggested that sensitive genes turn on earlier than insensitive genes during cell starvation, analysis consistent with work done by Wong *et al.* on another dataset (Wong *et. al* 2017). What's more, sensitive genes were found to be enriched for membrane and membrane transport GO terms, while insensitive genes were enriched in cytosolic, response to abiotic stimulus, and metabolic terms.
 
 However, RpoS sensitivity does not describe the global trend of transcriptomic response to cell starvation in *E. coli*. Density plots of the onset times for monotonic DEGs indicated that the vast majority of differentially expressed genes turned on at around the same time, with very weak multimodality. The distribution of onset times (t params) of sensitive genes peaks at 62 minutes, while the distribution of onset times of insensitive genes peaks at 65 minutes. Thus, sensitive and insensitive genes did not turn on abnormally early nor abnormally late respectively compared to all the other monotonic DEGs, and the short time separating their onsets suggests that RpoS sensitivity may not describe the global transcriptional response to cell starvation.
 
